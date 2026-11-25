@@ -1,0 +1,42 @@
+# Heavy / reproducible assets — rebuilt by `python bootstrap_studio.py`
+/asset_vault/*
+!/asset_vault/README.md
+/tools/bin/
+/tools/vendor/
+
+# Blender
+*.blend
+*.blend1
+*.blend@
+
+# Render intermediates
+productions/*/frames/
+productions/*/overlay/
+productions/*/build/
+productions/*/*.wav
+productions/*/*.webm
+productions/*/*.mov
+productions/*/*.png
+!productions/*/contact_sheet.jpg
+!productions/*/output_final.mp4
+!productions/*/qa_frames/*.jpg
+
+# Node / Remotion
+node_modules/
+remotion_studio/out/
+remotion_studio/public/props/
+.remotion/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# machine-specific (written by bootstrap)
+studio_config.json
