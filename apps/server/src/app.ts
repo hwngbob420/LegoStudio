@@ -2,7 +2,10 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
+import { writeJsonAtomic } from "./jsonStore";
+
+const CanvasDoc = z.object({ nodes: z.record(z.string(), z.object({ x: z.number(), y: z.number() })), viewport: z.object({ x: z.number(), y: z.number(), zoom: z.number() }).optional() });
 import { JobQueue, spawnRunner, type Runner, type Step } from "./jobs";
 import { libraryBundle, promoteCast, saveCast } from "./library";
 import { check, createProject, listProjects, readProject, saveScript, saveStoryboard } from "./projects";
@@ -24,7 +27,8 @@ export function jobSteps(kind: string, prod: string, repo: string): Step[] {
     case "render": return [produce("--from", "bake")];
     case "recut": return [produce("--from", "audio")];
     case "library": return [
-      { cmd: PY, args: [path.join(repo, "bootstrap_studio.py")], label: "textures" },
+      { cmd: PY, args: [path.join(repo, "apps/brick-engine/face_atlas_gen.py")], label: "faces" },
+      { cmd: PY, args: [path.join(repo, "apps/brick-engine/texture_gen.py")], label: "textures" },
       blender("export_manifest.py"), blender("export_glb.py"),
     ];
     default: throw new HttpError(400, `Việc không hỗ trợ: ${kind}`);
@@ -76,6 +80,16 @@ export function createApp(opts: AppOptions) {
     const j = jobs.get(String(req.params.id));
     if (!j) throw new HttpError(404, "Không thấy việc này.");
     return j;
+  }));
+  /** Sơ đồ tập trong Xưởng: chỉ lưu vị trí nút (dữ liệu thật vẫn ở storyboard). */
+  app.get("/api/projects/:id/canvas", h(async (req) => {
+    assertValidId(String(req.params.id), "ID tập");
+    const f = path.join(paths.projectDir(String(req.params.id)), "canvas.json");
+    return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : { nodes: {} };
+  }));
+  app.put("/api/projects/:id/canvas", h(async (req) => {
+    assertValidId(String(req.params.id), "ID tập");
+    return writeJsonAtomic(path.join(paths.projectDir(String(req.params.id)), "canvas.json"), CanvasDoc, req.body);
   }));
   app.get("/api/projects/:id/qa", h(async (req) => {
     const f = path.join(paths.projectDir(String(req.params.id)), "build", "qa_report.json");

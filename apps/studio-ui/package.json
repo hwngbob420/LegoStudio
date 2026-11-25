@@ -16,7 +16,10 @@
     "lucide-react": "^1.77.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "remotion": "4.0.542"
+    "remotion": "4.0.542",
+    "@xyflow/react": "13.0.2",
+    "three": "0.187.0",
+    "@react-three/fiber": "9.8.2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

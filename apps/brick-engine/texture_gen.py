@@ -8,10 +8,10 @@ from __future__ import annotations
 import json, math, os, random
 from PIL import Image, ImageDraw
 
-import paths as P
+import paths as PATHS
 
-OUT = P.TEXTURES
-PAL = json.load(open(P.PALETTE, encoding="utf-8"))
+OUT = PATHS.TEXTURES
+PAL = json.load(open(PATHS.PALETTE, encoding="utf-8"))
 S = 1024
 SS = 2
 N = S * SS
@@ -164,7 +164,7 @@ def menu_board(w=800, h=500):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for fn in sorted(P.cast_recipe_files().values()):
+    for fn in sorted(PATHS.cast_recipe_files().values()):
         if fn.endswith(".json"):
             r = json.load(open(fn, encoding="utf-8"))
             t = r["torso"]

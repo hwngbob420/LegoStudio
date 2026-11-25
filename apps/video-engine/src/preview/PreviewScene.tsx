@@ -243,6 +243,7 @@ const Stage: React.FC<PreviewProps & { L: Loaded; handle: number }> = (props) =>
   const { width: W, height: H } = useVideoConfig();
   const { scene, camera, gl } = useThree();
   const advance = useThree((st) => st.advance);
+  const size = useThree((st) => st.size);
   const released = useRef(false);
   const rig = useMemo(() => new RigModel(library.manifest), [library.manifest]);
   const built = useMemo(() => buildScene(props, L), [L]);
@@ -344,7 +345,7 @@ const Stage: React.FC<PreviewProps & { L: Loaded; handle: number }> = (props) =>
   useLayoutEffect(() => {
     advance(frame, true);
     if (!released.current) { released.current = true; continueRender(handle); }
-  }, [frame]);
+  }, [frame, size.width, size.height]);
   return null;
 };
 

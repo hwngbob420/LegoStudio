@@ -10,7 +10,7 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 | 1B. Xuất glTF + máy chiếu Three.js | Xong | 2026-11-25 | `export_glb.py` (5 diễn viên, 3 bộ set, cốc). Composition `Preview` (`@remotion/three`): mặt 2D theo ô, màn hình/poster, FX, lắp ráp, camera khớp Blender (test lệch < 0,5%). Render không màn hình ~5 khung/s ở 960x540 (WebGL ANGLE). |
 | 2A. Server + kho 2 tầng | Xong | 2026-11-25 | Express (cổng 8788, chỉ 127.0.0.1): API tập/kho/xem trước/việc nền, `jsonStore` atomic, hàng đợi lần lượt có tiến độ và lưu lịch sử, kho 2 tầng cho minifig + Lưu sang kho kênh. 41 test. Đã chạy thật việc "Kiểm khung" qua API. |
 | 2B. Studio lõi | Xong | 2026-11-25 | Studio 5 tab (React + Vite 8 + Tailwind + Lucide, cổng 5174). Tab Đạo diễn: Player (Three.js + lớp chữ + giọng) nướng lại sau mỗi lần sửa, thẻ cảnh, bảng sửa camera/vùng/biểu cảm/động tác/hiệu ứng, lỗi che mặt hiện ngay, nút Kiểm khung chạy Blender. Đã thử thật trong trình duyệt. Chưa đo FPS Player (ô xem trước bị ẩn khi thử). |
-| 2C. Xưởng 3D | Chưa làm | | |
+| 2C. Xưởng 3D | Xong | 2026-11-25 | Ráp minifig xem 3D xoay được (xem nhanh từ bộ mảnh, sau khi Nướng kho là .glb thật), vai quần chúng ngẫu nhiên lặp lại được, lưu kho tập, Lưu sang kho kênh, thêm vào tập theo mốc. Sơ đồ tập (React Flow): kéo dây diễn viên vào cảnh sửa storyboard thật, vị trí nút lưu canvas.json. Đã thử thật: ráp, Nướng kho (15 s), thêm vào tập, tạo giọng, xem trong Player. |
 | 3A. AI kịch bản + bảng tài nguyên | Chưa làm | | |
 | 3B. Giọng & khớp giờ | Chưa làm | | |
 | 3C. AI đạo diễn | Chưa làm | | |
@@ -27,3 +27,5 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 - Còn nợ nhỏ (từ visual-qa, có từ v1): gạch biểu đồ x3 bị cắt mép thẻ khi sụp; tóc Priya có bậc khi quay; hạt nhiễu ở hông. `output_final.mp4` sẽ render lại ở cuối (sau khi sửa tư thế uống cà phê và tránh chớp mắt đúng khung QA).
 - Gđ 2A: `npx tsx apps/server/src/server.ts` (hoặc `npm run dev:server`). Việc nền: tts, contact, render, publish, recut, library. Diễn viên riêng của tập ở `workspace/projects/<tập>/assets/cast/`, Python + director đọc 2 tầng (`paths.cast_recipe_files`, `castRecipeFiles`).
 - Gđ 2B: mở app bằng `start.bat` (server 8788 + Studio http://localhost:5174). `.claude/launch.json` có cấu hình `lse-server`, `lse-studio`. Studio phải dùng Vite 8 (cùng bản Vitest kéo vào gốc), `@vitejs/plugin-react` 6.
+- Gđ 2C: "Nướng kho" = face_atlas_gen + texture_gen + export_manifest + export_glb (khoảng 15 s). Trong Python, alias `paths` ở face_atlas_gen/texture_gen là `PATHS` (vì có hàm vẽ tên `P`).
+- Lưu ý khi thử bằng ô trình duyệt bị ẩn: ResizeObserver không chạy nên React Flow cần kích thước + chốt nối khai báo sẵn (đã làm); Player Three.js vẽ lại khi canvas đổi cỡ.

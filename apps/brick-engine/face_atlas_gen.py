@@ -9,10 +9,10 @@ from __future__ import annotations
 import json, math, os, sys
 from PIL import Image, ImageDraw, ImageFilter
 
-import paths as P
+import paths as PATHS
 
-OUT = P.TEXTURES
-SPEC = json.load(open(P.FACE_SPEC, encoding="utf-8"))
+OUT = PATHS.TEXTURES
+SPEC = json.load(open(PATHS.FACE_SPEC, encoding="utf-8"))
 
 CELL = SPEC["cell_px"]          # final cell size
 SS = 3                          # supersampling factor for anti-aliased ink
@@ -340,7 +340,7 @@ def main():
     build_atlas(SPEC["eyes"], EYE_FUNCS, xf=(0.5, 0.40, 1.3)).save(os.path.join(OUT, "atlas_eyes.png"))
     build_atlas(SPEC["mouths"], MOUTH_FUNCS, needs_img=True, xf=(0.5, 0.70, 2.0)).save(os.path.join(OUT, "atlas_mouths.png"))
     # detail layers: one PNG per combination used by recipes
-    for fn in sorted(P.cast_recipe_files().values()):
+    for fn in sorted(PATHS.cast_recipe_files().values()):
         if not fn.endswith(".json"):
             continue
         r = json.load(open(fn, encoding="utf-8"))
