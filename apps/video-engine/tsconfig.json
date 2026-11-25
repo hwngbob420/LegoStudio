@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "strict": false },
-  "include": ["src"]
+  "compilerOptions": { "strict": false, "strictNullChecks": true },
+  "include": ["src", "scripts"]
 }
