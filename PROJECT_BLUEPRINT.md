@@ -67,9 +67,9 @@ All 14 listed repositories were verified to exist (`git ls-remote`). Policy: no 
 | Repo | Status | Notes |
 |---|---|---|
 | remotion-dev/remotion | **Integrated** | npm `remotion@4.0.542`, overlay compositions in `remotion_studio/` |
-| DanielSWolf/rhubarb-lip-sync | **Optional backend** | `bootstrap --with-rhubarb` fetches the official v1.13 release; `lipsync_2d.py --rhubarb`. Default is SAPI visemes |
+| DanielSWolf/rhubarb-lip-sync | **Optional backend (untested)** | `bootstrap --with-rhubarb` fetches the official v1.13 release (URL verified, HTTP 200). The `lipsync_2d.py --rhubarb` path has not been exercised. Default is SAPI visemes |
 | Poly Haven (HDRIs) | **Integrated** | CC0 HDRIs fetched by bootstrap (studio_small_09, golden_bay) |
-| LDraw parts library | **Optional** | `bootstrap --with-ldraw` fetches the official complete.zip. Sets export `.ldr` with real part numbers |
+| LDraw parts library | **Optional (untested)** | `bootstrap --with-ldraw` fetches the official complete.zip (URL verified, HTTP 200, not downloaded in v1). Sets export `.ldr` with real part numbers |
 | ScanMountGoat/ldr_tools_blender | Verified, not installed | `.ldr` exports are compatible for import. Native builder used for rendering |
 | TobyLobster/ImportLDraw | Verified, not installed | Step-by-step build idea reimplemented natively (`obj["step"]` → assembly transition) |
 | pybricks/ldraw, michaelgale/ldraw-py, anteloc/ldraw-nova | Verified, not used | Procedural builder plus `.ldr` writer cover the needs without extra deps |
@@ -88,9 +88,17 @@ All 14 listed repositories were verified to exist (`git ls-remote`). Policy: no 
 - **Acting:** 15 gestures. **FX:** 8 GP3 types. **UI cues:** 4 types plus subtitles.
 
 ## 7. Definition of done
-- [x] 4+ minifigs with face atlases, NLA-style gesture library, 3 logo-free sets in `catalog_manifest.json`
+- [x] 4+ minifigs with face atlases, a baked stop-motion gesture library (per-frame pose keys, not NLA strips), 3 logo-free sets in `catalog_manifest.json`
 - [x] `productions/showcase_v1/output_final.mp4`: 19.5 s, 1080p60, assembly opener, two-character dialogue with TTS, 2D lip-sync,
       expression switches (deadpan → shocked → smug), stop-motion gestures, GP FX, tilt-shift DoF, rim light, thirds framing,
       STEP cards, brick bar chart, subtitles, zero face overlap (gate: pass)
 - [x] Contact sheet plus 13 QA frames inspected and iterated
 - [x] Pushed to `origin main`
+
+## 8. Known deviations from the original directive
+- **Faces at 12 fps.** 2D faces and lip-sync animate at 12 fps (on twos), not 60. Each face change needs a new 3D frame, and rendering the world at
+  60 fps costs 5× the GPU time. `fps_world: 24` works, but pair it with `fps_out` 48 or 72 for an even cadence. Motion graphics are a true 60 fps.
+- **Baked gestures, not NLA.** The gesture library is baked per-frame pose keys (`acting_library.py`), not Blender NLA action strips.
+- **Native FX and bricks.** nijiGPen is not installed; emotion FX are native Grease Pencil v3. ldr_tools_blender and ImportLDraw are not used for rendering;
+  bricks are native procedural geometry with `.ldr` export.
+- **Voices.** SAPI David and Zira are fully offline but sound robotic. Swap the backend in `tts_sapi.py` for a neural local TTS later.
