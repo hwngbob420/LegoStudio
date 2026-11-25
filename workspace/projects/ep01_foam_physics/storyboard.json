@@ -1,0 +1,355 @@
+{
+  "episode": "ep01_foam_physics",
+  "title": "Foam Physics",
+  "fps_world": 12,
+  "fps_out": 60,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 32,
+  "sets": [
+    {
+      "id": "Set_BrickCafeStreet",
+      "lighting": "cozy_golden_hour"
+    }
+  ],
+  "cast": [
+    {
+      "id": "kofi_barista",
+      "set": "Set_BrickCafeStreet",
+      "mark": "cafe_left"
+    },
+    {
+      "id": "grandma_lin",
+      "set": "Set_BrickCafeStreet",
+      "mark": "cafe_right"
+    }
+  ],
+  "shots": [
+    {
+      "id": "S1",
+      "t0": 0,
+      "t1": "L1.start-0.1",
+      "set": "Set_BrickCafeStreet",
+      "summary": "Lắp ráp bộ set",
+      "camera": {
+        "preset": "assembly_high",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "top_left",
+      "key_t": 2.0999999999999996,
+      "assembly": {
+        "t0": 0.1,
+        "t1": 1.5999999999999999
+      },
+      "actors": {
+        "kofi_barista": {
+          "appear": 1.8,
+          "expr": [
+            {
+              "t": 0,
+              "e": "happy_closed"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "appear": 1.95,
+          "expr": [
+            {
+              "t": 0,
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "t0": "L1.start-0.1",
+      "t1": "L2.start-0.12",
+      "set": "Set_BrickCafeStreet",
+      "summary": "Behold. The perfect milk foam.",
+      "subjects": [
+        "kofi_barista"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L1.w3",
+      "whoosh": true,
+      "actors": {
+        "kofi_barista": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L1.start",
+              "t1": "L1.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L1.start",
+              "e": "happy_closed"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S3",
+      "t0": "L2.start-0.12",
+      "t1": "L3.start-0.12",
+      "set": "Set_BrickCafeStreet",
+      "summary": "It is just bubbles, Kofi.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L2.w3",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L2.start",
+              "t1": "L2.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L2.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S4",
+      "t0": "L3.start-0.12",
+      "t1": "L4.start-0.12",
+      "set": "Set_BrickCafeStreet",
+      "summary": "Tiny bubbles! Smaller bubbles feel silkier.",
+      "subjects": [
+        "kofi_barista"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L3.w3",
+      "whoosh": true,
+      "actors": {
+        "kofi_barista": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L3.start",
+              "t1": "L3.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L3.start",
+              "e": "happy_closed"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S5",
+      "t0": "L4.start-0.12",
+      "t1": "L5.start-0.12",
+      "set": "Set_BrickCafeStreet",
+      "summary": "So you are selling air?",
+      "subjects": [
+        "kofi_barista",
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "drift_right"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L4.w3",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L4.start",
+              "t1": "L4.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L4.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "kofi_barista": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L4.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "grandma_lin",
+          "t0": "L4.w1",
+          "t1": "L4.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S6",
+      "t0": "L5.start-0.12",
+      "t1": "L6.start-0.12",
+      "set": "Set_BrickCafeStreet",
+      "summary": "Premium air!",
+      "subjects": [
+        "kofi_barista"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L5.w1",
+      "whoosh": true,
+      "actors": {
+        "kofi_barista": {
+          "acts": [
+            {
+              "a": "shock_jump",
+              "t0": "L5.start",
+              "t1": "L5.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L5.start",
+              "e": "shocked_wide"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L5.start+0.3",
+              "e": "sweating_nervous"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "exclaim",
+          "actor": "kofi_barista",
+          "t0": "L5.w1",
+          "t1": "L5.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S7",
+      "t0": "L6.start-0.12",
+      "t1": "END",
+      "set": "Set_BrickCafeStreet",
+      "summary": "Step one. Raise your prices.",
+      "subjects": [
+        "kofi_barista",
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "pull_out"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "top_center",
+      "key_t": "L6.w3",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L6.start",
+              "t1": "L6.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L6.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    }
+  ],
+  "ui": [
+    {
+      "type": "step_badge",
+      "t0": 1,
+      "t1": "S1.t1",
+      "zone": "top_left",
+      "step": "01",
+      "title": "Foam Physics"
+    },
+    {
+      "type": "step_badge",
+      "t0": "L6.w1",
+      "t1": "END",
+      "zone": "top_center",
+      "step": "02",
+      "title": "Your turn",
+      "check": true
+    }
+  ],
+  "sfx": [
+    {
+      "t": "L6.w1",
+      "type": "ding",
+      "gain": 0.8
+    }
+  ],
+  "subtitles": {
+    "speaker_colors": {
+      "kofi_barista": "#5CE1E6",
+      "grandma_lin": "#FFD43B"
+    }
+  }
+}

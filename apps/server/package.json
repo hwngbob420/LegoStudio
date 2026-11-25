@@ -11,7 +11,10 @@
   "dependencies": {
     "@lse/director": "*",
     "@lse/shared": "*",
-    "express": "5.3.0"
+    "express": "5.3.0",
+    "@google/genai": "3.6.1",
+    "zod": "^4.0.0",
+    "@remotion/install-whisper-cpp": "4.0.542"
   },
   "devDependencies": {
     "@types/express": "5.0.6"

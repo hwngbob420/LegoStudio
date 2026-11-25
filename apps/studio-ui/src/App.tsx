@@ -94,7 +94,7 @@ export const App: React.FC = () => {
               {tab === "script" && <ScriptTab pid={pid} state={state} lib={lib} onScript={editScript} onReload={reload} />}
               {tab === "workshop" && <WorkshopTab pid={pid} state={state} lib={lib} onStoryboard={editStoryboard} onReload={reload} />}
               {tab === "voice" && <VoiceTab pid={pid} state={state} lib={lib} />}
-              {tab === "director" && <DirectorTab pid={pid} state={state} lib={lib} rev={rev} onStoryboard={editStoryboard} />}
+              {tab === "director" && <DirectorTab pid={pid} state={state} lib={lib} rev={rev} onStoryboard={editStoryboard} onReload={reload} />}
               {tab === "publish" && <PublishTab pid={pid} state={state} rev={rev} />}
             </>
           )}

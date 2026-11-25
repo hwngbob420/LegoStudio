@@ -1,0 +1,44 @@
+{
+  "title": "Foam Physics",
+  "fps_world": 12,
+  "start_offset": 2.4,
+  "tail": 1.2,
+  "lines": [
+    {
+      "id": "L1",
+      "speaker": "kofi_barista",
+      "text": "Behold. The perfect milk foam.",
+      "gap_before": 0
+    },
+    {
+      "id": "L2",
+      "speaker": "grandma_lin",
+      "text": "It is just bubbles, Kofi.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L3",
+      "speaker": "kofi_barista",
+      "text": "Tiny bubbles! Smaller bubbles feel silkier.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L4",
+      "speaker": "grandma_lin",
+      "text": "So you are selling air?",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L5",
+      "speaker": "kofi_barista",
+      "text": "Premium air!",
+      "gap_before": 0.3
+    },
+    {
+      "id": "L6",
+      "speaker": "grandma_lin",
+      "text": "Step one. Raise your prices.",
+      "gap_before": 0.35
+    }
+  ]
+}

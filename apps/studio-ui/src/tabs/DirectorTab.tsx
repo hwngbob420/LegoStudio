@@ -1,9 +1,8 @@
 // Tab 4 — Đạo diễn & Xem trước: Player tức thì (Three.js), dãy thẻ cảnh, bảng sửa cảnh, lỗi bố cục, Kiểm khung (Blender).
 import React, { useMemo, useRef, useState } from "react";
-import { AlertTriangle, Plus, Trash2, Copy, ScanEye } from "lucide-react";
+import { AlertTriangle, Plus, Trash2, Copy, ScanEye, Sparkles, Wand2, LoaderCircle } from "lucide-react";
 import { ACTIONS, CAMERA_MOVES, CAMERA_PRESETS, EXPRESSIONS, FX_KINDS, SUBJECT_ZONES, UI_ZONE_NAMES, type Shot, type Storyboard } from "@lse/shared";
-import type { Library, ProjectState } from "../api";
-import { wsUrl } from "../api";
+import { api, wsUrl, type Library, type ProjectState } from "../api";
 import { PlayerPane, type PlayerPaneHandle } from "../components/PlayerPane";
 import { Field, NumberInput, Select, TimeInput } from "../components/Fields";
 import { JobButton } from "../components/jobs";
@@ -12,7 +11,25 @@ const PRESET_VI: Record<string, string> = { assembly_high: "Toàn cao (lắp rá
 const MOVE_VI: Record<string, string> = { none: "Đứng yên", push_in: "Đẩy vào", pull_out: "Lùi ra", drift_right: "Trượt phải", crane_down: "Hạ cần" };
 const ZONE_VI: Record<string, string> = { left_third: "1/3 trái", center: "Giữa", right_third: "1/3 phải", top_left: "Trên trái", top_right: "Trên phải", top_center: "Trên giữa", none: "Không có" };
 
-export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Library; rev: number; onStoryboard: (sb: Storyboard) => void }> = ({ pid, state, lib, rev, onStoryboard }) => {
+export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Library; rev: number; onStoryboard: (sb: Storyboard) => void; onReload: () => void }> = ({ pid, state, lib, rev, onStoryboard, onReload }) => {
+  const [aiBusy, setAiBusy] = useState<string | null>(null);
+  const [aiMsg, setAiMsg] = useState<string | null>(null);
+  const runAi = async (kind: "storyboard" | "rewrite") => {
+    setAiBusy(kind); setAiMsg(null);
+    try {
+      if (kind === "storyboard") {
+        if (!window.confirm("AI sẽ dựng lại TOÀN BỘ storyboard của tập từ kịch bản + giọng đọc. Các chỉnh tay hiện tại sẽ bị thay. Tiếp tục?")) { setAiBusy(null); return; }
+        const r = await api.ai(pid, "storyboard", {});
+        setAiMsg(`${r.source === "ai" ? "AI đạo diễn" : "Đạo diễn tự động"} đã dựng ${r.storyboard.shots.length} cảnh. ${r.note ?? ""}`);
+      } else {
+        const note = window.prompt("Muốn cảnh này khác thế nào? (để trống = AI tự chọn)") ?? "";
+        await api.ai(pid, "rewrite-shot", { shot: sel, note });
+        setAiMsg(`Đã viết lại cảnh ${sel}.`);
+      }
+      onReload();
+    } catch (e) { setAiMsg((e as Error).message); }
+    setAiBusy(null);
+  };
   const sb = state.storyboard;
   const [sel, setSel] = useState(sb.shots[1]?.id ?? sb.shots[0].id);
   const player = useRef<PlayerPaneHandle>(null);
@@ -64,6 +81,12 @@ export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Libr
     <div className="grid grid-cols-[minmax(0,1fr)_420px] gap-4">
       <div className="space-y-3">
         <PlayerPane ref={player} pid={pid} rev={rev} onShot={setSel} onPreview={setPreview} />
+        <div className="flex items-center gap-2">
+          <button className="btn-primary" disabled={!!aiBusy} onClick={() => runAi("storyboard")}>
+            {aiBusy === "storyboard" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} AI tạo Storyboard
+          </button>
+          {aiMsg ? <span className="text-sm text-ink-300">{aiMsg}</span> : null}
+        </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
           {sb.shots.map((s) => {
             const err = (byShot[s.id] ?? []).some((i) => i.level === "error");
@@ -103,7 +126,10 @@ export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Libr
       <aside className="card h-fit space-y-3 p-3">
         <div className="flex items-center gap-2">
           <div className="text-lg font-bold">Cảnh {shot.id}</div>
-          <button className="btn ml-auto" title="Nhân bản" onClick={dupShot}><Copy className="h-4 w-4" /></button>
+          <button className="btn ml-auto" title="AI viết lại riêng cảnh này" disabled={!!aiBusy || shotIdx === 0} onClick={() => runAi("rewrite")}>
+            {aiBusy === "rewrite" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+          </button>
+          <button className="btn" title="Nhân bản" onClick={dupShot}><Copy className="h-4 w-4" /></button>
           <button className="btn" title="Xoá cảnh" onClick={delShot}><Trash2 className="h-4 w-4" /></button>
         </div>
         <Field label="Tóm tắt"><input className="field" value={shot.summary ?? ""} onChange={(e) => setShot({ summary: e.target.value })} /></Field>

@@ -1,0 +1,57 @@
+{
+  "set": "Set_BrickCafeStreet",
+  "beats": [
+    {
+      "line": "L1",
+      "shot": "mcu",
+      "speaker_expr": "happy_closed",
+      "summary": "Behold. The perfect milk foam."
+    },
+    {
+      "line": "L2",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "It is just bubbles, Kofi."
+    },
+    {
+      "line": "L3",
+      "shot": "mcu",
+      "speaker_expr": "happy_closed",
+      "summary": "Tiny bubbles! Smaller bubbles feel silkier."
+    },
+    {
+      "line": "L4",
+      "shot": "two_shot",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "So you are selling air?"
+    },
+    {
+      "line": "L5",
+      "shot": "mcu",
+      "speaker_expr": "shocked_wide",
+      "listener_expr": "sweating_nervous",
+      "action": "shock_jump",
+      "fx": {
+        "kind": "exclaim",
+        "word": 1
+      },
+      "summary": "Premium air!"
+    },
+    {
+      "line": "L6",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Step one. Raise your prices."
+    }
+  ],
+  "ending": {
+    "step": "02",
+    "title": "Your turn"
+  }
+}

@@ -1,6 +1,6 @@
 // Server Lego Studio Engine: API tập + kho + việc nền; phục vụ workspace/ qua HTTP cho Studio và máy chiếu xem trước.
 import express, { type NextFunction, type Request, type Response } from "express";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, promises as fs, readFileSync } from "node:fs";
 import path from "node:path";
 import { z, ZodError } from "zod";
 import { writeJsonAtomic } from "./jsonStore";
@@ -10,8 +10,12 @@ import { JobQueue, spawnRunner, type Runner, type Step } from "./jobs";
 import { libraryBundle, promoteCast, saveCast } from "./library";
 import { check, createProject, listProjects, readProject, saveScript, saveStoryboard } from "./projects";
 import { HttpError, REPO, assertValidId, workspacePaths } from "./workspace";
+import { makeAI } from "./ai";
+import { AiError, type TextAI } from "./ai/types";
+import { analyzeStory } from "./aiScript";
+import { aiStoryboard, rewriteShot } from "./aiStoryboard";
 
-export interface AppOptions { workspaceRoot: string; repoRoot?: string; runner?: Runner; now?: () => string }
+export interface AppOptions { workspaceRoot: string; repoRoot?: string; runner?: Runner; now?: () => string; ai?: TextAI }
 
 const PY = process.platform === "win32" ? "python" : "python3";
 const NPX = process.platform === "win32" ? "npx.cmd" : "npx";
@@ -26,6 +30,7 @@ export function jobSteps(kind: string, prod: string, repo: string): Step[] {
     case "publish": return [produce()];
     case "render": return [produce("--from", "bake")];
     case "recut": return [produce("--from", "audio")];
+    case "align": return [{ cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/align.ts"), prod], label: "align" }];
     case "library": return [
       { cmd: PY, args: [path.join(repo, "apps/brick-engine/face_atlas_gen.py")], label: "faces" },
       { cmd: PY, args: [path.join(repo, "apps/brick-engine/texture_gen.py")], label: "textures" },
@@ -75,6 +80,28 @@ export function createApp(opts: AppOptions) {
     if (!existsSync(prod)) throw new HttpError(404, `Không thấy tập "${id}".`);
     return jobs.enqueue(id, String(req.body?.kind ?? ""), jobSteps(String(req.body?.kind ?? ""), prod, repo));
   }));
+  const ai = () => opts.ai ?? makeAI(repo);
+  app.post("/api/projects/:id/ai/script", h(async (req) => analyzeStory(ai(), paths, String(req.params.id), req.body ?? {})));
+  /** AI không cấu hình được thì trả null để rơi về đạo diễn tự động. */
+  const aiOrNull = () => { try { return ai(); } catch { return null; } };
+  app.post("/api/projects/:id/ai/storyboard", h(async (req) => aiStoryboard(aiOrNull(), paths, String(req.params.id), req.body ?? {})));
+  app.post("/api/projects/:id/ai/rewrite-shot", h(async (req) => rewriteShot(aiOrNull(), paths, String(req.params.id), String(req.body?.shot ?? ""), String(req.body?.note ?? ""))));
+  app.get("/api/ai/status", h(async () => { try { return { ok: true, id: ai().id }; } catch (e) { return { ok: false, message: (e as Error).message }; } }));
+
+  /** Nạp giọng thật cho một câu (thân yêu cầu là file âm thanh). */
+  app.post("/api/projects/:id/voice/:line", express.raw({ type: () => true, limit: "60mb" }), h(async (req) => {
+    const id = String(req.params.id), line = String(req.params.line);
+    assertValidId(id, "ID tập");
+    if (!/^L\d{1,3}$/.test(line)) throw new HttpError(400, "Mã câu không hợp lệ.");
+    const ct = String(req.headers["content-type"] ?? "");
+    const ext = /mpeg|mp3/.test(ct) ? "mp3" : /ogg/.test(ct) ? "ogg" : /m4a|mp4|aac/.test(ct) ? "m4a" : "wav";
+    const dir = path.join(paths.projectDir(id), "voice");
+    await fs.mkdir(dir, { recursive: true });
+    for (const f of (await fs.readdir(dir)).filter((f) => f.startsWith(`${line}.`))) await fs.rm(path.join(dir, f));
+    await fs.writeFile(path.join(dir, `${line}.${ext}`), req.body as Buffer);
+    return { ok: true, file: `voice/${line}.${ext}`, bytes: (req.body as Buffer).length };
+  }));
+
   app.get("/api/jobs", h(async (req) => jobs.list(typeof req.query.project === "string" ? req.query.project : undefined)));
   app.get("/api/jobs/:id", h(async (req) => {
     const j = jobs.get(String(req.params.id));
@@ -98,6 +125,7 @@ export function createApp(opts: AppOptions) {
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof HttpError) return res.status(err.status).json({ error: err.message });
+    if (err instanceof AiError) return res.status(err.status).json({ error: err.message });
     if (err instanceof ZodError) return res.status(400).json({ error: err.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") });
     console.error(err);
     res.status(500).json({ error: (err as Error)?.message ?? "Lỗi không rõ" });

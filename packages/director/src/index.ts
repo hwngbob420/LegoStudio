@@ -12,3 +12,5 @@ export * as M3 from "./math3";
 
 export const DIRECTOR_VERSION = "1.0.0";
 export { overlayProps, validateLayout, type OverlayProps, type Issue } from "./overlay";
+export { compose, autoPlan, Beat, BeatPlan, type ComposeContext } from "./compose";
+export { graphemeVisemes, lineVisemes } from "./voice";

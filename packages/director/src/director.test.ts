@@ -135,3 +135,45 @@ describe("overlay props + layout validator", () => {
     expect(validateLayout(T, bad, ov2).some((i) => i.code === "cue_over_face")).toBe(true);
   });
 });
+
+import { autoPlan, compose } from "./compose";
+import { storyboardRefErrors, Catalog, Script as ScriptSchema } from "@lse/shared";
+describe("compose (AI beats -> storyboard)", () => {
+  const script = parseOrThrow(ScriptSchema, read("workspace/projects/showcase_v1/script.json"), "script");
+  const cat = parseOrThrow(Catalog, read("workspace/channel_library/catalog.json"), "cat");
+  const sets = Object.fromEntries(Object.entries(cat.sets).map(([k, v]) => [k, { anchors: v.anchors, lighting: v.lighting }]));
+  const ctx = { episode: "showcase_v1", script, timing, sets, defaultExpr: lib.defaultExpr };
+  it("auto director (no AI) produces a valid storyboard with zero face/UI collisions", () => {
+    const sb = parseOrThrow(Storyboard, compose(autoPlan(script, "Set_BrickCreatorDesk", lib.defaultExpr), ctx), "auto");
+    expect(storyboardRefErrors(sb, cat)).toEqual([]);
+    const T = bake({ storyboard: sb, timing, ...lib });
+    const issues = validateLayout(T, sb, overlayProps(sb, timing, {})).filter((i) => i.level === "error");
+    expect(issues).toEqual([]);
+    expect(sb.shots[0].assembly).toBeDefined();
+  });
+  it("a chart beat puts the chart on the third opposite the speaker", () => {
+    const plan = autoPlan(script, "Set_BrickCreatorDesk", lib.defaultExpr);
+    plan.beats[1] = { ...plan.beats[1], shot: "mcu", ui: { type: "brick_chart", title: "Focus per coffee", bars: [{ label: "x1", value: 6 }, { label: "x2", value: 8 }, { label: "x3", value: 9 }], collapse_last: true } };
+    const sb = parseOrThrow(Storyboard, compose(plan, ctx), "chart");
+    const chart = sb.ui.find((c) => c.type === "brick_chart") as { zone: string };
+    const shot = sb.shots.find((s) => s.ui_safe_zone === chart.zone)!;
+    expect(shot.subject_zone).not.toBe(chart.zone);
+    const T = bake({ storyboard: sb, timing, ...lib });
+    expect(validateLayout(T, sb, overlayProps(sb, timing, {})).filter((i) => i.level === "error")).toEqual([]);
+  });
+});
+
+import { graphemeVisemes, lineVisemes } from "./voice";
+describe("real-voice visemes from words", () => {
+  it("maps letters to SAPI visemes inside the word span (m/b/p close the lips)", () => {
+    const v = graphemeVisemes("Bump", 1, 1.4);
+    expect(v[0][1]).toBe(21);
+    expect(v[v.length - 1][1]).toBe(21);
+    expect(v[0][0]).toBe(1);
+    expect(v.at(-1)![0] + v.at(-1)![2]).toBeCloseTo(1.4, 5);
+  });
+  it("inserts a rest between words separated by a pause", () => {
+    const v = lineVisemes([{ text: "Wait.", start: 0, end: 0.3 }, { text: "So", start: 0.9, end: 1.1 }]);
+    expect(v.some((x) => x[1] === 0 && x[0] === 0.3)).toBe(true);
+  });
+});

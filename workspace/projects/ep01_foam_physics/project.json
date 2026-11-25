@@ -1,0 +1,12 @@
+{
+  "id": "ep01_foam_physics",
+  "title": "Foam Physics",
+  "created": "2026-11-25T09:56:18.250Z",
+  "language": "vi",
+  "settings": {
+    "quality": "final",
+    "chunk_sec": 120
+  },
+  "stages": {},
+  "chunks": []
+}

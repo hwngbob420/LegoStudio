@@ -11,9 +11,9 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 | 2A. Server + kho 2 tầng | Xong | 2026-11-25 | Express (cổng 8788, chỉ 127.0.0.1): API tập/kho/xem trước/việc nền, `jsonStore` atomic, hàng đợi lần lượt có tiến độ và lưu lịch sử, kho 2 tầng cho minifig + Lưu sang kho kênh. 41 test. Đã chạy thật việc "Kiểm khung" qua API. |
 | 2B. Studio lõi | Xong | 2026-11-25 | Studio 5 tab (React + Vite 8 + Tailwind + Lucide, cổng 5174). Tab Đạo diễn: Player (Three.js + lớp chữ + giọng) nướng lại sau mỗi lần sửa, thẻ cảnh, bảng sửa camera/vùng/biểu cảm/động tác/hiệu ứng, lỗi che mặt hiện ngay, nút Kiểm khung chạy Blender. Đã thử thật trong trình duyệt. Chưa đo FPS Player (ô xem trước bị ẩn khi thử). |
 | 2C. Xưởng 3D | Xong | 2026-11-25 | Ráp minifig xem 3D xoay được (xem nhanh từ bộ mảnh, sau khi Nướng kho là .glb thật), vai quần chúng ngẫu nhiên lặp lại được, lưu kho tập, Lưu sang kho kênh, thêm vào tập theo mốc. Sơ đồ tập (React Flow): kéo dây diễn viên vào cảnh sửa storyboard thật, vị trí nút lưu canvas.json. Đã thử thật: ráp, Nướng kho (15 s), thêm vào tập, tạo giọng, xem trong Player. |
-| 3A. AI kịch bản + bảng tài nguyên | Chưa làm | | |
-| 3B. Giọng & khớp giờ | Chưa làm | | |
-| 3C. AI đạo diễn | Chưa làm | | |
+| 3A. AI kịch bản + bảng tài nguyên | Xong (chưa thử Gemini thật) | 2026-11-25 | Cổng AI chép từ PSE (Gemini + dự phòng kiểu OpenAI/Ollama, tự chuyển khi lỗi), series bible, Tab 1 "Phân tích bằng AI" bắt buộc Góc nhìn của tôi, diễn viên mới vào kho tập. Test bằng AI giả. Cần khoá trong `.env` để chạy thật. |
+| 3B. Giọng & khớp giờ | Xong | 2026-11-25 | Nạp giọng thật từng câu, Tự khớp giờ bằng Whisper medium (dùng chung bộ cài PSE), khẩu hình suy từ chữ cái. Thử thật trên 5 câu: đầu/cuối câu lệch tối đa 0,025 s (yêu cầu < 0,3 s), trung vị lệch từ 0,11 s. |
+| 3C. AI đạo diễn | Xong (chưa thử Gemini thật) | 2026-11-25 | AI trả nhịp (beats) theo lô 8 câu, `compose` dựng storyboard + tự đặt thẻ chữ đối diện người nói, kiểm schema/ID/che mặt, gửi lại sửa tối đa 2 lần, tự bỏ thẻ che mặt. Không có khoá thì dùng đạo diễn tự động. "AI viết lại riêng cảnh này" giữ nguyên cảnh khác. Thử thật: tập mới Foam Physics (6 câu) -> 7 cảnh, 0 lỗi, xem được trong Player. |
 | 4A. Xuất bản dài | Chưa làm | | |
 | 4B. Đa ngôn ngữ, Shorts, Hộp thư Claude | Chưa làm | | |
 
@@ -29,3 +29,5 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 - Gđ 2B: mở app bằng `start.bat` (server 8788 + Studio http://localhost:5174). `.claude/launch.json` có cấu hình `lse-server`, `lse-studio`. Studio phải dùng Vite 8 (cùng bản Vitest kéo vào gốc), `@vitejs/plugin-react` 6.
 - Gđ 2C: "Nướng kho" = face_atlas_gen + texture_gen + export_manifest + export_glb (khoảng 15 s). Trong Python, alias `paths` ở face_atlas_gen/texture_gen là `PATHS` (vì có hàm vẽ tên `P`).
 - Lưu ý khi thử bằng ô trình duyệt bị ẩn: ResizeObserver không chạy nên React Flow cần kích thước + chốt nối khai báo sẵn (đã làm); Player Three.js vẽ lại khi canvas đổi cỡ.
+- Gđ 3: AI cần `.env` (GEMINI_API_KEY + GEMINI_MODEL, hoặc AI_FALLBACKS + Ollama). Bạn có thể chép file `.env` từ pixel-story-engine. Whisper tìm ở `WHISPER_DIR`, rồi `workspace/_cache/whisper`, rồi bộ cài của PSE.
+- Tập mẫu thứ hai: `workspace/projects/ep01_foam_physics` (Kofi + Grandma Lin, phố quán cà phê, storyboard do đạo diễn tự động dựng).
