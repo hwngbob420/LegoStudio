@@ -1,0 +1,78 @@
+{
+  "episode": "showcase_v1",
+  "title": "Bug Hunt",
+  "fps_world": 12,
+  "fps_out": 60,
+  "resolution": [1920, 1080],
+  "samples": 32,
+  "sets": [{"id": "Set_BrickCreatorDesk", "lighting": "studio_bright"}],
+  "cast": [
+    {"id": "max_dev", "set": "Set_BrickCreatorDesk", "mark": "max_mark", "props": ["mug"], "prop_color": "red"},
+    {"id": "priya_lead", "set": "Set_BrickCreatorDesk", "mark": "priya_mark"}
+  ],
+  "shots": [
+    {"id": "S1", "t0": 0, "t1": "L1.start-0.1", "set": "Set_BrickCreatorDesk",
+     "camera": {"preset": "assembly_high", "move": "push_in", "lens": 30, "fstop": 1.1},
+     "subject_zone": "center", "ui_safe_zone": "top_left", "key_t": 2.3,
+     "assembly": {"t0": 0.1, "t1": 1.75},
+     "actors": {
+       "max_dev": {"appear": 1.95, "expr": [{"t": 0, "e": "innocent_dot"}, {"t": 2.15, "e": "deadpan_tired"}]},
+       "priya_lead": {"appear": 2.12, "expr": [{"t": 0, "e": "smug_smirk"}]}
+     }},
+    {"id": "S2", "t0": "L1.start-0.1", "t1": "L2.start-0.12", "set": "Set_BrickCreatorDesk", "subjects": ["max_dev"],
+     "camera": {"preset": "mcu", "yaw": 4, "move": "push_in", "distance": 0.9}, "subject_zone": "left_third",
+     "ui_safe_zone": "right_third", "key_t": "L1.w2", "whoosh": true,
+     "actors": {"max_dev": {
+       "acts": [{"a": "slump_tired", "t0": "L1.start", "t1": "L1.w3"},
+                {"a": "talk_gestures", "t0": "L1.w3", "t1": "L1.end", "intensity": 0.7, "mirror": true},
+                {"a": "shrug_confused", "t0": "L1.w7", "t1": "L1.end+0.3"}],
+       "expr": [{"t": "L1.start", "e": "deadpan_tired"}, {"t": "L1.w9", "e": "side_glance"}]}}},
+    {"id": "S3", "t0": "L2.start-0.12", "t1": "L4.start-0.15", "set": "Set_BrickCreatorDesk", "subjects": ["priya_lead"],
+     "camera": {"preset": "mcu", "yaw": -6, "move": "drift_right", "distance": 0.95}, "subject_zone": "right_third",
+     "ui_safe_zone": "left_third", "key_t": "L3.w3", "whoosh": true,
+     "actors": {"priya_lead": {
+       "acts": [{"a": "talk_gestures", "t0": "L2.start", "t1": "L2.end"},
+                {"a": "point_explain", "t0": "L3.start", "t1": "L3.end+0.2"},
+                {"a": "hands_on_hips", "t0": "L3.end+0.2", "t1": "L4.start"}],
+       "expr": [{"t": "L2.start", "e": "smug_smirk"}, {"t": "L2.w2", "e": "innocent_dot"}, {"t": "L2.w5", "e": "smug_smirk"},
+                {"t": "L3.w3", "e": "shocked_wide"}, {"t": "L3.end+0.15", "e": "smug_smirk"}]}},
+     "fx": [{"kind": "sparkle", "actor": "priya_lead", "t0": "L3.end+0.15", "t1": "L4.start-0.2", "size": 0.05}]},
+    {"id": "S4", "t0": "L4.start-0.15", "t1": "L5.start-0.12", "set": "Set_BrickCreatorDesk", "subjects": ["max_dev"],
+     "camera": {"preset": "ecu", "yaw": 2, "move": "push_in", "distance": 0.8}, "subject_zone": "center", "ui_safe_zone": "none",
+     "key_t": "L4.w4", "whoosh": true,
+     "actors": {"max_dev": {
+       "acts": [{"a": "talk_gestures", "t0": "L4.start", "t1": "L4.w3", "intensity": 0.5, "mirror": true},
+                {"a": "shock_jump", "t0": "L4.w4", "t1": "L5.start", "intensity": 0.45}],
+       "expr": [{"t": "L4.start", "e": "deadpan_tired"}, {"t": "L4.w2", "e": "side_glance"}, {"t": "L4.w4", "e": "shocked_wide"}]}},
+     "fx": [{"kind": "shock_lines", "actor": "max_dev", "t0": "L4.w4", "t1": "L4.end", "size": 0.075, "offset": [0.0, -0.01, 0.03]},
+            {"kind": "exclaim", "actor": "max_dev", "t0": "L4.w5", "t1": "L5.start-0.2", "size": 0.05, "offset": [0.075, -0.01, 0.06]}]},
+    {"id": "S5", "t0": "L5.start-0.12", "t1": "END", "set": "Set_BrickCreatorDesk", "subjects": ["max_dev", "priya_lead"],
+     "camera": {"preset": "two_shot", "lens": 40, "move": "pull_out", "rise": 0.05}, "subject_zone": "center",
+     "ui_safe_zone": "top_center", "key_t": "L5.w3", "whoosh": true,
+     "actors": {
+       "max_dev": {"acts": [{"a": "sip_coffee", "t0": "L5.w3", "t1": "END-0.1"}],
+                   "expr": [{"t": "L5.start", "e": "shocked_wide"}, {"t": "L5.w2", "e": "sweating_nervous"}]},
+       "priya_lead": {"acts": [{"a": "talk_gestures", "t0": "L5.start", "t1": "L5.end", "intensity": 0.8},
+                               {"a": "hands_on_hips", "t0": "L5.end", "t1": "END"}],
+                      "expr": [{"t": "L5.start", "e": "smug_smirk"}, {"t": "L5.end+0.2", "e": "happy_closed"}]}},
+     "fx": [{"kind": "sweat_drop", "actor": "max_dev", "t0": "L5.w2", "t1": "END", "size": 0.04, "offset": [0.06, -0.01, 0.04]},
+            {"kind": "sparkle", "actor": "priya_lead", "t0": "L5.end+0.2", "t1": "END", "size": 0.045}]}
+  ],
+  "ui": [
+    {"type": "step_badge", "t0": 1.0, "t1": "S1.t1", "zone": "top_left", "step": "01", "title": "Find the bug"},
+    {"type": "part_callout", "t0": "L1.w1-0.05", "t1": "L2.start-0.2", "zone": "right_third", "count": 3, "label": "Coffee", "icon": "mug", "note": "Bug found: 0"},
+    {"type": "brick_chart", "t0": "L2.w2-0.25", "t1": "L4.start-0.2", "zone": "left_third", "title": "Focus per coffee",
+     "bars": [{"label": "x1", "value": 6, "color": "#3E9D4A", "t": "L2.w2"},
+              {"label": "x2", "value": 8, "color": "#F2A20C", "t": "L2.w6"},
+              {"label": "x3", "value": 9, "color": "#D7261E", "t": "L3.w1", "collapse_t": "L3.w3"}]},
+    {"type": "step_badge", "t0": "L5.w1", "t1": "END", "zone": "top_center", "step": "02", "title": "Decaf", "check": true},
+    {"type": "arrow", "t0": "L5.w3+0.1", "t1": "END", "from": [0.42, 0.24], "to": [0.34, 0.47]}
+  ],
+  "sfx": [
+    {"t": "L3.w3", "type": "tumble", "gain": 0.9},
+    {"t": "L5.w3", "type": "ding", "gain": 0.8}
+  ],
+  "qa_extra": {"assembly_mid": 0.9, "wide_set_landed": 2.2, "callout_mid_speech": "L1.w6", "chart_build": "L2.w7",
+               "chart_collapse": "L3.w3+0.45", "ecu_mid_speech": "L4.w2+0.08", "ecu_shock": "L4.w6", "ending": "END-0.3"},
+  "subtitles": {"speaker_colors": {"max_dev": "#5CE1E6", "priya_lead": "#FFD43B"}}
+}
