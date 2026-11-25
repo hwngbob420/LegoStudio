@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { ACTIONS, Catalog, EXPRESSIONS, FX_KINDS, Script, Storyboard, Timing, parseOrThrow, storyboardRefErrors } from "@lse/shared";
-import { BeatPlan, autoPlan, bake, compose, overlayProps, validateLayout, type Beat } from "@lse/director";
+import { BeatPlan, autoFix, autoPlan, bake, compose, overlayProps, validateLayout, type Beat } from "@lse/director";
 import { loadLibrary, timingPath } from "@lse/director/io";
 import { AiError, type TextAI } from "./ai/types";
 import { bibleText } from "./aiScript";
@@ -104,19 +104,12 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
       note = `Không gọi được AI (${e.message.slice(0, 160)}). Đã dùng đạo diễn tự động theo luật.`;
     }
   } else if (!ai) note = "Chưa cấu hình AI: đã dùng đạo diễn tự động theo luật (xem trước được ngay; thêm khóa AI trong .env để đạo diễn sáng tạo hơn).";
-  let sb = parseOrThrow(Storyboard, compose(plan, composeCtx), "Storyboard");
-  let ev = evaluate(sb, ctx, episodeCast);
-  // tự sửa cuối: bỏ thẻ chữ đang che mặt (an toàn hơn là để lỗi)
-  if (ev.errors.length) {
-    const bad = new Set(ev.issues.filter((i) => i.level === "error").map((i) => i.shot));
-    plan = { ...plan, beats: plan.beats.map((b) => {
-      const shot = sb.shots.find((s) => typeof s.t0 === "string" && s.t0.startsWith(`${b.line}.`));
-      return shot && bad.has(shot.id) ? { ...b, ui: { type: "none" as const }, shot: b.shot === "ecu" ? "mcu" as const : b.shot } : b;
-    }) };
-    sb = parseOrThrow(Storyboard, compose(plan, composeCtx), "Storyboard");
-    ev = evaluate(sb, ctx, episodeCast);
-    note += ev.errors.length ? "" : " Đã tự bỏ thẻ chữ ở cảnh bị che mặt.";
-  }
+  // tự sửa bố cục: lật bên chủ thể -> cận thành trung cận -> bỏ thẻ chữ ở cảnh còn che mặt
+  const fixed = autoFix(plan, composeCtx, ctx.lib);
+  plan = fixed.plan;
+  const sb = parseOrThrow(Storyboard, fixed.storyboard, "Storyboard");
+  const ev = evaluate(sb, ctx, episodeCast);
+  if (JSON.stringify(fixed.plan) !== JSON.stringify(plan)) note += " Đã tự sửa bố cục.";
   await writeJsonAtomic(path.join(ctx.dir, "storyboard.json"), Storyboard, sb);
   await writeJsonAtomic(path.join(ctx.dir, "beats.json"), BeatPlan, plan);
   return { storyboard: sb, issues: ev.issues, source, note: note.trim() };

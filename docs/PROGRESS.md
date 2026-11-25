@@ -14,7 +14,7 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 | 3A. AI kịch bản + bảng tài nguyên | Xong (chưa thử Gemini thật) | 2026-11-25 | Cổng AI chép từ PSE (Gemini + dự phòng kiểu OpenAI/Ollama, tự chuyển khi lỗi), series bible, Tab 1 "Phân tích bằng AI" bắt buộc Góc nhìn của tôi, diễn viên mới vào kho tập. Test bằng AI giả. Cần khoá trong `.env` để chạy thật. |
 | 3B. Giọng & khớp giờ | Xong | 2026-11-25 | Nạp giọng thật từng câu, Tự khớp giờ bằng Whisper medium (dùng chung bộ cài PSE), khẩu hình suy từ chữ cái. Thử thật trên 5 câu: đầu/cuối câu lệch tối đa 0,025 s (yêu cầu < 0,3 s), trung vị lệch từ 0,11 s. |
 | 3C. AI đạo diễn | Xong (chưa thử Gemini thật) | 2026-11-25 | AI trả nhịp (beats) theo lô 8 câu, `compose` dựng storyboard + tự đặt thẻ chữ đối diện người nói, kiểm schema/ID/che mặt, gửi lại sửa tối đa 2 lần, tự bỏ thẻ che mặt. Không có khoá thì dùng đạo diễn tự động. "AI viết lại riêng cảnh này" giữ nguyên cảnh khác. Thử thật: tập mới Foam Physics (6 câu) -> 7 cảnh, 0 lỗi, xem được trong Player. |
-| 4A. Xuất bản dài | Chưa làm | | |
+| 4A. Xuất bản dài | Đang làm | | Xong: render chia chặng (`chunk_renderer.py`), trạng thái chặng trong project.json, nối lại sau khi tắt (đã thử: tắt giữa chặng 1, chạy lại bỏ qua chặng 0 và làm nốt), render lại riêng chặng (`--redo N`), ghép concat. Bộ tự sửa bố cục `autoFix`. Showcase render lại từ 4 chặng (19,5 s, 1170 hình 60 fps). Còn: render tập dài `ep02_the_to_do_list_trap` (52 câu, 3 phút 10 giây, storyboard 0 lỗi) và soi chỗ nối. |
 | 4B. Đa ngôn ngữ, Shorts, Hộp thư Claude | Chưa làm | | |
 
 ## Ghi chú cho phiên sau

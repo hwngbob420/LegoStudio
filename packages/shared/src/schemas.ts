@@ -208,6 +208,7 @@ export const Project = z.object({
     chunk_sec: z.number().min(10).max(600).default(120),
   }).default({ quality: "final", chunk_sec: 120 }),
   stages: z.record(z.string(), StageState).default({}),
+  timeline_hash: z.string().optional(),
   chunks: z.array(z.object({ index: z.number().int(), f0: z.number().int(), f1: z.number().int(),
     status: z.enum(["pending", "done", "error"]), file: z.string().optional() })).default([]),
 });

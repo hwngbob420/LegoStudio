@@ -249,18 +249,24 @@ def run_contact(prod_dir, T, cams, rigs, fast):
     print("[contact] wrote", len(report["shots"]), "shots")
 
 
-def run_render(prod_dir, f_end):
+def run_render(prod_dir, f_end, frange=None, out=None):
+    """Render all frames, or one chunk (frange=(f0, f1)) into `out`. Existing frames are skipped (resume after a crash)."""
     sc = bpy.context.scene
-    out = os.path.join(prod_dir, "frames")
+    out = out or os.path.join(prod_dir, "frames")
     os.makedirs(out, exist_ok=True)
+    if frange:
+        sc.frame_start, sc.frame_end = frange
     sc.render.filepath = os.path.join(out, "f_")
-    sc.render.use_overwrite = True
+    sc.render.use_overwrite = False
+    sc.render.use_placeholder = False
     t = time.time()
     bpy.ops.render.render(animation=True)
     dt = time.time() - t
-    json.dump({"frames": f_end, "seconds": round(dt, 1), "s_per_frame": round(dt / max(1, f_end), 2)},
-              open(os.path.join(prod_dir, "build", "render_stats.json"), "w"))
-    print(f"[render] {f_end} frames in {dt:.1f}s ({dt / max(1, f_end):.2f}s/frame)")
+    n = sc.frame_end - sc.frame_start + 1
+    if not frange:
+        json.dump({"frames": f_end, "seconds": round(dt, 1), "s_per_frame": round(dt / max(1, f_end), 2)},
+                  open(os.path.join(prod_dir, "build", "render_stats.json"), "w"))
+    print(f"[render] {n} frames in {dt:.1f}s ({dt / max(1, n):.2f}s/frame)")
 
 
 def main():
@@ -272,7 +278,9 @@ def main():
     if mode == "contact":
         run_contact(prod, T, cams, rigs, fast)
     elif mode == "render":
-        run_render(prod, f_end)
+        frange = (int(argv[argv.index("--range") + 1]), int(argv[argv.index("--range") + 2])) if "--range" in argv else None
+        out = argv[argv.index("--out") + 1] if "--out" in argv else None
+        run_render(prod, f_end, frange, out)
     if mode == "blend" or "--save" in argv:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.join(prod, "build", "episode.blend"), compress=True)
 

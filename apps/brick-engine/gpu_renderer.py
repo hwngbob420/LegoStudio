@@ -33,10 +33,13 @@ def run(prod, mode="render", fast=False, extra=()):
             import re
             m = re.search(r"(\d+) frames", line)
             total = int(m.group(1)) if m else 0
+            if "--range" in extra:
+                i = list(extra).index("--range")
+                total = int(extra[i + 2]) - int(extra[i + 1]) + 1
         if "Saved:" in line and total and mode == "render":
             done += 1
             if done % 6 == 0 or done == total:
-                print(f"[progress] render {done}/{total}", flush=True)
+                print(f"[progress] {'chunk' if '--range' in extra else 'render'} {done}/{total}", flush=True)
     p.wait()
     if p.returncode != 0:
         raise SystemExit(f"Blender failed ({mode}), exit {p.returncode}")

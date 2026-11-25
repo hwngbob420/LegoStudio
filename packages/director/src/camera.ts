@@ -67,7 +67,7 @@ export function planCamera(
     const ecu = preset === "ecu";
     lens = spec.lens ?? (ecu ? 70 : 50);
     fstop = spec.fstop ?? (ecu ? 1.8 : 1.4);
-    const d = spec.distance ?? (ecu ? 0.62 : 0.95);
+    const d = spec.distance ?? (ecu ? 0.8 : 0.95);
     const rise = spec.rise ?? (ecu ? 0.015 : 0.04);
     const ang = subjectFacingDeg * DEG * 0.5 + yaw;
     pos = add(h, [Math.sin(ang) * d, -Math.cos(ang) * d, rise]);

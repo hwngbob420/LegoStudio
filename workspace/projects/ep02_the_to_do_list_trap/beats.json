@@ -1,0 +1,428 @@
+{
+  "set": "Set_BrickCreatorDesk",
+  "beats": [
+    {
+      "line": "L1",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Good morning. I have forty seven tasks today.",
+      "ui": {
+        "type": "part_callout",
+        "count": 9,
+        "label": "Tasks",
+        "note": "+38 more"
+      },
+      "flip": true
+    },
+    {
+      "line": "L2",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "Forty seven? That is not a list. That is a novel."
+    },
+    {
+      "line": "L3",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "I will just start with the easy ones."
+    },
+    {
+      "line": "L4",
+      "shot": "two_shot",
+      "speaker_expr": "smug_smirk",
+      "summary": "Classic mistake. Easy tasks feel great. They change nothing."
+    },
+    {
+      "line": "L5",
+      "shot": "mcu",
+      "speaker_expr": "shocked_wide",
+      "listener_expr": "sweating_nervous",
+      "action": "shock_jump",
+      "fx": {
+        "kind": "exclaim",
+        "word": 1
+      },
+      "summary": "But I answered twelve emails!"
+    },
+    {
+      "line": "L6",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "And the bug from Monday?"
+    },
+    {
+      "line": "L7",
+      "shot": "ecu",
+      "speaker_expr": "sweating_nervous",
+      "fx": {
+        "kind": "sweat_drop",
+        "word": 2
+      },
+      "summary": "It is still. Emotionally. In progress."
+    },
+    {
+      "line": "L8",
+      "shot": "two_shot",
+      "speaker_expr": "deadpan_tired",
+      "summary": "In my day, we had one task. Build the bridge."
+    },
+    {
+      "line": "L9",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "Grandma Lin? Since when are you here?"
+    },
+    {
+      "line": "L10",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Since nineteen seventy one. I am always here."
+    },
+    {
+      "line": "L11",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "Let me show you the data. Look at this chart."
+    },
+    {
+      "line": "L12",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "One hard task in the morning. Huge progress.",
+      "ui": {
+        "type": "brick_chart",
+        "title": "Progress by noon",
+        "bars": [
+          {
+            "label": "1 hard",
+            "value": 9
+          },
+          {
+            "label": "40 small",
+            "value": 3
+          }
+        ]
+      },
+      "flip": true
+    },
+    {
+      "line": "L13",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "Forty small tasks. Tiny progress. Big tiredness."
+    },
+    {
+      "line": "L14",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "So the list is lying to me?"
+    },
+    {
+      "line": "L15",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "listener_expr": "shocked_wide",
+      "summary": "The list is not lying. You are hiding behind it."
+    },
+    {
+      "line": "L16",
+      "shot": "two_shot",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Wow. That was very personal."
+    },
+    {
+      "line": "L17",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Step one. Pick the scary task."
+    },
+    {
+      "line": "L18",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Step two. Do it before you open your inbox."
+    },
+    {
+      "line": "L19",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Before the inbox? That is illegal."
+    },
+    {
+      "line": "L20",
+      "shot": "two_shot",
+      "speaker_expr": "smug_smirk",
+      "summary": "It is not illegal. It is just uncomfortable."
+    },
+    {
+      "line": "L21",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Fine. The scary task is the Monday bug."
+    },
+    {
+      "line": "L22",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "How long will it take?"
+    },
+    {
+      "line": "L23",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Between ten minutes and the rest of my life."
+    },
+    {
+      "line": "L24",
+      "shot": "two_shot",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Then set a timer. Ninety minutes. No phone."
+    },
+    {
+      "line": "L25",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "No phone? What if something happens?"
+    },
+    {
+      "line": "L26",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "Something will happen. Your work."
+    },
+    {
+      "line": "L27",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Okay. Timer on. Phone in the drawer."
+    },
+    {
+      "line": "L28",
+      "shot": "two_shot",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Good. Now the small tasks go in one batch. After lunch."
+    },
+    {
+      "line": "L29",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "Emails, messages, meetings. One block. Done."
+    },
+    {
+      "line": "L30",
+      "shot": "ecu",
+      "speaker_expr": "happy_closed",
+      "listener_expr": "sweating_nervous",
+      "action": "shock_jump",
+      "fx": {
+        "kind": "sparkle",
+        "word": 4
+      },
+      "summary": "Wait. I fixed it. The bug is gone!"
+    },
+    {
+      "line": "L31",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "In how long?"
+    },
+    {
+      "line": "L32",
+      "shot": "two_shot",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Eleven minutes.",
+      "flip": false,
+      "ui": {
+        "type": "none"
+      }
+    },
+    {
+      "line": "L33",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Eleven minutes. After three days of avoiding it.",
+      "ui": {
+        "type": "none"
+      },
+      "flip": false
+    },
+    {
+      "line": "L34",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "I feel betrayed by my own brain."
+    },
+    {
+      "line": "L35",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "Welcome to productivity."
+    },
+    {
+      "line": "L36",
+      "shot": "two_shot",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "So what do I do with the other forty six tasks?"
+    },
+    {
+      "line": "L37",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Delete half. Nobody will notice."
+    },
+    {
+      "line": "L38",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "Is that true?"
+    },
+    {
+      "line": "L39",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "I deleted my calendar in two thousand five. Still alive."
+    },
+    {
+      "line": "L40",
+      "shot": "two_shot",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "Repeat? Every day? Forever?"
+    },
+    {
+      "line": "L41",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "Only on days you want things done."
+    },
+    {
+      "line": "L42",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "That is most days. Unfortunately."
+    },
+    {
+      "line": "L43",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Here is the secret. Start before you feel ready."
+    },
+    {
+      "line": "L44",
+      "shot": "two_shot",
+      "speaker_expr": "deadpan_tired",
+      "summary": "I never feel ready."
+    },
+    {
+      "line": "L45",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Perfect. Then you can start any time."
+    },
+    {
+      "line": "L46",
+      "shot": "mcu",
+      "speaker_expr": "smug_smirk",
+      "summary": "And when you finish the scary task, celebrate."
+    },
+    {
+      "line": "L47",
+      "shot": "ecu",
+      "speaker_expr": "side_glance",
+      "listener_expr": "deadpan_tired",
+      "action": "shrug_confused",
+      "fx": {
+        "kind": "question",
+        "word": 1
+      },
+      "summary": "With coffee?"
+    },
+    {
+      "line": "L48",
+      "shot": "two_shot",
+      "speaker_expr": "smug_smirk",
+      "summary": "With one coffee. Not four."
+    },
+    {
+      "line": "L49",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Three. Final offer."
+    },
+    {
+      "line": "L50",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Two. And you clean my keyboard."
+    },
+    {
+      "line": "L51",
+      "shot": "mcu",
+      "speaker_expr": "deadpan_tired",
+      "summary": "Deal. Step four. Bribe Grandma Lin."
+    },
+    {
+      "line": "L52",
+      "shot": "two_shot",
+      "speaker_expr": "smug_smirk",
+      "summary": "Step five. Tomorrow, repeat."
+    }
+  ],
+  "ending": {
+    "step": "05",
+    "title": "Tomorrow, repeat"
+  }
+}

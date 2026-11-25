@@ -1,0 +1,321 @@
+{
+  "title": "The To-Do List Trap",
+  "logline": "Max has 47 tasks. Priya has a chart. Grandma Lin has a better idea.",
+  "fps_world": 12,
+  "start_offset": 2.5,
+  "tail": 1.4,
+  "lines": [
+    {
+      "id": "L1",
+      "speaker": "max_dev",
+      "text": "Good morning. I have forty seven tasks today.",
+      "gap_before": 0
+    },
+    {
+      "id": "L2",
+      "speaker": "priya_lead",
+      "text": "Forty seven? That is not a list. That is a novel.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L3",
+      "speaker": "max_dev",
+      "text": "I will just start with the easy ones.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L4",
+      "speaker": "priya_lead",
+      "text": "Classic mistake. Easy tasks feel great. They change nothing.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L5",
+      "speaker": "max_dev",
+      "text": "But I answered twelve emails!",
+      "gap_before": 0.3
+    },
+    {
+      "id": "L6",
+      "speaker": "priya_lead",
+      "text": "And the bug from Monday?",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L7",
+      "speaker": "max_dev",
+      "text": "It is still. Emotionally. In progress.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L8",
+      "speaker": "grandma_lin",
+      "text": "In my day, we had one task. Build the bridge.",
+      "gap_before": 0.45
+    },
+    {
+      "id": "L9",
+      "speaker": "max_dev",
+      "text": "Grandma Lin? Since when are you here?",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L10",
+      "speaker": "grandma_lin",
+      "text": "Since nineteen seventy one. I am always here.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L11",
+      "speaker": "priya_lead",
+      "text": "Let me show you the data. Look at this chart.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L12",
+      "speaker": "priya_lead",
+      "text": "One hard task in the morning. Huge progress.",
+      "gap_before": 0.3
+    },
+    {
+      "id": "L13",
+      "speaker": "priya_lead",
+      "text": "Forty small tasks. Tiny progress. Big tiredness.",
+      "gap_before": 0.3
+    },
+    {
+      "id": "L14",
+      "speaker": "max_dev",
+      "text": "So the list is lying to me?",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L15",
+      "speaker": "grandma_lin",
+      "text": "The list is not lying. You are hiding behind it.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L16",
+      "speaker": "max_dev",
+      "text": "Wow. That was very personal.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L17",
+      "speaker": "grandma_lin",
+      "text": "Step one. Pick the scary task.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L18",
+      "speaker": "grandma_lin",
+      "text": "Step two. Do it before you open your inbox.",
+      "gap_before": 0.3
+    },
+    {
+      "id": "L19",
+      "speaker": "max_dev",
+      "text": "Before the inbox? That is illegal.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L20",
+      "speaker": "priya_lead",
+      "text": "It is not illegal. It is just uncomfortable.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L21",
+      "speaker": "max_dev",
+      "text": "Fine. The scary task is the Monday bug.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L22",
+      "speaker": "priya_lead",
+      "text": "How long will it take?",
+      "gap_before": 0.3
+    },
+    {
+      "id": "L23",
+      "speaker": "max_dev",
+      "text": "Between ten minutes and the rest of my life.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L24",
+      "speaker": "grandma_lin",
+      "text": "Then set a timer. Ninety minutes. No phone.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L25",
+      "speaker": "max_dev",
+      "text": "No phone? What if something happens?",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L26",
+      "speaker": "priya_lead",
+      "text": "Something will happen. Your work.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L27",
+      "speaker": "max_dev",
+      "text": "Okay. Timer on. Phone in the drawer.",
+      "gap_before": 0.45
+    },
+    {
+      "id": "L28",
+      "speaker": "grandma_lin",
+      "text": "Good. Now the small tasks go in one batch. After lunch.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L29",
+      "speaker": "priya_lead",
+      "text": "Emails, messages, meetings. One block. Done.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L30",
+      "speaker": "max_dev",
+      "text": "Wait. I fixed it. The bug is gone!",
+      "gap_before": 0.6
+    },
+    {
+      "id": "L31",
+      "speaker": "priya_lead",
+      "text": "In how long?",
+      "gap_before": 0.3
+    },
+    {
+      "id": "L32",
+      "speaker": "max_dev",
+      "text": "Eleven minutes.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L33",
+      "speaker": "grandma_lin",
+      "text": "Eleven minutes. After three days of avoiding it.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L34",
+      "speaker": "max_dev",
+      "text": "I feel betrayed by my own brain.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L35",
+      "speaker": "priya_lead",
+      "text": "Welcome to productivity.",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L36",
+      "speaker": "max_dev",
+      "text": "So what do I do with the other forty six tasks?",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L37",
+      "speaker": "grandma_lin",
+      "text": "Delete half. Nobody will notice.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L38",
+      "speaker": "max_dev",
+      "text": "Is that true?",
+      "gap_before": 0.35
+    },
+    {
+      "id": "L39",
+      "speaker": "grandma_lin",
+      "text": "I deleted my calendar in two thousand five. Still alive.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L40",
+      "speaker": "max_dev",
+      "text": "Repeat? Every day? Forever?",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L41",
+      "speaker": "priya_lead",
+      "text": "Only on days you want things done.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L42",
+      "speaker": "max_dev",
+      "text": "That is most days. Unfortunately.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L43",
+      "speaker": "grandma_lin",
+      "text": "Here is the secret. Start before you feel ready.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L44",
+      "speaker": "max_dev",
+      "text": "I never feel ready.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L45",
+      "speaker": "grandma_lin",
+      "text": "Perfect. Then you can start any time.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L46",
+      "speaker": "priya_lead",
+      "text": "And when you finish the scary task, celebrate.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L47",
+      "speaker": "max_dev",
+      "text": "With coffee?",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L48",
+      "speaker": "priya_lead",
+      "text": "With one coffee. Not four.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L49",
+      "speaker": "max_dev",
+      "text": "Three. Final offer.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L50",
+      "speaker": "grandma_lin",
+      "text": "Two. And you clean my keyboard.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L51",
+      "speaker": "max_dev",
+      "text": "Deal. Step four. Bribe Grandma Lin.",
+      "gap_before": 0.4
+    },
+    {
+      "id": "L52",
+      "speaker": "priya_lead",
+      "text": "Step five. Tomorrow, repeat.",
+      "gap_before": 0.45
+    }
+  ]
+}

@@ -1,7 +1,10 @@
 // Dựng storyboard từ "nhịp" (beats) gọn mà AI (hoặc đạo diễn tự động) trả về. Code tự lo:
 // mốc thời gian theo câu/từ, cảnh mở lắp ráp, vùng chủ thể đối diện thẻ chữ (không che mặt), phản ứng người nghe, thẻ STEP kết.
 import { z } from "zod";
-import { ACTIONS, EXPRESSIONS, FX_KINDS, type Script, type Storyboard, type Timing } from "@lse/shared";
+import { ACTIONS, EXPRESSIONS, FX_KINDS, type Manifest, type Script, type Storyboard, type Timing } from "@lse/shared";
+import { bake } from "./bake";
+import type { FaceSpec } from "./faces";
+import { overlayProps, validateLayout, type Issue } from "./overlay";
 
 const Expr = z.enum(EXPRESSIONS);
 export const Beat = z.object({
@@ -19,6 +22,8 @@ export const Beat = z.object({
     z.object({ type: z.literal("brick_chart"), title: z.string().max(28), bars: z.array(z.object({ label: z.string().max(8), value: z.number().int().min(1).max(12) })).min(2).max(4), collapse_last: z.boolean().optional() }),
   ]).optional(),
   summary: z.string().max(80).optional(),
+  /** đổi bên: chủ thể sang 1/3 kia (bộ tự sửa dùng khi người đứng sau bị thẻ chữ che) */
+  flip: z.boolean().optional(),
 });
 export type Beat = z.infer<typeof Beat>;
 export const BeatPlan = z.object({
@@ -97,9 +102,10 @@ export function compose(plan: BeatPlan, ctx: ComposeContext): Storyboard {
     if (isLast) preset = speakers.length > 1 ? "two_shot" : "mcu";
     let subjects: string[] = preset === "two_shot" ? speakers.slice(0, 2) : preset === "wide_establish" ? [] : [subject];
     if (preset === "two_shot" && subjects.length < 2) { preset = "mcu"; subjects = [subject]; }
-    let zone: "left_third" | "center" | "right_third" = preset === "mcu" ? side(subject) : "center";
+    const home = first.flip ? opposite(side(subject)) : side(subject);
+    let zone: "left_third" | "center" | "right_third" = preset === "mcu" ? home : "center";
     let uiZone: "left_third" | "right_third" | "top_center" | "top_left" | "none" = "none";
-    if (cue) { uiZone = opposite(zone === "center" ? side(subject) : zone); zone = opposite(uiZone as "left_third" | "right_third"); }
+    if (cue) { uiZone = opposite(zone === "center" ? home : zone); zone = opposite(uiZone as "left_third" | "right_third"); }
     if (isLast) uiZone = "top_center";
     const actors: NonNullable<Storyboard["shots"][number]["actors"]> = {};
     for (const b of g) {
@@ -156,4 +162,38 @@ export function autoPlan(script: Script, setId: string, defaultExpr: Record<stri
     };
   });
   return { set: setId, beats, ending: { step: "02", title: "Your turn" } };
+}
+
+/** Tự sửa bố cục: cảnh có lỗi che mặt -> lật bên chủ thể -> cận mặt thành trung cận -> bỏ thẻ chữ. Trả kế hoạch cuối + storyboard + lỗi còn lại. */
+export function autoFix(plan: BeatPlan, ctx: ComposeContext, lib: { manifest: Manifest; faceSpec: FaceSpec; defaultExpr: Record<string, string> }) {
+  const evalPlan = (p: BeatPlan) => {
+    const sb = compose(p, ctx);
+    const T = bake({ storyboard: sb, timing: ctx.timing, ...lib });
+    return { sb, issues: validateLayout(T, sb, overlayProps(sb, ctx.timing, {})) };
+  };
+  const shotLines = (sb: Storyboard, shotId: string) => {
+    const i = sb.shots.findIndex((s) => s.id === shotId);
+    const from = String(sb.shots[i].t0).split(".")[0];
+    const to = i + 1 < sb.shots.length ? String(sb.shots[i + 1].t0).split(".")[0] : null;
+    const ids = ctx.script.lines.map((l) => l.id);
+    const a = ids.indexOf(from), b = to ? ids.indexOf(to) : ids.length;
+    return a < 0 ? [] : ids.slice(a, b);
+  };
+  let cur = plan;
+  let res = evalPlan(cur);
+  const steps: ((b: Beat) => Beat)[] = [
+    (b) => ({ ...b, flip: !b.flip }),
+    (b) => ({ ...b, flip: !b.flip, shot: b.shot === "ecu" ? "mcu" : b.shot }),
+    (b) => ({ ...b, ui: { type: "none" }, shot: b.shot === "ecu" ? "mcu" : b.shot }),
+  ];
+  for (const fix of steps) {
+    const bad = new Set(res.issues.filter((i) => i.level === "error").map((i) => i.shot));
+    if (!bad.size) break;
+    const lines = new Set([...bad].filter((s) => s !== "S1").flatMap((s) => shotLines(res.sb, s)));
+    const next: BeatPlan = { ...cur, beats: cur.beats.map((b) => (lines.has(b.line) ? fix(b) : b)) };
+    const r2 = evalPlan(next);
+    const errs = (x: { issues: Issue[] }) => x.issues.filter((i) => i.level === "error").length;
+    if (errs(r2) <= errs(res)) { cur = next; res = r2; }
+  }
+  return { plan: cur, storyboard: res.sb, issues: res.issues };
 }

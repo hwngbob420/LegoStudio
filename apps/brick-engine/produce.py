@@ -47,7 +47,10 @@ def main():
             if r.returncode != 0 and not force:
                 raise SystemExit("Contact-sheet gate FAILED (face/UI collision). Fix the shotlist or pass --force.")
         elif st == "render":
-            log["gpu_render_s"] = round(gpu_renderer.run(prod, "render", fast), 1)
+            t_r = time.time()
+            args = [prod] + (["--fast"] if fast else []) + (["--chunk-sec", a[a.index("--chunk-sec") + 1]] if "--chunk-sec" in a else [])
+            subprocess.run([sys.executable, os.path.join(ENGINE, "chunk_renderer.py"), *args], check=True)
+            log["gpu_render_s"] = round(time.time() - t_r, 1)
         elif st == "audio":
             py("audio_design.py", prod)
         elif st == "overlay":

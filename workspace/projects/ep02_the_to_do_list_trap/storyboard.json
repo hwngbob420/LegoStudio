@@ -1,0 +1,2355 @@
+{
+  "episode": "ep02_the_to_do_list_trap",
+  "title": "The To-Do List Trap",
+  "fps_world": 12,
+  "fps_out": 60,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 32,
+  "sets": [
+    {
+      "id": "Set_BrickCreatorDesk",
+      "lighting": "studio_bright"
+    }
+  ],
+  "cast": [
+    {
+      "id": "max_dev",
+      "set": "Set_BrickCreatorDesk",
+      "mark": "max_mark"
+    },
+    {
+      "id": "priya_lead",
+      "set": "Set_BrickCreatorDesk",
+      "mark": "priya_mark"
+    },
+    {
+      "id": "grandma_lin",
+      "set": "Set_BrickCreatorDesk",
+      "mark": "center"
+    }
+  ],
+  "shots": [
+    {
+      "id": "S1",
+      "t0": 0,
+      "t1": "L1.start-0.1",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Lắp ráp bộ set",
+      "camera": {
+        "preset": "assembly_high",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "top_left",
+      "key_t": 2.1999999999999997,
+      "assembly": {
+        "t0": 0.1,
+        "t1": 1.7
+      },
+      "actors": {
+        "max_dev": {
+          "appear": 1.9,
+          "expr": [
+            {
+              "t": 0,
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "priya_lead": {
+          "appear": 2.05,
+          "expr": [
+            {
+              "t": 0,
+              "e": "smug_smirk"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "appear": 2.2,
+          "expr": [
+            {
+              "t": 0,
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "t0": "L1.start-0.1",
+      "t1": "L2.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Good morning. I have forty seven tasks today.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "left_third",
+      "key_t": "L1.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L1.start",
+              "t1": "L1.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L1.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S3",
+      "t0": "L2.start-0.12",
+      "t1": "L3.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Forty seven? That is not a list. That is a novel.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L2.w6",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L2.start",
+              "t1": "L2.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L2.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S4",
+      "t0": "L3.start-0.12",
+      "t1": "L4.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "I will just start with the easy ones.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L3.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L3.start",
+              "t1": "L3.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L3.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S5",
+      "t0": "L4.start-0.12",
+      "t1": "L5.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Classic mistake. Easy tasks feel great. They change nothing.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "drift_right"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L4.w5",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L4.start",
+              "t1": "L4.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L4.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S6",
+      "t0": "L5.start-0.12",
+      "t1": "L6.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "But I answered twelve emails!",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L5.w3",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shock_jump",
+              "t0": "L5.start",
+              "t1": "L5.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L5.start",
+              "e": "shocked_wide"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L5.start+0.3",
+              "e": "sweating_nervous"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L5.start+0.3",
+              "e": "sweating_nervous"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "exclaim",
+          "actor": "max_dev",
+          "t0": "L5.w1",
+          "t1": "L5.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S7",
+      "t0": "L6.start-0.12",
+      "t1": "L7.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "And the bug from Monday?",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L6.w3",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L6.start",
+              "t1": "L6.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L6.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "max_dev": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L6.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L6.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "priya_lead",
+          "t0": "L6.w1",
+          "t1": "L6.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S8",
+      "t0": "L7.start-0.12",
+      "t1": "L8.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "It is still. Emotionally. In progress.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L7.w3",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L7.start",
+              "t1": "L7.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L7.start",
+              "e": "sweating_nervous"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "sweat_drop",
+          "actor": "max_dev",
+          "t0": "L7.w2",
+          "t1": "L7.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S9",
+      "t0": "L8.start-0.12",
+      "t1": "L9.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "In my day, we had one task. Build the bridge.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "drift_right"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L8.w5",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L8.start",
+              "t1": "L8.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L8.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S10",
+      "t0": "L9.start-0.12",
+      "t1": "L10.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Grandma Lin? Since when are you here?",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L9.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L9.start",
+              "t1": "L9.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L9.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L9.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L9.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "max_dev",
+          "t0": "L9.w1",
+          "t1": "L9.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S11",
+      "t0": "L10.start-0.12",
+      "t1": "L11.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Since nineteen seventy one. I am always here.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L10.w4",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L10.start",
+              "t1": "L10.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L10.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S12",
+      "t0": "L11.start-0.12",
+      "t1": "L12.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Let me show you the data. Look at this chart.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L11.w5",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L11.start",
+              "t1": "L11.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L11.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S13",
+      "t0": "L12.start-0.12",
+      "t1": "L13.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "One hard task in the morning. Huge progress.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "right_third",
+      "key_t": "L12.w4",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "point_explain",
+              "t0": "L12.start",
+              "t1": "L12.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L12.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S14",
+      "t0": "L13.start-0.12",
+      "t1": "L14.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Forty small tasks. Tiny progress. Big tiredness.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L13.w4",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L13.start",
+              "t1": "L13.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L13.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S15",
+      "t0": "L14.start-0.12",
+      "t1": "L15.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "So the list is lying to me?",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L14.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L14.start",
+              "t1": "L14.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L14.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L14.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L14.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "max_dev",
+          "t0": "L14.w1",
+          "t1": "L14.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S16",
+      "t0": "L15.start-0.12",
+      "t1": "L16.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "The list is not lying. You are hiding behind it.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L15.w5",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L15.start",
+              "t1": "L15.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L15.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "max_dev": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L15.start+0.3",
+              "e": "shocked_wide"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L15.start+0.3",
+              "e": "shocked_wide"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S17",
+      "t0": "L16.start-0.12",
+      "t1": "L17.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Wow. That was very personal.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "drift_right"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L16.w3",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L16.start",
+              "t1": "L16.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L16.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S18",
+      "t0": "L17.start-0.12",
+      "t1": "L19.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Step one. Pick the scary task.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L17.w3",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L17.start",
+              "t1": "L17.end"
+            },
+            {
+              "a": "talk_gestures",
+              "t0": "L18.start",
+              "t1": "L18.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L17.start",
+              "e": "deadpan_tired"
+            },
+            {
+              "t": "L18.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S19",
+      "t0": "L19.start-0.12",
+      "t1": "L20.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Before the inbox? That is illegal.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L19.w3",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L19.start",
+              "t1": "L19.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L19.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S20",
+      "t0": "L20.start-0.12",
+      "t1": "L21.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "It is not illegal. It is just uncomfortable.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L20.w4",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L20.start",
+              "t1": "L20.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L20.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S21",
+      "t0": "L21.start-0.12",
+      "t1": "L22.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Fine. The scary task is the Monday bug.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L21.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L21.start",
+              "t1": "L21.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L21.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S22",
+      "t0": "L22.start-0.12",
+      "t1": "L23.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "How long will it take?",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L22.w3",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L22.start",
+              "t1": "L22.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L22.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "max_dev": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L22.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L22.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "priya_lead",
+          "t0": "L22.w1",
+          "t1": "L22.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S23",
+      "t0": "L23.start-0.12",
+      "t1": "L24.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Between ten minutes and the rest of my life.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L23.w5",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L23.start",
+              "t1": "L23.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L23.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S24",
+      "t0": "L24.start-0.12",
+      "t1": "L25.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Then set a timer. Ninety minutes. No phone.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L24.w4",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L24.start",
+              "t1": "L24.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L24.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S25",
+      "t0": "L25.start-0.12",
+      "t1": "L26.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "No phone? What if something happens?",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L25.w3",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L25.start",
+              "t1": "L25.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L25.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L25.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L25.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "max_dev",
+          "t0": "L25.w1",
+          "t1": "L25.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S26",
+      "t0": "L26.start-0.12",
+      "t1": "L27.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Something will happen. Your work.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L26.w3",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L26.start",
+              "t1": "L26.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L26.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S27",
+      "t0": "L27.start-0.12",
+      "t1": "L28.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Okay. Timer on. Phone in the drawer.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L27.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L27.start",
+              "t1": "L27.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L27.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S28",
+      "t0": "L28.start-0.12",
+      "t1": "L29.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Good. Now the small tasks go in one batch. After lunch.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L28.w6",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L28.start",
+              "t1": "L28.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L28.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S29",
+      "t0": "L29.start-0.12",
+      "t1": "L30.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Emails, messages, meetings. One block. Done.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L29.w3",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L29.start",
+              "t1": "L29.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L29.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S30",
+      "t0": "L30.start-0.12",
+      "t1": "L31.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Wait. I fixed it. The bug is gone!",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L30.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shock_jump",
+              "t0": "L30.start",
+              "t1": "L30.end",
+              "intensity": 0.45
+            }
+          ],
+          "expr": [
+            {
+              "t": "L30.start",
+              "e": "happy_closed"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L30.start+0.3",
+              "e": "sweating_nervous"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L30.start+0.3",
+              "e": "sweating_nervous"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "sparkle",
+          "actor": "max_dev",
+          "t0": "L30.w4",
+          "t1": "L30.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S31",
+      "t0": "L31.start-0.12",
+      "t1": "L32.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "In how long?",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L31.w2",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L31.start",
+              "t1": "L31.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L31.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "max_dev": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L31.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L31.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "priya_lead",
+          "t0": "L31.w1",
+          "t1": "L31.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S32",
+      "t0": "L32.start-0.12",
+      "t1": "L33.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Eleven minutes.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L32.w1",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L32.start",
+              "t1": "L32.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L32.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S33",
+      "t0": "L33.start-0.12",
+      "t1": "L34.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Eleven minutes. After three days of avoiding it.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L33.w4",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L33.start",
+              "t1": "L33.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L33.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S34",
+      "t0": "L34.start-0.12",
+      "t1": "L35.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "I feel betrayed by my own brain.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L34.w4",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L34.start",
+              "t1": "L34.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L34.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S35",
+      "t0": "L35.start-0.12",
+      "t1": "L36.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Welcome to productivity.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L35.w2",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L35.start",
+              "t1": "L35.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L35.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S36",
+      "t0": "L36.start-0.12",
+      "t1": "L37.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "So what do I do with the other forty six tasks?",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L36.w6",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L36.start",
+              "t1": "L36.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L36.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L36.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L36.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "max_dev",
+          "t0": "L36.w1",
+          "t1": "L36.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S37",
+      "t0": "L37.start-0.12",
+      "t1": "L38.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Delete half. Nobody will notice.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L37.w3",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L37.start",
+              "t1": "L37.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L37.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S38",
+      "t0": "L38.start-0.12",
+      "t1": "L39.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Is that true?",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L38.w2",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L38.start",
+              "t1": "L38.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L38.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L38.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L38.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "max_dev",
+          "t0": "L38.w1",
+          "t1": "L38.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S39",
+      "t0": "L39.start-0.12",
+      "t1": "L40.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "I deleted my calendar in two thousand five. Still alive.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L39.w5",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L39.start",
+              "t1": "L39.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L39.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S40",
+      "t0": "L40.start-0.12",
+      "t1": "L41.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Repeat? Every day? Forever?",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L40.w2",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L40.start",
+              "t1": "L40.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L40.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L40.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L40.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "max_dev",
+          "t0": "L40.w1",
+          "t1": "L40.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S41",
+      "t0": "L41.start-0.12",
+      "t1": "L42.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Only on days you want things done.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L41.w4",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L41.start",
+              "t1": "L41.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L41.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S42",
+      "t0": "L42.start-0.12",
+      "t1": "L43.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "That is most days. Unfortunately.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L42.w3",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L42.start",
+              "t1": "L42.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L42.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S43",
+      "t0": "L43.start-0.12",
+      "t1": "L44.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Here is the secret. Start before you feel ready.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L43.w5",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L43.start",
+              "t1": "L43.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L43.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S44",
+      "t0": "L44.start-0.12",
+      "t1": "L45.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "I never feel ready.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L44.w2",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L44.start",
+              "t1": "L44.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L44.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S45",
+      "t0": "L45.start-0.12",
+      "t1": "L46.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Perfect. Then you can start any time.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L45.w4",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L45.start",
+              "t1": "L45.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L45.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S46",
+      "t0": "L46.start-0.12",
+      "t1": "L47.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "And when you finish the scary task, celebrate.",
+      "subjects": [
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "right_third",
+      "ui_safe_zone": "none",
+      "key_t": "L46.w4",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L46.start",
+              "t1": "L46.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L46.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S47",
+      "t0": "L47.start-0.12",
+      "t1": "L48.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "With coffee?",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "ecu",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L47.w1",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "shrug_confused",
+              "t0": "L47.start",
+              "t1": "L47.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L47.start",
+              "e": "side_glance"
+            }
+          ]
+        },
+        "priya_lead": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L47.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        },
+        "grandma_lin": {
+          "acts": [],
+          "expr": [
+            {
+              "t": "L47.start+0.3",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": [
+        {
+          "kind": "question",
+          "actor": "max_dev",
+          "t0": "L47.w1",
+          "t1": "L47.end+0.4",
+          "size": 0.05
+        }
+      ]
+    },
+    {
+      "id": "S48",
+      "t0": "L48.start-0.12",
+      "t1": "L49.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "With one coffee. Not four.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "push_in"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "none",
+      "key_t": "L48.w3",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L48.start",
+              "t1": "L48.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L48.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S49",
+      "t0": "L49.start-0.12",
+      "t1": "L50.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Three. Final offer.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L49.w2",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L49.start",
+              "t1": "L49.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L49.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S50",
+      "t0": "L50.start-0.12",
+      "t1": "L51.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Two. And you clean my keyboard.",
+      "subjects": [
+        "grandma_lin"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "push_in"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L50.w3",
+      "whoosh": true,
+      "actors": {
+        "grandma_lin": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L50.start",
+              "t1": "L50.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L50.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S51",
+      "t0": "L51.start-0.12",
+      "t1": "L52.start-0.12",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Deal. Step four. Bribe Grandma Lin.",
+      "subjects": [
+        "max_dev"
+      ],
+      "camera": {
+        "preset": "mcu",
+        "move": "drift_right"
+      },
+      "subject_zone": "left_third",
+      "ui_safe_zone": "none",
+      "key_t": "L51.w3",
+      "whoosh": true,
+      "actors": {
+        "max_dev": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L51.start",
+              "t1": "L51.end"
+            }
+          ],
+          "expr": [
+            {
+              "t": "L51.start",
+              "e": "deadpan_tired"
+            }
+          ]
+        }
+      },
+      "fx": []
+    },
+    {
+      "id": "S52",
+      "t0": "L52.start-0.12",
+      "t1": "END",
+      "set": "Set_BrickCreatorDesk",
+      "summary": "Step five. Tomorrow, repeat.",
+      "subjects": [
+        "max_dev",
+        "priya_lead"
+      ],
+      "camera": {
+        "preset": "two_shot",
+        "move": "pull_out"
+      },
+      "subject_zone": "center",
+      "ui_safe_zone": "top_center",
+      "key_t": "L52.w2",
+      "whoosh": true,
+      "actors": {
+        "priya_lead": {
+          "acts": [
+            {
+              "a": "talk_gestures",
+              "t0": "L52.start",
+              "t1": "L52.end",
+              "mirror": true
+            }
+          ],
+          "expr": [
+            {
+              "t": "L52.start",
+              "e": "smug_smirk"
+            }
+          ]
+        }
+      },
+      "fx": []
+    }
+  ],
+  "ui": [
+    {
+      "type": "step_badge",
+      "t0": 1,
+      "t1": "S1.t1",
+      "zone": "top_left",
+      "step": "01",
+      "title": "The To-Do List Trap"
+    },
+    {
+      "type": "part_callout",
+      "t0": "L1.w1",
+      "t1": "S2.t1-0.15",
+      "zone": "left_third",
+      "count": 9,
+      "label": "Tasks",
+      "icon": "mug",
+      "note": "+38 more"
+    },
+    {
+      "type": "brick_chart",
+      "t0": "L12.start-0.2",
+      "t1": "S13.t1-0.15",
+      "zone": "right_third",
+      "title": "Progress by noon",
+      "bars": [
+        {
+          "label": "1 hard",
+          "value": 9,
+          "color": "#3E9D4A",
+          "t": "L12.w1"
+        },
+        {
+          "label": "40 small",
+          "value": 3,
+          "color": "#F2A20C",
+          "t": "L12.w5"
+        }
+      ]
+    },
+    {
+      "type": "step_badge",
+      "t0": "L52.w1",
+      "t1": "END",
+      "zone": "top_center",
+      "step": "05",
+      "title": "Tomorrow, repeat",
+      "check": true
+    }
+  ],
+  "sfx": [
+    {
+      "t": "L52.w1",
+      "type": "ding",
+      "gain": 0.8
+    }
+  ],
+  "subtitles": {
+    "speaker_colors": {
+      "max_dev": "#5CE1E6",
+      "priya_lead": "#FFD43B",
+      "grandma_lin": "#FF8787"
+    }
+  }
+}
