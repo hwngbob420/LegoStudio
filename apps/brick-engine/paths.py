@@ -1,0 +1,26 @@
+"""Single source of truth for every path the brick engine touches (stdlib only, Blender-safe)."""
+import os
+
+ENGINE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.abspath(os.path.join(ENGINE, "..", ".."))
+WORKSPACE = os.path.join(REPO, "workspace")
+LIBRARY = os.path.join(WORKSPACE, "channel_library")
+PROJECTS = os.path.join(WORKSPACE, "projects")
+CAST = os.path.join(LIBRARY, "cast")
+SETS = os.path.join(LIBRARY, "sets")
+FACES = os.path.join(LIBRARY, "faces")
+LIGHTING = os.path.join(LIBRARY, "lighting")
+PALETTE = os.path.join(LIBRARY, "palette.json")
+CATALOG = os.path.join(LIBRARY, "catalog.json")
+FACE_SPEC = os.path.join(FACES, "face_atlas_spec.json")
+# generated / downloaded (gitignored, rebuilt by bootstrap_studio.py)
+BAKED = os.path.join(LIBRARY, "baked")
+TEXTURES = os.path.join(BAKED, "textures")
+HDRI = os.path.join(BAKED, "hdri")
+LOOKDEV = os.path.join(BAKED, "lookdev")
+GLB = os.path.join(BAKED, "glb")
+DOWNLOADS = os.path.join(BAKED, "downloads")
+TOOLS_BIN = os.path.join(BAKED, "bin")
+VIDEO_ENGINE = os.path.join(REPO, "apps", "video-engine")
+STUDIO_CONFIG = os.path.join(REPO, "studio_config.json")
+STORYBOARD = "storyboard.json"

@@ -1,0 +1,14 @@
+{
+ "id": "Set_BrickCreatorDesk",
+ "name": "Phòng sáng tạo",
+ "lighting": "studio_bright",
+ "anchors": [
+  "max_mark",
+  "priya_mark",
+  "priya_offstage",
+  "desk_center",
+  "center"
+ ],
+ "notes": "creator room: standing desk, monitor with code, 3 mugs, bookshelf, window, poster, rug",
+ "builder": "build_creator_desk"
+}

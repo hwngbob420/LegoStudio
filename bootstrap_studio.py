@@ -1,11 +1,11 @@
 """LegoStudio bootstrap: audit the machine, fetch reproducible assets, build generated textures.
 
     python bootstrap_studio.py                 # core: audit + HDRIs + atlases + textures + Remotion deps
-    python bootstrap_studio.py --with-ldraw    # + official LDraw parts library (~45 MB zip) into asset_vault/ldraw
-    python bootstrap_studio.py --with-rhubarb  # + Rhubarb Lip Sync 1.13 binary into tools/bin/rhubarb
+    python bootstrap_studio.py --with-ldraw    # + official LDraw parts library (~45 MB zip) into workspace/channel_library/baked/ldraw
+    python bootstrap_studio.py --with-rhubarb  # + Rhubarb Lip Sync 1.13 binary into workspace/channel_library/baked/bin/rhubarb
     python bootstrap_studio.py --audit         # only print the environment report
 
-Everything heavy lands in gitignored folders (asset_vault/, tools/bin/, node_modules/), so a fresh clone is
+Everything heavy lands in gitignored folders (workspace/channel_library/baked/, node_modules/), so a fresh clone is
 fully reproducible with this one command. Downloads come only from first-party sources: Poly Haven (CC0),
 library.ldraw.org, the official Rhubarb GitHub release, and npm.
 """
@@ -13,8 +13,11 @@ from __future__ import annotations
 import json, os, platform, shutil, subprocess, sys, urllib.request, zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-VAULT = os.path.join(ROOT, "asset_vault")
-CFG = os.path.join(ROOT, "studio_config.json")
+sys.path.insert(0, os.path.join(ROOT, "apps", "brick-engine"))
+import paths as P  # noqa: E402
+
+VAULT = P.BAKED
+CFG = P.STUDIO_CONFIG
 
 HDRIS = {  # Poly Haven CC0, 2k
     "studio_small_09_2k.hdr": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_09_2k.hdr",
@@ -112,24 +115,23 @@ def main():
     if "--with-rhubarb" in args:
         print("== Rhubarb Lip Sync ==")
         z = fetch(RHUBARB_ZIP, os.path.join(VAULT, "downloads", "rhubarb.zip"))
-        dst = os.path.join(ROOT, "tools", "bin", "rhubarb")
+        dst = os.path.join(P.TOOLS_BIN, "rhubarb")
         if not os.path.exists(os.path.join(dst, "rhubarb.exe")):
             with zipfile.ZipFile(z) as zf:
-                zf.extractall(os.path.join(ROOT, "tools", "bin"))
-            inner = [d for d in os.listdir(os.path.join(ROOT, "tools", "bin")) if d.lower().startswith("rhubarb-lip-sync")]
+                zf.extractall(P.TOOLS_BIN)
+            inner = [d for d in os.listdir(P.TOOLS_BIN) if d.lower().startswith("rhubarb-lip-sync")]
             if inner:
-                os.replace(os.path.join(ROOT, "tools", "bin", inner[0]), dst)
+                os.replace(os.path.join(P.TOOLS_BIN, inner[0]), dst)
         print("  ->", dst)
     print("== Generated textures ==")
-    subprocess.run([sys.executable, os.path.join(ROOT, "vault_config", "face_atlases", "generate_atlases.py")], check=True)
-    subprocess.run([sys.executable, os.path.join(ROOT, "engine", "texture_gen.py")], check=True)
-    rs = os.path.join(ROOT, "remotion_studio")
-    if os.path.exists(os.path.join(rs, "package.json")) and not os.path.isdir(os.path.join(rs, "node_modules")):
-        print("== Remotion dependencies (npm ci) ==")
+    subprocess.run([sys.executable, os.path.join(P.ENGINE, "face_atlas_gen.py")], check=True)
+    subprocess.run([sys.executable, os.path.join(P.ENGINE, "texture_gen.py")], check=True)
+    if not os.path.isdir(os.path.join(ROOT, "node_modules", "remotion")):
+        print("== Node dependencies (npm install, workspaces) ==")
         npm = "npm.cmd" if os.name == "nt" else "npm"
-        lock = os.path.exists(os.path.join(rs, "package-lock.json"))
-        subprocess.run([npm, "ci" if lock else "install", "--no-audit", "--no-fund"], cwd=rs, check=True)
-    print("\nReady. Produce an episode:\n  python engine/produce.py productions/showcase_v1")
+        lock = os.path.exists(os.path.join(ROOT, "package-lock.json"))
+        subprocess.run([npm, "ci" if lock else "install", "--no-audit", "--no-fund"], cwd=ROOT, check=True)
+    print("\nReady. Produce an episode:\n  python apps/brick-engine/produce.py workspace/projects/showcase_v1")
 
 
 if __name__ == "__main__":

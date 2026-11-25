@@ -1,42 +1,46 @@
-# Heavy / reproducible assets — rebuilt by `python bootstrap_studio.py`
-/asset_vault/*
-!/asset_vault/README.md
-/tools/bin/
-/tools/vendor/
+# Node
+node_modules/
+dist/
+out/
+.remotion/
+apps/video-engine/src/sample_props.json.bak
+
+# Secrets / machine-specific
+.env
+.env.*
+!.env.example
+studio_config.json
+
+# Generated / downloaded library assets (rebuilt by `python bootstrap_studio.py`)
+workspace/channel_library/baked/
+
+# Per-project intermediates (only output_final.mp4, contact_sheet.jpg, qa_frames/*.jpg are committed)
+workspace/projects/*/build/
+workspace/projects/*/frames/
+workspace/projects/*/chunks/
+workspace/projects/*/voice/
+workspace/projects/*/*.wav
+workspace/projects/*/*.webm
+workspace/projects/*/*.mov
+workspace/_qa/
+workspace/_cache/
+workspace/_trash/
 
 # Blender
 *.blend
 *.blend1
 *.blend@
 
-# Render intermediates
-productions/*/frames/
-productions/*/overlay/
-productions/*/build/
-productions/*/*.wav
-productions/*/*.webm
-productions/*/*.mov
-productions/*/*.png
-!productions/*/contact_sheet.jpg
-!productions/*/output_final.mp4
-!productions/*/qa_frames/*.jpg
-
-# Node / Remotion
-node_modules/
-remotion_studio/out/
-remotion_studio/public/props/
-.remotion/
-
 # Python
 __pycache__/
 *.pyc
 .venv/
+
+# Claude Code worktrees
+.claude/worktrees/
 
 # OS / editors
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
-# machine-specific (written by bootstrap)
-studio_config.json

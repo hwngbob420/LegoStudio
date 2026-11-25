@@ -1,42 +1,68 @@
-# LegoStudio — agent operating manual
+# Lego Studio Engine — Luật dự án cho Claude Code
 
-Brick-stylized explainer film studio. AI writes **tiny JSON**; local Blender/Remotion/FFmpeg do 100% of the heavy work.
+Ứng dụng chạy trên máy (Windows) biến truyện chữ thành video giải thích hài hước phong cách mô hình gạch 3D. Minifig có **gương mặt 2D**,
+bộ set gạch không logo, chữ và biểu đồ kiểu sách hướng dẫn lắp ráp.
+Đặc tả đầy đủ: `docs/MASTER_ADD.md`. Tiến độ: `docs/PROGRESS.md`. Mô hình tham chiếu: `C:\pixel-story-engine` (chỉ đọc, không sửa).
 
-## One-liners
+## Cách làm việc (bắt buộc)
+- Đầu mỗi phiên: đọc `docs/PROGRESS.md`. Chỉ đọc mục của `docs/MASTER_ADD.md` cần cho việc đang làm.
+- Làm từng giai đoạn. Hết giai đoạn thì chạy `/phase-gate`, cập nhật `docs/PROGRESS.md`, rồi `git commit`.
+  Người dùng đã cho phép tự làm liền các giai đoạn và tự sửa lỗi; chỉ hỏi khi có thay đổi ảnh hưởng lớn tới dự án.
+- Người dùng không rành kỹ thuật: báo cáo bằng tiếng Việt đơn giản, ghi rõ lệnh cần gõ và bấm gì.
+- Máy Windows: đường dẫn dùng `path.join` / `os.path.join`; script npm phải chạy được trên Windows.
+- Không tự cài skill, plugin, MCP hay gói npm/pip ngoài danh sách ở `docs/MASTER_ADD.md` mục 3 mà chưa hỏi.
+  Mọi gói `remotion` và `@remotion/*` ghim cùng MỘT phiên bản chính xác.
+- Mỗi mô-đun logic thuần (schema, timeref, các phần của director, validator, jsonStore) phải có test Vitest. `npm test` luôn phải chạy được.
+
+## Kiến trúc cố định (phương án C)
+- Monorepo npm workspaces:
+  - `packages/shared`: schema zod, hằng số, timeref.
+  - `packages/director`: bộ đạo diễn tất định, nướng `baked_timeline.json`.
+  - `apps/video-engine`: Remotion, gồm lớp chữ và máy chiếu Three.js xem trước.
+  - `apps/brick-engine`: Python + Blender 5.2, dựng tài nguyên và render bản cuối.
+  - `apps/server`: Express.
+  - `apps/studio-ui`: React + Vite.
+- **Một bộ đạo diễn, hai máy chiếu.** Chuyển động, camera, mặt, khẩu hình, lắp ráp chỉ được tính trong `packages/director`.
+  Blender và Three.js chỉ phát lại `baked_timeline.json`, không tự tính chuyển động.
+- Mọi JSON (`script.json`, `storyboard.json`, `timing.json`, `catalog.json`, `cast/*.json`, `sets/*.json`) phải được kiểm bằng schema trong
+  `packages/shared` trước khi ghi và sau khi đọc. Ghi file kiểu an toàn: ghi file tạm rồi đổi tên.
+- **AI chỉ sinh JSON.** Mọi việc dựng hình, chuyển động, trộn âm, xuất video do code cố định làm.
+- **Đường dẫn Python** chỉ khai báo ở `apps/brick-engine/paths.py`. Kho kênh ở `workspace/channel_library/`, tập ở `workspace/projects/<tập>/`.
+  Tài nguyên nướng hoặc tải về nằm trong `workspace/channel_library/baked/` (không commit, `python bootstrap_studio.py` dựng lại).
+- Khóa API chỉ để trong `.env` (không commit, không đọc).
+
+## Luật hình 3D
+- **Mặt là 2D.** Không bao giờ thêm hình khối miệng hay shape key. Đổi biểu cảm bằng ô atlas (`face_expr`, `face_mouth`).
+- **Nhịp stop-motion.** Thế giới chạy 12 hình/giây với khóa CONSTANT; giao video 60 hình/giây (giữ mỗi hình 5 lần). Không làm mượt bezier cho chuyển động thế giới.
+- **Blender 5.2:**
+  - engine là `BLENDER_EEVEE`;
+  - fcurve nằm trong `action.layers[].strips[].channelbag(slot)`;
+  - luôn chạy `-b --factory-startup`.
+- 1 núm = 0,08 m. Làm mờ hậu cảnh (tilt-shift) bằng khẩu độ thật f/1.0–1.8; luôn có rim light.
+- **Không che mặt.** Thẻ chữ hoặc biểu đồ ở 1/3 nào thì chủ thể đứng 1/3 đối diện. Dải phụ đề (y > 0,83) cấm mặt.
+  Cửa kiểm contact sheet báo trượt khi có va chạm ở bất kỳ khung mẫu nào.
+- **An toàn thương hiệu.** Núm trơn, không logo; không có chữ thương hiệu (lego, duplo) trong chữ hiển thị, poster, màn hình, áo in. Hook tự chặn.
+
+## Luật tất định
+- Trong `packages/director` và `apps/video-engine`: CẤM `Math.random()`, `Date.now()`, `new Date()`, `performance.now()`, `setTimeout/setInterval`.
+  Hook tự chặn. Dùng ngẫu nhiên có hạt giống (crc32 của ID) theo số khung.
+- Nướng cùng storyboard hai lần phải ra cùng sha256.
+
+## Chữ, âm thanh, biểu tượng
+- Cấm emoji trong UI, video và các gói. UI dùng Lucide.
+- UI tiếng Việt tự nhiên. Phụ đề video theo ngôn ngữ xuất, nằm trong `locales/`.
+- Nhạc nền tự hạ khi có lời đọc.
+
+## Kiểm tra thị giác
+- Mọi thay đổi ảnh hưởng tới hình (brick-engine, video-engine, director) phải qua subagent `visual-qa` trước khi báo xong.
+- Mỗi vòng QA chỉ mở MỘT ảnh tổng (`contact_sheet.jpg` hoặc `qa_frames/_strip.jpg`), trừ khi cần soi chi tiết.
+
+## Lệnh hay dùng
 ```bash
-python bootstrap_studio.py                       # fresh clone -> ready (HDRIs, atlases, textures, npm deps)
-python engine/produce.py productions/<ep>        # script.json + episode_shotlist.json -> output_final.mp4
-python engine/produce.py productions/<ep> --from audio   # re-cut overlay/audio without re-rendering 3D
-python tools/studio_doctor.py                    # health check
+python bootstrap_studio.py                                   # máy mới: tải HDRI, vẽ atlas + texture, npm install
+npm test                                                     # test
+npm run typecheck                                            # kiểm kiểu
+npm run doctor                                               # kiểm sức khỏe môi trường
+npm run produce -- workspace/projects/<tập>                  # làm trọn một tập ra output_final.mp4
+npm run produce -- workspace/projects/<tập> --from audio     # cắt lại chữ + tiếng, không render 3D lại
 ```
-Slash commands: `/produce <ep> <idea>`, `/cast-minifig <id> <brief>`, `/build-brick-set <Set> <brief>`, `/studio-doctor`.
-
-## The 5 sub-agents (`.claude/agents/`)
-| Agent | Writes | Reads (and nothing else) |
-|---|---|---|
-| 01-showrunner | `script.json`, `episode_shotlist.json` | `vault_config/catalog_manifest.json`, `build/timing.json`, showcase_v1 as reference |
-| 02-minifig-caster | `vault_config/minifig_recipes/*.json` | palette + an existing recipe |
-| 03-brick-architect | a builder in `engine/sets_library.py` | `brick_builder.py` API, `build_creator_desk` |
-| 04-stopmotion-dop | shotlist camera/zone edits | `contact_sheet.jpg` + `build/qa_report.json` (ONE image per iteration) |
-| 05-motion-editor | `remotion_studio/src/**` | `qa_frames/_strip.jpg` |
-
-## Token rules
-- Never read engine sources to *produce* an episode; the catalog plus the showcase shotlist is the whole contract.
-- Inspect at most ONE image per QA iteration (`contact_sheet.jpg` or `_strip.jpg`). Each costs about 1.5k tokens; never read individual frames in bulk.
-- Use time refs (`L2.w3`, `S1.t1`, `END`) so a re-timed TTS take doesn't require rewriting the shotlist.
-- Long renders run in the background (`produce.py` is resumable with `--from <stage>`).
-
-## Hard rules
-- **Faces are 2D.** Never add mouth geometry or shape keys. Change expressions via `face_expr` / `face_mouth` keys only.
-- **Zero-overlap UI.** A card or chart on one third means the subject goes on the opposite third. The contact gate (`contact_sheet_gen.py`)
-  fails the build on any face/UI intersection at sampled frames.
-- **Brand-safe pixels.** Plain studs, and no trademark words, logos or real brand marks in any rendered frame.
-- **Stop-motion cadence.** The world runs at 12 fps (on twos) with CONSTANT keys; delivery is 60 fps. Don't add bezier smoothing to world animation.
-- **Blender 5.2:** the engine id is `BLENDER_EEVEE`, Action fcurves live in `action.layers[].strips[].channelbag(slot)`, and you must run with
-  `-b --factory-startup` so user add-ons stay out of batch renders.
-- Heavy or reproducible files never enter git (`asset_vault/`, `frames/`, `*.blend`, `node_modules/`). Only `output_final.mp4`,
-  `contact_sheet.jpg` and `qa_frames/*.jpg` are committed per production.
-
-## Map
-`engine/` pipeline (see PROJECT_BLUEPRINT.md §3) · `vault_config/` catalog, recipes, palette, lighting, atlas spec ·
-`remotion_studio/` overlay compositions · `tools/` look-dev, set preview, doctor · `productions/<ep>/` episodes.

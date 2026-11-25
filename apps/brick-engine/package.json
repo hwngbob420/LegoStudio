@@ -1,0 +1,7 @@
+{
+  "name": "@lse/brick-engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Python + Blender 5.2 brick engine: procedural sets/minifigs, EEVEE renderer, TTS, audio, compositor. Run via root npm scripts.",
+  "scripts": {}
+}

@@ -1,0 +1,13 @@
+{
+ "id": "Set_BrickCafeStreet",
+ "name": "Phố quán cà phê",
+ "lighting": "cozy_golden_hour",
+ "anchors": [
+  "cafe_left",
+  "cafe_right",
+  "door",
+  "center"
+ ],
+ "notes": "street + sidewalk, cafe facade with glowing window, striped awning, tables, lamp, tree",
+ "builder": "build_cafe_street"
+}

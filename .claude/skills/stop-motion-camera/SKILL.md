@@ -1,6 +1,6 @@
 ---
 name: stop-motion-camera
-description: How LegoStudio cameras, timing and stop-motion acting work (12 fps world, presets, lens-shift thirds, DoF, shake, acting clips). Use when editing shots or engine/stage_compiler.py / acting_library.py.
+description: How LegoStudio cameras, timing and stop-motion acting work (12 fps world, presets, lens-shift thirds, DoF, shake, acting clips). Use when editing shots or apps/brick-engine/stage_compiler.py / acting_library.py (soon packages/director).
 ---
 # Stop-Motion Camera & Acting
 
@@ -8,7 +8,7 @@ description: How LegoStudio cameras, timing and stop-motion acting work (12 fps 
 (Blender 5 slotted actions: `acting_library.set_constant()` walks `action.layers[].strips[].channelbag(slot).fcurves`).
 FFmpeg holds each frame 5× for 60 fps delivery, an even cadence, while the Remotion graphics stay at a smooth 60 fps.
 
-**Acting.** `ACTIONS` in `engine/acting_library.py` are pose keys in degrees, layered additively over `idle_breathe`, with a ±0.35° per-frame "boil".
+**Acting.** `ACTIONS` in `apps/brick-engine/acting_library.py` are pose keys in degrees, layered additively over `idle_breathe`, with a ±0.35° per-frame "boil".
 Bone axes (all bones point +Z, roll 0):
 - arm X<0 raises it forward; arm.L Z>0 and arm.R Z<0 raise it sideways
 - leg X<0 swings it forward

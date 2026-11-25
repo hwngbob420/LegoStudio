@@ -1,0 +1,14 @@
+{
+ "id": "Set_BrickOfficeStage",
+ "name": "Sân khấu văn phòng",
+ "lighting": "moody_night_desk",
+ "anchors": [
+  "stage_center",
+  "stage_left",
+  "stage_right",
+  "floor_center",
+  "center"
+ ],
+ "notes": "keynote stage, giant chart screen, podium, spot cans",
+ "builder": "build_office_stage"
+}
