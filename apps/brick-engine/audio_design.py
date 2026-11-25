@@ -173,7 +173,7 @@ def main(prod):
     n = int(dur * SR)
     vo = np.zeros(n)
     for lid, L in timing["lines"].items():
-        a = _read_wav(L["wav"])
+        a = _read_wav(L["wav"] if os.path.isabs(L["wav"]) else os.path.join(prod, L["wav"]))
         p = int(L["wav_start"] * SR)
         seg = a[: max(0, n - p)]
         vo[p:p + len(seg)] += seg * 1.15

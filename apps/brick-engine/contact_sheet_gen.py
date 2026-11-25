@@ -85,14 +85,26 @@ def main(prod):
                     if rect and overlap(bb, rect) > 0.0004:
                         issues.append({"shot": s["id"], "actor": aid, "type": "cue_over_face", "cue": c["type"],
                                        "t": smp["t"], "head": [round(v, 3) for v in bb], "rect": rect})
+    # parity: Blender-measured head boxes must equal the director's predicted ones (same baked timeline, same math)
+    parity = 0.0
+    for s in shots:
+        for smp in s.get("samples", []):
+            for aid, bb in smp["heads"].items():
+                p = smp.get("predicted", {}).get(aid)
+                if p is not None:
+                    parity = max(parity, max(abs(a - b) for a, b in zip(bb, p)))
+    if parity > 0.002:
+        issues.append({"type": "director_parity", "max_diff": round(parity, 6),
+                       "hint": "Blender and packages/director disagree: rig/camera math or manifest is stale (re-run export_manifest.py)"})
     hard = [x for x in issues if x.get("severity") != "warn"]
     d.text((pad, 10), f"CONTACT SHEET - {os.path.basename(prod)}   shots:{len(shots)}   "
                       f"{'ALL CLEAR' if not hard else str(len(hard)) + ' COLLISION(S)'}", font=f_big,
            fill=(255, 255, 255) if not hard else (255, 90, 90))
     out = os.path.join(prod, "contact_sheet.jpg")
     sheet.save(out, quality=90)
-    json.dump({"pass": not hard, "issues": issues}, open(os.path.join(prod, "build", "qa_report.json"), "w"), indent=1)
-    print(f"contact sheet -> {out}  pass={not hard}  issues={len(issues)}")
+    json.dump({"pass": not hard, "issues": issues, "director_parity": round(parity, 6)},
+              open(os.path.join(prod, "build", "qa_report.json"), "w"), indent=1)
+    print(f"contact sheet -> {out}  pass={not hard}  issues={len(issues)}  director_parity={parity:.6f}")
     return 0 if not hard else 1
 
 

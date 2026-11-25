@@ -1,6 +1,14 @@
-// Bộ đạo diễn tất định của Lego Studio Engine.
-// Gđ 0: mới có khung. Gđ 1A chuyển acting, camera, mặt, lip-sync, lắp ráp từ Python sang đây
-// và sinh baked_timeline.json cho cả hai máy chiếu (Three.js xem trước, Blender bản cuối).
+// Bộ đạo diễn tất định của Lego Studio Engine: storyboard + timing + manifest -> baked_timeline.json.
+// Blender (bản cuối) và Three.js (xem trước) chỉ phát lại kết quả này.
 export { frameOf, Timeline } from "@lse/shared";
+export { bake, type BakeInput } from "./bake";
+export { poseAt, bakeActor, POSED_BONES } from "./acting";
+export { ACTION_DEFS } from "./actions";
+export { planCamera, project, cameraRight, cameraMatrix } from "./camera";
+export { bakeFace, mouthTrack, quantise, SAPI_TO_SHAPE, type FaceSpec } from "./faces";
+export { RigModel } from "./rig";
+export { Rng, crc32 } from "./rng";
+export * as M3 from "./math3";
 
-export const DIRECTOR_VERSION = "0.0.0";
+export const DIRECTOR_VERSION = "1.0.0";
+export { overlayProps, validateLayout, type OverlayProps, type Issue } from "./overlay";

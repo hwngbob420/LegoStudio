@@ -138,7 +138,7 @@ def main(prod):
         t += float(L.get("gap_before", 0.3))
         start = t - s0                      # place the wav so speech begins at t
         timing["lines"][L["id"]] = {
-            "speaker": L["speaker"], "text": L["text"], "wav": wav, "wav_start": round(start, 3),
+            "speaker": L["speaker"], "text": L["text"], "wav": os.path.relpath(wav, prod).replace(os.sep, "/"), "wav_start": round(start, 3),
             "start": round(t, 3), "end": round(start + s1, 3),
             "visemes": [[round(start + a / 1000, 3), int(vv), round(dd / 1000, 3)] for a, vv, dd in d["visemes"]],
             "words": [[round(start + a / 1000, 3), w] for a, cp, cc, w in d["words"]],

@@ -2,7 +2,7 @@
 
     python apps/brick-engine/produce.py workspace/projects/<episode> [--fast] [--force] [--keep-frames] [--from STAGE]
 
-Stages: tts -> lipsync -> props -> contact (QA gate) -> render -> audio -> overlay -> composite -> qa -> clean
+Stages: tts -> bake (packages/director) -> props -> contact (QA gate) -> render -> audio -> overlay -> composite -> qa -> clean
 The contact gate stops the run when a face collides with UI (override with --force).
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ import json, os, shutil, subprocess, sys, time
 ENGINE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ENGINE)
 import paths as P
-STAGES = ["tts", "lipsync", "props", "contact", "render", "audio", "overlay", "composite", "qa", "clean"]
+STAGES = ["tts", "bake", "props", "contact", "render", "audio", "overlay", "composite", "qa", "clean"]
 
 
 def py(script, *args):
@@ -35,8 +35,9 @@ def main():
         print(f"== {st} ==")
         if st == "tts":
             py("tts_sapi.py", prod)
-        elif st == "lipsync":
-            py("lipsync_2d.py", prod)
+        elif st == "bake":
+            npx = "npx.cmd" if os.name == "nt" else "npx"
+            subprocess.run([npx, "tsx", os.path.join(P.REPO, "packages", "director", "src", "cli.ts"), prod], cwd=P.REPO, check=True)
         elif st == "props":
             py("remotion_props.py", prod)
         elif st == "contact":

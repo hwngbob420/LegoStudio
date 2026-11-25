@@ -148,6 +148,10 @@ class SetBuilder:
         self.objects: list = []
         self.anchors: dict = {}
 
+    def _uid(self):
+        """Stable, glTF-safe object name: <set>_p0001 (Three.js and Blender find the same brick by it)."""
+        return f"{self.name}_p{len(self.objects) + 1:04d}"
+
     def next_step(self, n=1):
         self.step += n
         return self.step
@@ -156,7 +160,8 @@ class SetBuilder:
               tilt=None, name=None, step=None):
         """rot: 0/90/180/270 around Z (about the part's min corner footprint)."""
         me = part_mesh(kind, w, l, plates, studs)
-        ob = bpy.data.objects.new(name or f"{kind}_{w}x{l}", me)
+        ob = bpy.data.objects.new(self._uid(), me)
+        ob["label"] = name or f"{kind}_{w}x{l}"
         ob.material_slots[0].link = "OBJECT"
         ob.material_slots[0].material = material or LD.abs_material(color, mat_kind)
         # orientation, then shift so the transformed bounding box min corner lands exactly on (x, y, z)
@@ -179,7 +184,8 @@ class SetBuilder:
     def place_mesh(self, me, matrix_local, color, mat_kind="abs", material=None, name=None, step=None):
         if not me.materials:
             me.materials.append(None)
-        ob = bpy.data.objects.new(name or me.name, me)
+        ob = bpy.data.objects.new(self._uid(), me)
+        ob["label"] = name or me.name
         ob.material_slots[0].link = "OBJECT"
         ob.material_slots[0].material = material or LD.abs_material(color, mat_kind)
         ob.matrix_world = Matrix.Translation(self.origin) @ matrix_local
