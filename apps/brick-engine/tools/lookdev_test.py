@@ -20,7 +20,8 @@ sb.place("baseplate", 20, 12, 0, 0, 0, "green_bright")
 sb.place("brick", 2, 4, 2, 9, 0, "red")
 sb.place("brick", 1, 4, 14, 9, 0, "blue")
 sb.place("round", 1, 1, 17, 3, 0, "white")
-ids = sorted(f[:-5] for f in os.listdir(MB.RECIPES) if f.endswith(".json"))
+import paths as P
+ids = sorted(P.cast_recipe_files())
 for i, fid in enumerate(ids):
     rig = MB.build_minifig(fid)
     rig.location = (-0.5 + i * 0.25, 0, BB.PLATE * 0.5)

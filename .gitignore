@@ -44,3 +44,6 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Server job history (machine-local)
+workspace/_jobs/

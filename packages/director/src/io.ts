@@ -18,12 +18,28 @@ export function writeJsonAtomic(p: string, data: unknown, pretty = false) {
   renameSync(tmp, p);
 }
 
+/** Kho 2 tầng: diễn viên của kho kênh trước, rồi diễn viên riêng của từng tập (assets/cast). Trùng ID thì kho kênh thắng. */
+export function castRecipeFiles(lib = LIBRARY): Record<string, string> {
+  const out: Record<string, string> = {};
+  const dirs = [path.join(lib, "cast")];
+  const projects = path.join(path.dirname(lib), "projects");
+  if (existsSync(projects)) for (const ep of readdirSync(projects).sort()) {
+    const d = path.join(projects, ep, "assets", "cast");
+    if (existsSync(d)) dirs.push(d);
+  }
+  for (const d of dirs) for (const f of readdirSync(d).filter((x) => x.endsWith(".json")).sort()) {
+    const id = f.slice(0, -5);
+    if (!(id in out)) out[id] = path.join(d, f);
+  }
+  return out;
+}
+
 export function loadLibrary(lib = LIBRARY) {
   const manifest = readJson(path.join(lib, "manifest.json")) as Manifest;
   const faceSpec = readJson(path.join(lib, "faces", "face_atlas_spec.json")) as FaceSpec;
   const defaultExpr: Record<string, string> = {};
-  for (const f of readdirSync(path.join(lib, "cast")).filter((x) => x.endsWith(".json"))) {
-    const r = parseOrThrow(CastRecipe, readJson(path.join(lib, "cast", f)), f);
+  for (const file of Object.values(castRecipeFiles(lib))) {
+    const r = parseOrThrow(CastRecipe, readJson(file), path.basename(file));
     defaultExpr[r.id] = r.default_expression;
   }
   return { manifest, faceSpec, defaultExpr };

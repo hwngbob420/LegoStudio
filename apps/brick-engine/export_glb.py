@@ -40,10 +40,7 @@ def export(objs, path):
 def main():
     os.makedirs(P.GLB, exist_ok=True)
     report = {}
-    for fn in sorted(os.listdir(P.CAST)):
-        if not fn.endswith(".json"):
-            continue
-        cid = fn[:-5]
+    for cid in sorted(P.cast_recipe_files()):
         wipe()
         rig = MB.build_minifig(cid)
         bpy.context.view_layer.update()

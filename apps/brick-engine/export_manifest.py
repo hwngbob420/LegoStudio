@@ -37,10 +37,7 @@ def main():
         objs = [{"name": o.name, "step": int(o.get("step", 0)), "loc": R(o.matrix_world.translation, 6)} for o in sb.objects]
         out["sets"][sid] = {"anchors": {k: {"location": R(v["location"], 6), "facing_deg": v["facing_deg"]} for k, v in sb.anchors.items()},
                             "objects": objs}
-    for fn in sorted(os.listdir(P.CAST)):
-        if not fn.endswith(".json"):
-            continue
-        cid = fn[:-5]
+    for cid in sorted(P.cast_recipe_files()):
         rig = MB.build_minifig(cid)
         bpy.context.view_layer.update()
         boxes = []

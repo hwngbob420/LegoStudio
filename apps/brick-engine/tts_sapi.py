@@ -124,7 +124,7 @@ def main(prod):
     t = float(script.get("start_offset", 0.0))
     timing = {"lines": {}, "fps_world": script.get("fps_world", 12)}
     for L in script["lines"]:
-        r = json.load(open(os.path.join(RECIPES, f"{L['speaker']}.json"), encoding="utf-8"))
+        r = json.load(open(P.cast_recipe_files()[L["speaker"]], encoding="utf-8"))
         v = r["voice"]
         raw = os.path.join(adir, f"{L['id']}_raw.wav")
         js = os.path.join(adir, f"{L['id']}.json")

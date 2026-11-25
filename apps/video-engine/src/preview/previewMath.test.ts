@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { bake, RigModel } from "@lse/director";
-import { loadLibrary } from "../../../../packages/director/src/io";
+import { loadLibrary } from "@lse/director/io";
 import { Storyboard, Timing, parseOrThrow } from "@lse/shared";
 import { headBoxThree, worldFrame } from "./previewMath";
 

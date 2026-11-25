@@ -8,7 +8,7 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 | 0. Dựng khung monorepo | Xong | 2026-11-25 | Monorepo (shared, director, video-engine, brick-engine), schema zod + timeref TS, hook + test hook, /phase-gate, visual-qa, start.bat, CLAUDE.md tiếng Việt. 14 test qua, typecheck sạch. Contact sheet showcase khớp bản cũ tuyệt đối (lệch 0,00000). |
 | 1A. Bộ đạo diễn TS + Blender phát timeline | Xong | 2026-11-25 | `packages/director` nướng `baked_timeline.json` (động tác, mặt, khẩu hình, camera, lắp ráp, FX, SFX, hộp đầu dự đoán). Blender chỉ phát lại. Đối chiếu Blender với bộ đạo diễn lệch 0,000008. Nướng 2 lần cùng sha256. visual-qa PASS (SSIM 0,92 so với v1). |
 | 1B. Xuất glTF + máy chiếu Three.js | Xong | 2026-11-25 | `export_glb.py` (5 diễn viên, 3 bộ set, cốc). Composition `Preview` (`@remotion/three`): mặt 2D theo ô, màn hình/poster, FX, lắp ráp, camera khớp Blender (test lệch < 0,5%). Render không màn hình ~5 khung/s ở 960x540 (WebGL ANGLE). |
-| 2A. Server + kho 2 tầng | Chưa làm | | |
+| 2A. Server + kho 2 tầng | Xong | 2026-11-25 | Express (cổng 8788, chỉ 127.0.0.1): API tập/kho/xem trước/việc nền, `jsonStore` atomic, hàng đợi lần lượt có tiến độ và lưu lịch sử, kho 2 tầng cho minifig + Lưu sang kho kênh. 41 test. Đã chạy thật việc "Kiểm khung" qua API. |
 | 2B. Studio lõi | Chưa làm | | |
 | 2C. Xưởng 3D | Chưa làm | | |
 | 3A. AI kịch bản + bảng tài nguyên | Chưa làm | | |
@@ -25,3 +25,4 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 - Gđ 1A: nướng bằng `npx tsx packages/director/src/cli.ts workspace/projects/<tập>` (produce.py gọi ở bước `bake`). `workspace/channel_library/manifest.json` sinh bằng `blender -b --factory-startup -P apps/brick-engine/export_manifest.py`, phải chạy lại khi sửa builder (cửa contact báo `director_parity` nếu lệch).
 - Gđ 1B: `.glb` sinh bằng `blender -b --factory-startup -P apps/brick-engine/export_glb.py` vào `baked/glb/`. Xem trước: `npx tsx apps/video-engine/scripts/previewProps.ts <tập>` rồi `npx remotion still src/index.ts Preview out.png --frame=N --props=../../workspace/projects/<tập>/build/preview_props.json` (trong apps/video-engine).
 - Còn nợ nhỏ (từ visual-qa, có từ v1): gạch biểu đồ x3 bị cắt mép thẻ khi sụp; tóc Priya có bậc khi quay; hạt nhiễu ở hông. `output_final.mp4` sẽ render lại ở cuối (sau khi sửa tư thế uống cà phê và tránh chớp mắt đúng khung QA).
+- Gđ 2A: `npx tsx apps/server/src/server.ts` (hoặc `npm run dev:server`). Việc nền: tts, contact, render, publish, recut, library. Diễn viên riêng của tập ở `workspace/projects/<tập>/assets/cast/`, Python + director đọc 2 tầng (`paths.cast_recipe_files`, `castRecipeFiles`).

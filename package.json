@@ -14,7 +14,9 @@
     "test": "vitest run",
     "bootstrap": "python bootstrap_studio.py",
     "doctor": "python apps/brick-engine/tools/studio_doctor.py",
-    "produce": "python apps/brick-engine/produce.py"
+    "produce": "python apps/brick-engine/produce.py",
+    "dev:server": "npm run start -w @lse/server",
+    "dev:ui": "npm run dev -w @lse/studio-ui"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

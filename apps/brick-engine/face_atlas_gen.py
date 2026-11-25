@@ -340,11 +340,10 @@ def main():
     build_atlas(SPEC["eyes"], EYE_FUNCS, xf=(0.5, 0.40, 1.3)).save(os.path.join(OUT, "atlas_eyes.png"))
     build_atlas(SPEC["mouths"], MOUTH_FUNCS, needs_img=True, xf=(0.5, 0.70, 2.0)).save(os.path.join(OUT, "atlas_mouths.png"))
     # detail layers: one PNG per combination used by recipes
-    recipes_dir = P.CAST
-    for fn in sorted(os.listdir(recipes_dir)):
+    for fn in sorted(P.cast_recipe_files().values()):
         if not fn.endswith(".json"):
             continue
-        r = json.load(open(os.path.join(recipes_dir, fn), encoding="utf-8"))
+        r = json.load(open(fn, encoding="utf-8"))
         img = Image.new("RGBA", (C, C), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
         set_xf(0.5, 0.40, 1.3)

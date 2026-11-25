@@ -5,6 +5,14 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "scripts": { "typecheck": "tsc -p tsconfig.json" },
-  "dependencies": { "@lse/shared": "*" }
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@lse/shared": "*"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./io": "./src/io.ts"
+  }
 }

@@ -1,6 +1,6 @@
 """One-command production: script.json + storyboard.json -> output_final.mp4
 
-    python apps/brick-engine/produce.py workspace/projects/<episode> [--fast] [--force] [--keep-frames] [--from STAGE]
+    python apps/brick-engine/produce.py workspace/projects/<episode> [--fast] [--force] [--keep-frames] [--from STAGE] [--to STAGE]
 
 Stages: tts -> bake (packages/director) -> props -> contact (QA gate) -> render -> audio -> overlay -> composite -> qa -> clean
 The contact gate stops the run when a face collides with UI (override with --force).
@@ -23,6 +23,7 @@ def main():
     prod = os.path.abspath(a[0])
     fast, force, keep = "--fast" in a, "--force" in a, "--keep-frames" in a
     start = STAGES.index(a[a.index("--from") + 1]) if "--from" in a else 0
+    stop = STAGES.index(a[a.index("--to") + 1]) + 1 if "--to" in a else len(STAGES)
     import gpu_renderer
     log = {"episode": os.path.basename(prod), "stages": {}}
     lp = os.path.join(prod, "build", "production_log.json")
@@ -30,7 +31,7 @@ def main():
         log = json.load(open(lp))
     os.makedirs(os.path.join(prod, "build"), exist_ok=True)
     t_all = time.time()
-    for st in STAGES[start:]:
+    for st in STAGES[start:stop]:
         t = time.time()
         print(f"== {st} ==")
         if st == "tts":

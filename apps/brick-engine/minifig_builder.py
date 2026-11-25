@@ -366,7 +366,7 @@ def mesh_mug():
 
 # ------------------------------------------------------------------ assembly
 def load_recipe(fig_id):
-    return json.load(open(os.path.join(RECIPES, f"{fig_id}.json"), encoding="utf-8"))
+    return json.load(open(P.cast_recipe_files()[fig_id], encoding="utf-8"))
 
 
 def _link(ob, coll):

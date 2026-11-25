@@ -192,6 +192,27 @@ export const Catalog = z.looseObject({
 });
 export type Catalog = z.infer<typeof Catalog>;
 
+// ---------------------------------------------------------------- project.json
+export const StageState = z.object({
+  status: z.enum(["idle", "queued", "running", "done", "error"]).default("idle"),
+  at: z.string().optional(),
+  message: z.string().optional(),
+});
+export const Project = z.object({
+  id: Id,
+  title: z.string().min(1),
+  created: z.string(),
+  language: z.enum(["vi", "en"]).default("vi"),
+  settings: z.object({
+    quality: z.enum(["draft", "final"]).default("final"),
+    chunk_sec: z.number().min(10).max(600).default(120),
+  }).default({ quality: "final", chunk_sec: 120 }),
+  stages: z.record(z.string(), StageState).default({}),
+  chunks: z.array(z.object({ index: z.number().int(), f0: z.number().int(), f1: z.number().int(),
+    status: z.enum(["pending", "done", "error"]), file: z.string().optional() })).default([]),
+});
+export type Project = z.infer<typeof Project>;
+
 /** Đọc và kiểm; ném lỗi tiếng Việt dễ đọc. */
 export function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown, label: string): T {
   const r = schema.safeParse(data);

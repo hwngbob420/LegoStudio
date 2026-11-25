@@ -164,10 +164,9 @@ def menu_board(w=800, h=500):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    rdir = P.CAST
-    for fn in sorted(os.listdir(rdir)):
+    for fn in sorted(P.cast_recipe_files().values()):
         if fn.endswith(".json"):
-            r = json.load(open(os.path.join(rdir, fn), encoding="utf-8"))
+            r = json.load(open(fn, encoding="utf-8"))
             t = r["torso"]
             torso_print(t["print"], t["color"], t["print_color"]).save(os.path.join(OUT, f"torso_{r['id']}.png"))
     screen_code().save(os.path.join(OUT, "screen_code.png"))

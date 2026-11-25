@@ -37,7 +37,7 @@ def build(prod):
     colors = ep.get("subtitles", {}).get("speaker_colors", {})
     names = {}
     for c in ep["cast"]:
-        rp = os.path.join(P.CAST, f"{c['id']}.json")
+        rp = P.cast_recipe_files()[c["id"]]
         names[c["id"]] = json.load(open(rp, encoding="utf-8"))["name"]
     subs = []
     for lid, L in timing["lines"].items():
