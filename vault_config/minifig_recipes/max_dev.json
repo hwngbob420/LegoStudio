@@ -1,0 +1,17 @@
+{
+  "id": "max_dev",
+  "name": "Max",
+  "vibe": "Tired indie developer. Deadpan, three coffees deep, loves the bug he can't find.",
+  "age": "late 20s",
+  "skin": "skin_light",
+  "hair": {"style": "messy", "color": "hair_brown"},
+  "torso": {"color": "teal_dark", "print": "hoodie", "print_color": "white"},
+  "arms": "teal_dark",
+  "hands": "skin_light",
+  "hips": "denim_blue",
+  "legs": "denim_blue",
+  "accessories": ["glasses_round"],
+  "face_details": ["freckles"],
+  "default_expression": "deadpan_tired",
+  "voice": {"sapi": "Microsoft David Desktop", "rate": -1, "pitch_semitones": -1.0}
+}

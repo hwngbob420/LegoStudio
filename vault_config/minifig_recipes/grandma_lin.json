@@ -1,0 +1,17 @@
+{
+  "id": "grandma_lin",
+  "name": "Grandma Lin",
+  "vibe": "Retired engineer, 78, faster with spreadsheets than you. Unimpressed by everything.",
+  "age": "70s",
+  "skin": "skin_light_warm",
+  "hair": {"style": "bun", "color": "hair_grey"},
+  "torso": {"color": "lavender", "print": "cardigan", "print_color": "white"},
+  "arms": "lavender",
+  "hands": "skin_light_warm",
+  "hips": "slate_blue",
+  "legs": "slate_blue",
+  "accessories": ["glasses_square"],
+  "face_details": ["wrinkles", "blush"],
+  "default_expression": "deadpan_tired",
+  "voice": {"sapi": "Microsoft Zira Desktop", "rate": -2, "pitch_semitones": -2.0}
+}

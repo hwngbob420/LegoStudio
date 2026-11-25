@@ -1,0 +1,10 @@
+{
+  "name": "Moody Night Desk",
+  "hdri": "studio_small_09_2k.hdr", "hdri_strength": 0.12, "hdri_rotation_deg": 0, "world_tint": "#6F7FB0",
+  "world_color": "#1C2236",
+  "lights": [
+    {"name": "Monitor", "type": "AREA", "offset": [0.0, 0.3, 0.45], "energy": 60, "color": "#7FD0FF", "size": 0.4, "aim_offset": [0, -0.4, 0.3]},
+    {"name": "Lamp", "type": "POINT", "offset": [-0.6, 0.1, 0.7], "energy": 40, "color": "#FFB866", "size": 0.1},
+    {"name": "Rim", "type": "AREA", "offset": [1.0, 1.5, 1.1], "energy": 180, "color": "#9FA8FF", "size": 0.5, "aim_offset": [0, 0, 0.25]}
+  ]
+}

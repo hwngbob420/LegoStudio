@@ -1,0 +1,17 @@
+{
+  "id": "kofi_barista",
+  "name": "Kofi",
+  "vibe": "Warm, booming barista and philosopher of foam. Easily delighted.",
+  "age": "40s",
+  "skin": "skin_deep_brown",
+  "hair": {"style": "short_crop", "color": "hair_black"},
+  "torso": {"color": "brick_red", "print": "apron", "print_color": "tan"},
+  "arms": "brick_red",
+  "hands": "skin_deep_brown",
+  "hips": "tan",
+  "legs": "brown_dark",
+  "accessories": [],
+  "face_details": ["beard"],
+  "default_expression": "happy_closed",
+  "voice": {"sapi": "Microsoft David Desktop", "rate": -2, "pitch_semitones": -3.0}
+}

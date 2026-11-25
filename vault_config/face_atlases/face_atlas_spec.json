@@ -1,0 +1,11 @@
+{
+  "cell_px": 512,
+  "grid": [4, 4],
+  "eyes": ["innocent_dot", "deadpan_tired", "shocked_wide", "smug_smirk", "sweating_nervous", "angry_brow", "blink", "happy_closed", "side_glance"],
+  "mouths": ["X", "A", "B", "C", "D", "E", "F", "G", "H", "smirk", "frown", "wavy", "shock_O", "grin"],
+  "expression_rest_mouth": {
+    "innocent_dot": "X", "deadpan_tired": "A", "shocked_wide": "shock_O", "smug_smirk": "smirk",
+    "sweating_nervous": "wavy", "angry_brow": "frown", "blink": "X", "happy_closed": "grin", "side_glance": "A"
+  },
+  "head_uv": {"arc_degrees": 150, "note": "u 0..1 spans the front 150 deg of the head cylinder; v 0..1 spans head height"}
+}

@@ -1,0 +1,45 @@
+{
+  "_purpose": "The ONLY catalog the showrunner reads. Every id here is valid in episode_shotlist.json.",
+  "version": 1,
+  "world": {"fps_world": 12, "fps_out": 60, "resolution": [1920, 1080], "units": "1 stud = 0.08 m (10x real)"},
+  "cast": {
+    "max_dev":        {"name": "Max", "vibe": "tired indie dev, deadpan", "default_expr": "deadpan_tired", "voice": "David -1st", "props_ok": ["mug"]},
+    "priya_lead":     {"name": "Priya", "vibe": "confident team lead, smug", "default_expr": "smug_smirk", "voice": "Zira +0.5st", "props_ok": ["mug"]},
+    "kofi_barista":   {"name": "Kofi", "vibe": "warm booming barista, delighted", "default_expr": "happy_closed", "voice": "David -3st", "props_ok": ["mug"]},
+    "grandma_lin":    {"name": "Grandma Lin", "vibe": "retired engineer, unimpressed", "default_expr": "deadpan_tired", "voice": "Zira -2st", "props_ok": ["mug"]},
+    "classic_yellow": {"name": "Bricky", "vibe": "classic yellow everyfig, innocent narrator", "default_expr": "innocent_dot", "voice": "David +2st", "props_ok": ["mug"]}
+  },
+  "sets": {
+    "Set_BrickCreatorDesk": {"lighting": "studio_bright", "anchors": ["max_mark", "priya_mark", "priya_offstage", "desk_center", "center"],
+                             "notes": "creator room: standing desk, monitor with code, 3 mugs, bookshelf, window, poster, rug"},
+    "Set_BrickCafeStreet":  {"lighting": "cozy_golden_hour", "anchors": ["cafe_left", "cafe_right", "door", "center"],
+                             "notes": "street + sidewalk, cafe facade with glowing window, striped awning, tables, lamp, tree"},
+    "Set_BrickOfficeStage": {"lighting": "moody_night_desk", "anchors": ["stage_center", "stage_left", "stage_right", "floor_center", "center"],
+                             "notes": "keynote stage, giant chart screen, podium, spot cans"}
+  },
+  "expressions": ["innocent_dot", "deadpan_tired", "shocked_wide", "smug_smirk", "sweating_nervous", "angry_brow", "happy_closed", "side_glance", "blink"],
+  "mouths_auto": "lip-sync is automatic from audio; non-speaking frames use the expression's rest mouth",
+  "actions": {
+    "idle_breathe": "always-on base layer", "talk_gestures": "loop, right-hand gestures (mirror:true = left)",
+    "talk_both_hands": "loop", "shrug_confused": "one-shot", "point_explain": "one-shot, right arm points to figure's right (screen-left when facing camera)",
+    "slump_tired": "one-shot hold", "shock_jump": "one-shot with hop", "walk_stopmotion": "loop", "sip_coffee": "one-shot (needs mug prop)",
+    "nod_yes": "loop", "shake_no": "loop", "hands_on_hips": "one-shot hold", "facepalm": "one-shot", "wave": "one-shot", "lean_in": "one-shot hold"
+  },
+  "camera_presets": {
+    "assembly_high": "high wide for the brick-assembly opener", "wide_establish": "eye-level wide",
+    "mcu": "medium close-up of subjects[0], honours subject_zone via lens shift", "ecu": "extreme close-up of the face",
+    "two_shot": "frames subjects[0..1]"
+  },
+  "camera_moves": ["none", "push_in", "pull_out", "drift_right", "crane_down"],
+  "fx": ["sweat_drop", "shock_lines", "question", "exclaim", "sparkle", "anger", "steam", "motion_arcs"],
+  "ui_cues": {
+    "step_badge": {"fields": ["step", "title", "check?"], "zones": ["top_left", "top_right", "top_center"]},
+    "part_callout": {"fields": ["count", "label", "icon", "note"], "zones": ["left_third", "right_third"]},
+    "brick_chart": {"fields": ["title", "bars[{label,value,color,t,collapse_t?}]"], "zones": ["left_third", "right_third"]},
+    "arrow": {"fields": ["from[x,y]", "to[x,y]"], "note": "normalised screen coords, must not end on a face"}
+  },
+  "ui_zone_rule": "A shot with a card/chart sets subject_zone to the OPPOSITE third of its ui_safe_zone. Subtitles own the bottom band (y>0.83).",
+  "sfx": ["clack", "pop", "boing", "whoosh", "ding", "tumble"],
+  "time_refs": "seconds, or 'L2.start', 'L2.end', 'L3.w2' (2nd word), 'S1.t1', 'END', with +/- offsets",
+  "lighting_presets": ["studio_bright", "cozy_golden_hour", "moody_night_desk"]
+}

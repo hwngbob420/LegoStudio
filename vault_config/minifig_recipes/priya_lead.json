@@ -1,0 +1,17 @@
+{
+  "id": "priya_lead",
+  "name": "Priya",
+  "vibe": "Sharp, confident team lead. Smug when she's right (always).",
+  "age": "early 30s",
+  "skin": "skin_medium_brown",
+  "hair": {"style": "ponytail", "color": "hair_black"},
+  "torso": {"color": "mustard", "print": "blazer", "print_color": "white"},
+  "arms": "mustard",
+  "hands": "skin_medium_brown",
+  "hips": "charcoal",
+  "legs": "charcoal",
+  "accessories": [],
+  "face_details": ["lashes", "blush"],
+  "default_expression": "smug_smirk",
+  "voice": {"sapi": "Microsoft Zira Desktop", "rate": 0, "pitch_semitones": 0.5}
+}

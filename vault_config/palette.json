@@ -1,0 +1,13 @@
+{
+  "_note": "sRGB hex. Brick colours loosely follow common ABS brick tones. Skin tones cover classic yellow plus a realistic range.",
+  "white": "#F4F4F0", "black": "#1B1D21", "red": "#C91A09", "brick_red": "#A83226", "blue": "#0A5BC0", "blue_dark": "#143A6B",
+  "yellow_classic": "#F7C82F", "yellow": "#F2CD37", "orange": "#FE8A18", "green": "#237841", "green_bright": "#4B9F4A",
+  "lime": "#BBE90B", "teal_dark": "#0F6C77", "tan": "#E4CD9E", "tan_dark": "#958A73", "brown_dark": "#5C3A23",
+  "brown": "#7B4A2A", "reddish_brown": "#82422A", "light_gray": "#A0A5A9", "dark_gray": "#5B6066", "charcoal": "#3A3D42",
+  "mustard": "#D9A520", "lavender": "#B7A6D6", "slate_blue": "#4F5D80", "denim_blue": "#3C5F8C", "sand_blue": "#7A90A8",
+  "sand_green": "#A0BCAC", "pink": "#FC97AC", "coral": "#FF6D5A", "cream": "#F3E7C9", "wood": "#A9764A",
+  "trans_clear": "#EEF6FF", "trans_blue": "#9AD3FF", "screen_glow": "#64D2FF",
+  "skin_light": "#F2C9A4", "skin_light_warm": "#EFC39B", "skin_medium": "#D49A6A", "skin_medium_brown": "#B47B50",
+  "skin_deep_brown": "#6E4630", "hair_brown": "#5A3A24", "hair_black": "#1E1A1A", "hair_grey": "#B9B8B5", "hair_blonde": "#E2B85C",
+  "hair_red": "#A8441E"
+}

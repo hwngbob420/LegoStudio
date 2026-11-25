@@ -1,0 +1,17 @@
+{
+  "id": "classic_yellow",
+  "name": "Bricky",
+  "vibe": "The classic yellow everyfig. Narrator, extra, crowd filler. Eternally innocent.",
+  "age": "ageless",
+  "skin": "yellow_classic",
+  "hair": {"style": "cap", "color": "red"},
+  "torso": {"color": "blue", "print": "tee_star", "print_color": "white"},
+  "arms": "blue",
+  "hands": "yellow_classic",
+  "hips": "blue_dark",
+  "legs": "blue_dark",
+  "accessories": [],
+  "face_details": [],
+  "default_expression": "innocent_dot",
+  "voice": {"sapi": "Microsoft David Desktop", "rate": 1, "pitch_semitones": 2.0}
+}
