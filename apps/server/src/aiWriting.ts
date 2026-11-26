@@ -1,192 +1,267 @@
-// Phương án B — phòng biên kịch nhiều bước (chạy được bằng Gemini hoặc Hộp thư Claude):
-//   1. lập dàn ý (beat sheet) từ outline/truyện  -> 2. phê bình đạt/không đạt + sửa (tối đa 2 vòng)
-//   3. NGƯỜI DÙNG duyệt/sửa dàn ý                 -> 4. viết thoại theo dàn ý -> 5. phê bình + một lượt sửa có mục tiêu
-// Nghiên cứu (DOC, CritiCS, TTCW): đầu tư vào dàn ý; phê bình bằng danh sách đạt/không đạt; người thật là cửa kiểm cuối.
+// Phòng biên kịch — một nút "Generate kịch bản": Claude (Claude Code + skill screenwriter) tự triển khai kịch bản từ tư liệu.
+//   1. dàn ý (beat sheet; tập dài chia chương), Claude tự chấm BEAT_CHECKS và tự sửa trước khi trả; code kiểm lại những gì đo được
+//   2. thoại viết theo từng phần (~40 câu/phần) trong CÙNG phiên Claude, mỗi phần tự chấm SCRIPT_CHECKS; code kiểm người nói,
+//      đủ nhịp, đúng thứ tự, không thương hiệu -> sai thì gửi lại lỗi cho Claude sửa
+//   3. ghi script.json + dàn ý + phiếu chấm; người dùng sửa dàn ý được và bấm viết lại thoại.
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { z } from "zod";
-import { BEAT_CHECKS, BeatSheet, CheckResult, Critique, CritiqueLog, SCRIPT_CHECKS, linesForDuration, passRate } from "@lse/shared";
-import type { TextAI } from "./ai/types";
+import { z, type ZodType } from "zod";
 import {
-  NewCast, WritingInput, castSummary, gatherMaterial, knownCast, lineErrors, materializeCast, writeScriptFile, writerSystem,
-} from "./aiScript";
+  BEAT_CHECKS, BeatSheet, CheckResult, CritiqueLog, POVS, SCRIPT_CHECKS, TONES, WritingInput, linesForDuration, passRate,
+  type Beat,
+} from "@lse/shared";
+import type { TextAI } from "./ai/types";
+import { ClaudeSession, type SessionOpts } from "./ai/claudeCode";
+import { NewCast, castSummary, guideText, bibleText, knownCast, lineErrors, materializeCast, writeScriptFile } from "./aiScript";
 import { readJson, writeJsonAtomic } from "./jsonStore";
+import { listSources, sourcesForPrompt } from "./sources";
 import { HttpError, assertValidId, type WorkspacePaths } from "./workspace";
 
 type Check = z.infer<typeof CheckResult>;
-export const MAX_BEAT_ROUNDS = 2;
-
 const wdir = (paths: WorkspacePaths, ep: string) => path.join(paths.projectDir(ep), "writing");
-const F = {
+export const WF = {
   input: (p: WorkspacePaths, ep: string) => path.join(wdir(p, ep), "input.json"),
   beats: (p: WorkspacePaths, ep: string) => path.join(wdir(p, ep), "beat_sheet.json"),
   beatLog: (p: WorkspacePaths, ep: string) => path.join(wdir(p, ep), "beat_critique.json"),
   scriptLog: (p: WorkspacePaths, ep: string) => path.join(wdir(p, ep), "script_critique.json"),
 };
 
-/** Khuôn dàn ý AI trả về (dàn ý + diễn viên mới nếu cần). */
-const BeatDraft = BeatSheet.omit({ approved: true }).extend({ new_cast: z.array(NewCast).max(3).default([]) });
+/** Số câu mỗi phần thoại (giữ câu trả lời của Claude vừa phải, tập 30 phút ~ 12 phần). */
+export const CHUNK_LINES = 40;
 
-/** Khuôn phiếu phê bình với đúng các mục kiểm được giao. */
-const critiqueFor = (checks: Record<string, string>) => Critique.extend({
-  checks: z.array(z.object({ id: z.enum(Object.keys(checks) as [string, ...string[]]), pass: z.boolean(), reason: z.string().max(300) })).min(1).max(20),
+// ---------------------------------------------------------------- phiên viết (Claude nhiều lượt, hoặc AI một lượt)
+export interface WriterSession { ask<T>(label: string, task: string, schema: ZodType<T>, check?: (d: T) => string[]): Promise<T> }
+
+/** Claude Code: lượt đầu gửi ngữ cảnh (tư liệu, luật), các lượt sau cùng phiên nên chỉ gửi việc. */
+export function claudeWriter(context: string, opts: SessionOpts): WriterSession {
+  const s = new ClaudeSession(opts);
+  let first = true;
+  return { ask: (label, task, schema, check) => { const p = first ? `${context}\n\n---\n\n${task}` : task; first = false; return s.ask(label, p, schema, check); } };
+}
+
+/** AI một lượt (Hộp thư Claude, test): mỗi lượt gửi kèm toàn bộ ngữ cảnh; sai thì gửi lại lỗi (tối đa 2 lần). */
+export function statelessWriter(context: string, ai: TextAI, system: string): WriterSession {
+  return {
+    async ask(label, task, schema, check) {
+      let feedback = "";
+      for (let attempt = 0; ; attempt++) {
+        const { data } = await ai.json({ label, system, schema, prompt: `${context}\n\n---\n\n${task}${feedback}` });
+        const errs = check?.(data) ?? [];
+        if (!errs.length) return data;
+        if (attempt >= 2) throw new HttpError(422, `AI trả kết quả chưa đạt sau 3 lần (${label}): ${errs.slice(0, 3).join("; ")}`);
+        feedback = `\n\nLần trước chưa đạt, hãy sửa:\n${errs.map((e) => `- ${e}`).join("\n")}`;
+      }
+    },
+  };
+}
+
+// ---------------------------------------------------------------- ngữ cảnh + luật
+export const WRITER_SYSTEM = "Bạn là biên kịch của kênh video hoạt hình mô hình gạch (minifig). Làm theo skill `screenwriter` của dự án. Chỉ trả JSON đúng khuôn.";
+
+/** Khối ngữ cảnh gửi Claude ở lượt đầu: thông số người dùng chọn, luật kênh, diễn viên, tư liệu. */
+export async function buildContext(paths: WorkspacePaths, ep: string, input: WritingInput): Promise<string> {
+  const budget = linesForDuration(input.targetSec);
+  const src = await sourcesForPrompt(paths, ep, input.sourceIds);
+  const mins = input.targetSec >= 60 ? `${Math.round(input.targetSec / 60)} phút` : `${input.targetSec} giây`;
+  return [
+    "Dùng skill `screenwriter` của dự án (file .claude/skills/screenwriter/SKILL.md) để viết kịch bản cho một tập video từ tư liệu bên dưới.",
+    "Thoại viết bằng TIẾNG ANH tự nhiên (phụ đề các thứ tiếng làm sau). Không tên thương hiệu thật (không viết LEGO, Duplo), không nhân vật có bản quyền.",
+    "",
+    "# Thông số người dùng chọn",
+    `- Ngôi kể: ${POVS[input.pov].label} — ${POVS[input.pov].directive}`,
+    `- Giọng văn: ${input.tones.map((t) => `${TONES[t].label} (${TONES[t].directive})`).join(" + ") || "theo series bible"}`,
+    `- Độ dài: ${mins} -> khoảng ${budget.min}–${budget.max} câu thoại.`,
+    input.message.trim() ? `- Thông điệp người xem cần mang về: ${input.message.trim()}` : "- Thông điệp: người dùng để trống -> tự rút MỘT thông điệp rõ ràng, đáng nhớ từ tư liệu.",
+    input.notes.trim() ? `- Yêu cầu thêm của người dùng: ${input.notes.trim()}` : "",
+    "",
+    "# Diễn viên có sẵn (id: tên — tính cách)",
+    castSummary(paths),
+    "",
+    "# Hướng dẫn biên kịch của kênh",
+    guideText(paths),
+    "",
+    "# Series bible",
+    bibleText(paths),
+    "",
+    "# Tư liệu",
+    input.story.trim() ? `<outline_document name="dan_tay">\n${input.story}\n</outline_document>` : "",
+    src.text,
+    src.visionFiles.length ? `Tư liệu dạng ảnh chụp, đọc trực tiếp bằng công cụ Read: ${src.visionFiles.join(", ")}` : "",
+  ].filter((l) => l !== "").join("\n");
+}
+
+const checklist = (c: Record<string, string>) => Object.entries(c).map(([id, q]) => `- ${id}: ${q}`).join("\n");
+const checksSchema = (c: Record<string, string>) =>
+  z.array(z.object({ id: z.enum(Object.keys(c) as [string, ...string[]]), pass: z.boolean(), reason: z.string().max(300) })).min(1).max(20);
+
+export const BeatPlanOut = BeatSheet.omit({ approved: true }).extend({
+  new_cast: z.array(NewCast).max(3).default([]),
+  checks: checksSchema(BEAT_CHECKS),
+  /** số vòng Claude đã tự sửa dàn ý trước khi trả */
+  revisions: z.number().int().min(0).max(5).default(0),
 });
+type BeatPlanOut = z.infer<typeof BeatPlanOut>;
 
-const checklistText = (checks: Record<string, string>) => Object.entries(checks).map(([id, q]) => `- ${id}: ${q}`).join("\n");
+export const ChunkOut = z.object({
+  lines: z.array(z.object({ beat: z.string().regex(/^B\d{1,3}$/), speaker: z.string(), text: z.string().min(1).max(220) })).min(1).max(CHUNK_LINES * 2 + 10),
+  checks: checksSchema(SCRIPT_CHECKS),
+  revisions: z.number().int().min(0).max(5).default(0),
+});
+type ChunkOut = z.infer<typeof ChunkOut>;
 
-/** Mục kiểm do code tính (đè kết quả AI): đúng sự thật hơn để AI tự chấm. */
-function codeBeatChecks(sheet: z.infer<typeof BeatDraft>, known: Set<string>, budget: { min: number; max: number }): Check[] {
-  const total = sheet.beats.reduce((a, b) => a + b.est_lines, 0);
-  const unknown = [...new Set([...sheet.cast, ...sheet.beats.flatMap((b) => b.speakers)].filter((c) => !known.has(c)))];
-  const out: Check[] = [{ id: "length_fit", pass: total >= budget.min && total <= budget.max, reason: `Tổng est_lines = ${total}, cho phép ${budget.min}–${budget.max}.` }];
-  if (unknown.length) out.push({ id: "cast_fit", pass: false, reason: `Nhân vật không có trong kho hay new_cast: ${unknown.join(", ")}.` });
-  if (sheet.beats.at(-1)?.kind !== "button") out.push({ id: "button", pass: false, reason: "Nhịp cuối phải có kind = button (câu 'Step N: ...')." });
+/** Kiểm dàn ý bằng code. */
+export function beatErrors(d: BeatPlanOut, known: Set<string>, budget: { min: number; max: number }, pov: WritingInput["pov"]): string[] {
+  const errs: string[] = [];
+  const all = new Set([...known, ...d.new_cast.map((c) => c.id)]);
+  const unknown = [...new Set([...d.cast, ...d.beats.flatMap((b) => b.speakers)].filter((c) => !all.has(c)))];
+  if (unknown.length) errs.push(`Nhân vật không có trong kho hay new_cast: ${unknown.join(", ")}`);
+  const ids = d.beats.map((b) => b.id);
+  if (ids.some((id, i) => id !== `B${i + 1}`)) errs.push("id nhịp phải liên tục B1, B2, B3...");
+  if (d.beats[0]?.kind !== "hook") errs.push("Nhịp đầu phải có kind = hook.");
+  if (d.beats.at(-1)?.kind !== "button") errs.push("Nhịp cuối phải có kind = button.");
+  const total = d.beats.reduce((a, b) => a + b.est_lines, 0);
+  if (total < budget.min || total > Math.ceil(budget.max * 1.1)) errs.push(`Tổng est_lines = ${total}, phải trong ${budget.min}–${budget.max}.`);
+  if ((pov === "second" || pov === "third") && !d.cast.includes("classic_yellow")) errs.push("Ngôi kể có người dẫn: cast phải có classic_yellow làm người dẫn.");
+  return errs;
+}
+
+/** Kiểm một phần thoại bằng code. */
+export function chunkErrors(d: ChunkOut, beats: Beat[], known: Set<string>): string[] {
+  const ids = beats.map((b) => b.id);
+  const errs = lineErrors(d.lines, known);
+  const stray = [...new Set(d.lines.filter((l) => !ids.includes(l.beat)).map((l) => l.beat))];
+  if (stray.length) errs.push(`Câu gắn nhịp không thuộc phần này: ${stray.join(", ")} (chỉ dùng ${ids.join(", ")}).`);
+  const missing = ids.filter((id) => !d.lines.some((l) => l.beat === id));
+  if (missing.length) errs.push(`Thiếu thoại cho nhịp ${missing.join(", ")}.`);
+  const order = d.lines.map((l) => ids.indexOf(l.beat));
+  if (order.some((v, i) => i > 0 && v < order[i - 1])) errs.push("Thoại phải đi đúng thứ tự nhịp.");
+  const est = beats.reduce((a, b) => a + b.est_lines, 0);
+  if (d.lines.length > est * 2 + 4) errs.push(`Quá nhiều câu (${d.lines.length}) so với dàn ý (~${est}).`);
+  return errs;
+}
+
+/** Gom nhịp thành từng phần ~CHUNK_LINES câu (không cắt giữa nhịp). */
+export function chunkBeats(beats: Beat[], size = CHUNK_LINES): Beat[][] {
+  const out: Beat[][] = [];
+  let cur: Beat[] = [], n = 0;
+  for (const b of beats) {
+    if (cur.length && n + b.est_lines > size) { out.push(cur); cur = []; n = 0; }
+    cur.push(b); n += b.est_lines;
+  }
+  if (cur.length) out.push(cur);
   return out;
 }
 
-const mergeChecks = (ai: Check[], code: Check[]) => {
-  const m = new Map(ai.map((c) => [c.id, c]));
-  for (const c of code) if (!c.pass || !m.has(c.id) || c.id === "length_fit") m.set(c.id, c);
-  return [...m.values()];
-};
-
+// ---------------------------------------------------------------- pipeline
 export async function getWriting(paths: WorkspacePaths, ep: string) {
   assertValidId(ep, "ID tập");
   const rd = async <T,>(f: string, s: z.ZodType<T>) => (existsSync(f) ? readJson(f, s) : null);
   return {
-    input: await rd(F.input(paths, ep), WritingInput),
-    beats: await rd(F.beats(paths, ep), BeatSheet),
-    beatCritique: await rd(F.beatLog(paths, ep), CritiqueLog),
-    scriptCritique: await rd(F.scriptLog(paths, ep), CritiqueLog),
+    input: await rd(WF.input(paths, ep), WritingInput),
+    beats: await rd(WF.beats(paths, ep), BeatSheet),
+    beatCritique: await rd(WF.beatLog(paths, ep), CritiqueLog),
+    scriptCritique: await rd(WF.scriptLog(paths, ep), CritiqueLog),
   };
 }
 
-/** Bước 1 + 2: lập dàn ý rồi tự phê bình/sửa tối đa MAX_BEAT_ROUNDS vòng. Kết quả chờ người dùng duyệt. */
-export async function makeBeats(ai: TextAI, paths: WorkspacePaths, ep: string, raw: unknown) {
-  const { input, material, budget, attach } = await gatherMaterial(paths, ep, raw);
-  const cast = castSummary(paths);
-  const system = [
-    writerSystem(paths, "trưởng phòng biên kịch"),
-    "Nhiệm vụ: lập DÀN Ý (beat sheet), chưa viết thoại. Mỗi nhịp: kind, tóm tắt, giá trị đổi, cú hài chính, ý tưởng thẻ chữ, người nói, số câu ước tính.",
-    "Ưu tiên diễn viên có sẵn; chỉ thêm new_cast khi thật cần (tối đa 3). cast và speakers chỉ dùng id có sẵn hoặc id trong new_cast.",
-    `Tổng est_lines phải nằm trong ${budget.min}–${budget.max}. Nhịp đầu kind = hook, nhịp cuối kind = button. id nhịp là B1, B2, ...`,
-  ].join("\n");
-  const first = await ai.json({ label: "lap_dan_y", system, schema: BeatDraft, prompt: `Diễn viên có sẵn:\n${cast}\n\n${material}`, ...attach });
-  let draft = first.data;
-  const log: CritiqueLog = { stage: "beats", rounds: [] };
-  const critic = critiqueFor(BEAT_CHECKS);
-  for (let round = 1; round <= MAX_BEAT_ROUNDS; round++) {
-    const known = new Set([...knownCast(paths), ...draft.new_cast.map((c) => c.id)]);
-    const crit = await ai.json({
-      label: "phe_binh_dan_y", schema: critic,
-      system: writerSystem(paths, "nhà phê bình kịch bản khó tính") + "\nChấm từng mục ĐẠT/KHÔNG ĐẠT kèm một dòng lý do; đề xuất tối đa 3 sửa đổi cụ thể, quan trọng nhất trước.",
-      prompt: `Danh sách kiểm:\n${checklistText(BEAT_CHECKS)}\n\nKhoảng số câu cho phép: ${budget.min}–${budget.max}.\n\nTư liệu gốc:\n${material}\n\nDàn ý cần chấm:\n${JSON.stringify(draft, null, 1)}`,
-    });
-    const checks = mergeChecks(crit.data.checks, codeBeatChecks(draft, known, budget));
-    const rate = passRate({ checks, fixes: [] });
-    const needs = checks.some((c) => !c.pass);
-    const entry = { round, pass_rate: rate, checks, fixes: crit.data.fixes, applied: false };
-    log.rounds.push(entry);
-    if (!needs) break;
-    const fixes = [...checks.filter((c) => !c.pass).map((c) => `[${c.id}] ${c.reason}`), ...crit.data.fixes.map((f) => `[${f.target}] ${f.change}`)];
-    const rev = await ai.json({
-      label: "sua_dan_y", schema: BeatDraft, ...attach,
-      system: system + "\nSửa dàn ý theo đúng các lỗi được nêu. Giữ nguyên những nhịp đã ổn.",
-      prompt: `Diễn viên có sẵn:\n${cast}\n\n${material}\n\nDàn ý hiện tại:\n${JSON.stringify(draft, null, 1)}\n\nCần sửa:\n${fixes.join("\n")}`,
-    });
-    draft = rev.data;
-    entry.applied = true;
-  }
-  const known = new Set([...knownCast(paths), ...draft.new_cast.map((c) => c.id)]);
-  const bad = codeBeatChecks(draft, known, budget).find((c) => c.id === "cast_fit");
-  if (bad) throw new HttpError(422, `${bad.reason} Bấm lại để thử lần nữa.`);
-  const newCast = await materializeCast(paths, ep, draft.new_cast);
-  const { new_cast: _nc, ...sheetOnly } = draft;
-  const sheet = await writeJsonAtomic(F.beats(paths, ep), BeatSheet, { ...sheetOnly, approved: false });
-  await writeJsonAtomic(F.beatLog(paths, ep), CritiqueLog, log);
-  await writeJsonAtomic(F.input(paths, ep), WritingInput, input);
-  return { beats: sheet, critique: log, newCast };
+/** Lưu thông tin người dùng điền (kiểm bắt buộc) trước khi chạy. */
+export async function saveInput(paths: WorkspacePaths, ep: string, raw: unknown) {
+  assertValidId(ep, "ID tập");
+  const input = WritingInput.parse(raw ?? {});
+  if (!input.story.trim() && !input.sourceIds.length) throw new HttpError(400, "Chưa có tư liệu: gửi file hoặc dán truyện trước khi bấm Generate.");
+  const have = new Set((await listSources(paths, ep)).map((s) => s.id));
+  const gone = input.sourceIds.filter((id) => !have.has(id));
+  if (gone.length) throw new HttpError(404, `Tư liệu đã bị xóa: ${gone.join(", ")}.`);
+  return writeJsonAtomic(WF.input(paths, ep), WritingInput, input);
 }
 
-/** Bước 3: người dùng sửa/duyệt dàn ý. */
+/** Người dùng sửa dàn ý (rồi bấm viết lại thoại). */
 export async function saveBeats(paths: WorkspacePaths, ep: string, body: unknown) {
   assertValidId(ep, "ID tập");
   const sheet = BeatSheet.parse(body);
   const known = new Set(knownCast(paths));
   const unknown = [...new Set([...sheet.cast, ...sheet.beats.flatMap((b) => b.speakers)].filter((c) => !known.has(c)))];
   if (unknown.length) throw new HttpError(400, `Nhân vật không có trong kho: ${unknown.join(", ")}.`);
-  return writeJsonAtomic(F.beats(paths, ep), BeatSheet, sheet);
+  return writeJsonAtomic(WF.beats(paths, ep), BeatSheet, sheet);
 }
 
-/** Khuôn thoại theo nhịp. */
-const draftSchema = (budget: { min: number; max: number }) => z.object({
-  title: z.string().max(60),
-  logline: z.string().max(200),
-  lines: z.array(z.object({ beat: z.string().regex(/^B\d{1,2}$/), speaker: z.string(), text: z.string().min(2).max(160) })).min(budget.min).max(budget.max),
-});
-type Draft = z.infer<ReturnType<typeof draftSchema>>;
-
-function codeScriptChecks(d: Draft, sheet: BeatSheet, known: Set<string>): Check[] {
-  const missing = sheet.beats.filter((b) => !d.lines.some((l) => l.beat === b.id)).map((b) => b.id);
-  const order = d.lines.map((l) => sheet.beats.findIndex((b) => b.id === l.beat));
-  const inOrder = order.every((v, i) => i === 0 || v >= order[i - 1]);
-  const errs = lineErrors(d.lines, known);
-  const long = d.lines.filter((l) => l.text.split(/\s+/).length > 22).length;
+export function beatTask(input: WritingInput) {
+  const budget = linesForDuration(input.targetSec);
+  const long = input.targetSec > 300;
   return [
-    { id: "covers_beats", pass: !missing.length && inOrder, reason: missing.length ? `Thiếu thoại cho nhịp ${missing.join(", ")}.` : inOrder ? "Đủ nhịp, đúng thứ tự." : "Thoại nhảy ngược thứ tự nhịp." },
-    { id: "natural_english", pass: !errs.some((e) => e.includes("thương hiệu")), reason: errs.find((e) => e.includes("thương hiệu")) ?? "Không có tên thương hiệu." },
-    ...(errs.some((e) => e.startsWith("Người nói")) ? [{ id: "distinct_voices", pass: false, reason: errs.find((e) => e.startsWith("Người nói"))! }] : []),
-    ...(long ? [{ id: "short_lines", pass: false, reason: `${long} câu dài quá 22 từ.` }] : []),
-  ];
+    "## Việc 1: lập DÀN Ý (beat sheet), chưa viết thoại",
+    "Đọc kỹ tư liệu. Lập dàn ý theo khung trong hướng dẫn biên kịch: nhịp đầu kind=hook, nhịp cuối kind=button, id liên tục B1, B2, ...",
+    `Tổng est_lines của mọi nhịp phải nằm trong ${budget.min}–${budget.max}.`,
+    long ? "Tập dài: chia 3–10 chương (ghi tên ở field chapter của mỗi nhịp); mỗi chương có móc riêng, leo thang và một lật nhỏ; nhịp 3–8 câu. Giữ một running gag xuyên tập." : "",
+    "Ưu tiên diễn viên có sẵn; chỉ thêm new_cast khi tư liệu thật sự cần (tối đa 3). cast/speakers chỉ dùng id có sẵn hoặc trong new_cast.",
+    "Sau khi lập xong, TỰ CHẤM theo danh sách dưới (ĐẠT/KHÔNG ĐẠT + một dòng lý do, khó tính thật), tự sửa tối đa 2 vòng, rồi mới trả bản cuối.",
+    "Trả checks là kết quả chấm của BẢN CUỐI; revisions là số vòng đã sửa.",
+    checklist(BEAT_CHECKS),
+  ].filter(Boolean).join("\n");
 }
 
-/** Bước 4 + 5: viết thoại từ dàn ý ĐÃ DUYỆT, phê bình, sửa một lượt có mục tiêu, ghi script.json. */
-export async function writeFromBeats(ai: TextAI, paths: WorkspacePaths, ep: string) {
-  assertValidId(ep, "ID tập");
-  const w = await getWriting(paths, ep);
-  if (!w.beats) throw new HttpError(409, "Chưa có dàn ý. Bấm \"Lập dàn ý\" trước.");
-  if (!w.beats.approved) throw new HttpError(409, "Hãy đọc và bấm \"Duyệt dàn ý\" trước khi viết thoại.");
-  const sheet = w.beats;
-  const { material, attach } = await gatherMaterial(paths, ep, w.input ?? {});
-  const budget = linesForDuration(w.input?.targetSec ?? 45);
-  const total = sheet.beats.reduce((a, b) => a + b.est_lines, 0);
-  const b2 = { min: 2, max: Math.max(budget.max, total + 4) };
-  const schema = draftSchema(b2);
-  const known = new Set(knownCast(paths));
-  const cast = castSummary(paths);
-  const system = [
-    writerSystem(paths, "biên kịch thoại hài"),
-    "Viết THOẠI theo đúng dàn ý đã duyệt: mỗi câu gắn id nhịp (beat), đi đúng thứ tự nhịp, số câu mỗi nhịp xấp xỉ est_lines.",
-    "Chỉ dùng người nói trong dàn ý. Punch đặt cuối câu. Gài running gag sớm, gọi lại ở cuối. Câu cuối là câu 'Step N: ...' của nhịp button.",
-  ].join("\n");
-  const first = await ai.json({ label: "viet_thoai", system, schema, ...attach,
-    prompt: `Diễn viên:\n${cast}\n\nDàn ý ĐÃ DUYỆT:\n${JSON.stringify(sheet, null, 1)}\n\n${material}` });
-  let draft = first.data;
-  const log: CritiqueLog = { stage: "script", rounds: [] };
-  const critic = critiqueFor(SCRIPT_CHECKS);
-  const crit = await ai.json({
-    label: "phe_binh_kich_ban", schema: critic,
-    system: writerSystem(paths, "biên tập viên hài khó tính") + "\nChấm từng mục ĐẠT/KHÔNG ĐẠT kèm một dòng lý do; đề xuất tối đa 3 sửa đổi cụ thể (ghi rõ nhịp/câu).",
-    prompt: `Danh sách kiểm:\n${checklistText(SCRIPT_CHECKS)}\n\nDàn ý đã duyệt:\n${JSON.stringify(sheet, null, 1)}\n\nTư liệu gốc:\n${material}\n\nKịch bản cần chấm:\n${draft.lines.map((l, i) => `${i + 1}. [${l.beat}] ${l.speaker}: ${l.text}`).join("\n")}`,
-  });
-  const checks = mergeChecks(crit.data.checks, codeScriptChecks(draft, sheet, known));
-  const entry = { round: 1, pass_rate: passRate({ checks, fixes: [] }), checks, fixes: crit.data.fixes, applied: false };
-  log.rounds.push(entry);
-  if (checks.some((c) => !c.pass)) {
-    const fixes = [...checks.filter((c) => !c.pass).map((c) => `[${c.id}] ${c.reason}`), ...crit.data.fixes.map((f) => `[${f.target}] ${f.change}`)];
-    const rev = await ai.json({ label: "sua_kich_ban", schema, ...attach,
-      system: system + "\nSửa ĐÚNG những chỗ được nêu, giữ nguyên các câu đã ổn (nhất là các câu hài đã đạt).",
-      prompt: `Dàn ý đã duyệt:\n${JSON.stringify(sheet, null, 1)}\n\nKịch bản hiện tại:\n${JSON.stringify(draft, null, 1)}\n\nCần sửa:\n${fixes.join("\n")}` });
-    // chỉ nhận bản sửa nếu không làm hỏng các mục code kiểm được
-    const after = codeScriptChecks(rev.data, sheet, known);
-    if (after.filter((c) => !c.pass).length <= codeScriptChecks(draft, sheet, known).filter((c) => !c.pass).length) {
-      draft = rev.data;
-      entry.applied = true;
-    }
-  }
-  const hard = lineErrors(draft.lines, known);
-  if (hard.length) throw new HttpError(422, `${hard[0]}. Bấm lại để thử lần nữa.`);
-  const script = await writeScriptFile(paths, ep, { title: draft.title || sheet.title, logline: draft.logline || sheet.logline, lines: draft.lines });
-  await writeJsonAtomic(F.scriptLog(paths, ep), CritiqueLog, log);
-  return { script, critique: log, lineBeats: draft.lines.map((l) => l.beat) };
+export function chunkTask(part: Beat[], k: number, n: number, prev: { speaker: string; text: string }[], sheet: BeatSheet) {
+  return [
+    `## Việc 2 (phần ${k}/${n}): viết THOẠI cho các nhịp ${part[0].id}–${part.at(-1)!.id}`,
+    k === 1 ? `Dàn ý đầy đủ để nắm mạch (đã chốt):\n${JSON.stringify({ title: sheet.title, idea: sheet.idea, runner: sheet.runner, beats: sheet.beats.map((b) => ({ id: b.id, chapter: b.chapter, kind: b.kind, summary: b.summary })) })}` : "",
+    `Các nhịp của phần này (viết đúng thứ tự, mỗi câu gắn beat, số câu mỗi nhịp xấp xỉ est_lines):\n${JSON.stringify(part)}`,
+    prev.length ? `Các câu ngay trước phần này (nối mạch, không lặp lại):\n${prev.map((l) => `${l.speaker}: ${l.text}`).join("\n")}` : "",
+    "Chỉ dùng người nói trong dàn ý. Punch đặt cuối câu. Câu ngắn nói được bằng giọng máy.",
+    k === n ? "Đây là phần CUỐI: câu cuối cùng là câu chốt 'Step N: ...' của nhịp button, gọi lại running gag." : "",
+    "Viết xong, TỰ CHẤM phần này theo danh sách dưới, tự sửa chỗ KHÔNG ĐẠT rồi mới trả. checks là kết quả của bản cuối.",
+    checklist(SCRIPT_CHECKS),
+  ].filter(Boolean).join("\n\n");
 }
+
+/**
+ * Chạy phòng biên kịch. `from = "dialogue"`: giữ dàn ý hiện có (người dùng vừa sửa), chỉ viết lại thoại.
+ * `log` nhận dòng tiến độ; dòng "[progress] write k/N" để hàng đợi việc nền vẽ thanh tiến độ.
+ */
+export async function generateScript(paths: WorkspacePaths, ep: string, session: WriterSession, opts: { from?: "beats" | "dialogue" } = {}, log: (l: string) => void = () => {}) {
+  assertValidId(ep, "ID tập");
+  if (!existsSync(WF.input(paths, ep))) throw new HttpError(409, "Chưa có thông tin tập (writing/input.json).");
+  const input = await readJson(WF.input(paths, ep), WritingInput);
+  const budget = linesForDuration(input.targetSec);
+  let sheet: BeatSheet;
+  const steps = (b: number) => 1 + b;
+  if (opts.from === "dialogue") {
+    if (!existsSync(WF.beats(paths, ep))) throw new HttpError(409, "Chưa có dàn ý để viết lại thoại.");
+    sheet = await readJson(WF.beats(paths, ep), BeatSheet);
+  } else {
+    log("== beats ==");
+    log("[progress] write 0/1");
+    const known = new Set(knownCast(paths));
+    const plan = await session.ask("lap_dan_y", beatTask(input), BeatPlanOut, (d) => beatErrors(d, known, budget, input.pov));
+    await materializeCast(paths, ep, plan.new_cast);
+    const { new_cast: _nc, checks, revisions, ...rest } = plan;
+    sheet = await writeJsonAtomic(WF.beats(paths, ep), BeatSheet, { ...rest, approved: true });
+    const codeChecks: Check[] = [{ id: "length_fit", pass: true, reason: `Tổng ${rest.beats.reduce((a, b) => a + b.est_lines, 0)} câu, trong khoảng ${budget.min}–${budget.max}.` }];
+    const merged = [...checks.filter((c) => c.id !== "length_fit"), ...codeChecks];
+    await writeJsonAtomic(WF.beatLog(paths, ep), CritiqueLog, { stage: "beats", rounds: [{ round: 1, pass_rate: passRate({ checks: merged, fixes: [] }), checks: merged, fixes: [], applied: revisions > 0 }] });
+    log(`dàn ý: ${sheet.beats.length} nhịp, Claude tự sửa ${revisions} vòng`);
+  }
+  log("== dialogue ==");
+  const parts = chunkBeats(sheet.beats);
+  const known = new Set(knownCast(paths));
+  const lines: { speaker: string; text: string }[] = [];
+  const rounds: CritiqueLog["rounds"] = [];
+  for (let k = 0; k < parts.length; k++) {
+    log(`[progress] write ${k + 1}/${steps(parts.length)}`);
+    const out = await session.ask(`viet_thoai_${k + 1}`, chunkTask(parts[k], k + 1, parts.length, lines.slice(-4), sheet), ChunkOut, (d) => chunkErrors(d, parts[k], known));
+    lines.push(...out.lines.map((l) => ({ speaker: l.speaker, text: l.text })));
+    rounds.push({ round: k + 1, label: parts.length > 1 ? `Phần ${k + 1} (${parts[k][0].id}–${parts[k].at(-1)!.id})` : undefined, pass_rate: passRate({ checks: out.checks, fixes: [] }), checks: out.checks, fixes: [], applied: out.revisions > 0 });
+    log(`thoại phần ${k + 1}/${parts.length}: ${out.lines.length} câu`);
+  }
+  const script = await writeScriptFile(paths, ep, { title: sheet.title, logline: sheet.logline, lines });
+  await writeJsonAtomic(WF.scriptLog(paths, ep), CritiqueLog, { stage: "script", rounds });
+  log(`[progress] write ${steps(parts.length)}/${steps(parts.length)}`);
+  log(`xong: ${script.lines.length} câu thoại, ${sheet.beats.length} nhịp`);
+  return { script, beats: sheet };
+}
+
+/** Đọc thông tin + dựng ngữ cảnh (cho script chạy nền). */
+export async function contextFor(paths: WorkspacePaths, ep: string) {
+  const input = await readJson(WF.input(paths, ep), WritingInput);
+  return buildContext(paths, ep, input);
+}
+

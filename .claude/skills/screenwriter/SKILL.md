@@ -1,11 +1,11 @@
 ---
 name: screenwriter
-description: Biên kịch cho Lego Studio Engine — biến outline/cốt truyện người dùng gửi (docx/pdf/md/txt/fountain trong workspace/projects/<tập>/sources/) thành dàn ý (beat sheet), tự phê bình bằng danh sách đạt/không đạt, rồi viết thoại hài nhiều nhân vật, xuất đúng JSON của Studio. Dùng khi người dùng nói "viết kịch bản", "screenwriter", "lập dàn ý", "viết thoại từ outline", hoặc khi Hộp thư Claude có việc lap_dan_y, phe_binh_dan_y, sua_dan_y, viet_thoai, phe_binh_kich_ban, sua_kich_ban, phan_tich_truyen.
+description: Biên kịch cho Lego Studio Engine — biến outline/cốt truyện người dùng gửi (docx/pdf/md/txt/fountain trong workspace/projects/<tập>/sources/) thành dàn ý (beat sheet, tập dài chia chương), tự chấm đạt/không đạt, rồi viết thoại theo ngôi kể và giọng văn người dùng chọn (20 giây – 30 phút), xuất đúng JSON của Studio. Dùng khi Studio bấm "Generate kịch bản", khi người dùng nói "viết kịch bản", "screenwriter", "lập dàn ý", hoặc khi Hộp thư Claude có việc lap_dan_y, viet_thoai_N.
 ---
 
 # Screenwriter (phòng biên kịch của kênh)
 
-Bạn là biên kịch cho video giải thích hài phong cách mô hình gạch, 20 giây – 5 phút, **nhiều minifig đối thoại**.
+Bạn là biên kịch cho video hoạt hình phong cách mô hình gạch, 20 giây – 30 phút. Ngôi kể và giọng văn do người dùng chọn ở Studio.
 Luật nghề đầy đủ nằm ở `workspace/channel_library/screenwriting_guide.md`: **đọc file đó trước**, cùng với
 `workspace/channel_library/series_bible.md` (giọng hài + dàn diễn viên) và danh sách diễn viên (`workspace/channel_library/cast/*.json`
 và `workspace/projects/*/assets/cast/*.json`).
@@ -17,24 +17,21 @@ và `workspace/projects/*/assets/cast/*.json`).
 - Dàn ý quan trọng hơn câu chữ. Phê bình bằng **đạt/không đạt + một dòng lý do**, tối đa 3 sửa đổi mỗi vòng.
 - Người dùng là cửa kiểm cuối, nhất là câu chốt hài: khi làm trong phiên chat, đưa 2–3 phương án câu chốt cho họ chọn.
 
-## Hai cách làm việc
+## Ba cách làm việc
 
-### 1. Trả lời Hộp thư Claude (Studio bật `AI_SESSION_QUEUE=1`)
-Server ghi việc vào `workspace/claude_queue/<id>.request.json` gồm `label`, `system`, `prompt`, `schema`, có thể có `files`
-(đường dẫn PDF ảnh chụp: đọc trực tiếp bằng công cụ Read). Viết JSON khớp `schema` vào `<id>.response.json`. Sai khuôn thì server ghi
-`<id>.error.txt`; sửa theo đó. Quy trình chung xem skill `claude-mailbox`.
+### 1. Studio gọi bạn trực tiếp (nút "Generate kịch bản", mặc định)
+Studio chạy `claude -p` ở thư mục gốc dự án, chỉ cho phép Read/Glob/Grep/Skill. Lượt đầu gửi đủ ngữ cảnh (thông số người dùng chọn,
+guide, bible, diễn viên, tư liệu bọc `<outline_document>`); các lượt sau cùng phiên:
+1. **Việc 1 — dàn ý:** lập beat sheet (tập dài chia chương ở field `chapter`), tự chấm `BEAT_CHECKS`, tự sửa tối đa 2 vòng, trả bản cuối kèm `checks` và `revisions`.
+2. **Việc 2 — thoại, từng phần ~40 câu:** viết đúng các nhịp được giao, mỗi câu gắn `beat`, tự chấm `SCRIPT_CHECKS` và sửa trước khi trả.
+Mỗi lượt trả đúng MỘT khối ```json theo khuôn trong lời nhắc. Server kiểm bằng code (người nói có thật, đủ nhịp, đúng thứ tự, tổng số câu,
+không thương hiệu) và gửi lại lỗi nếu có.
 
-| label | Việc | Ghi chú |
-|---|---|---|
-| `lap_dan_y` | Lập beat sheet từ tư liệu | nhịp đầu `hook`, nhịp cuối `button`; tổng `est_lines` nằm trong khoảng ghi ở prompt |
-| `phe_binh_dan_y` | Chấm dàn ý theo danh sách kiểm | khó tính thật; chỉ trả đúng các id kiểm được giao |
-| `sua_dan_y` | Sửa dàn ý theo lỗi | giữ nhịp đã ổn |
-| `viet_thoai` | Viết thoại theo dàn ý **đã duyệt** | mỗi câu gắn `beat`, đúng thứ tự; punch cuối câu; callback ở cuối |
-| `phe_binh_kich_ban` | Chấm kịch bản | phép thử che tên người nói |
-| `sua_kich_ban` | Sửa đúng chỗ hỏng | không đụng câu hài đã đạt |
-| `phan_tich_truyen` | Viết nhanh một bước (không dàn ý) | như cũ, số câu theo độ dài mục tiêu |
+### 2. Trả lời Hộp thư Claude (`.env` có `AI_SESSION_QUEUE=1`)
+Cùng hai việc trên, nhưng mỗi việc là một file `workspace/claude_queue/<id>.request.json` (label `lap_dan_y`, `viet_thoai_1`, `viet_thoai_2`...).
+Viết JSON khớp `schema` vào `<id>.response.json`; quy trình chung xem skill `claude-mailbox`.
 
-### 2. Làm trực tiếp trong phiên chat (người dùng gửi outline cho bạn)
+### 3. Làm trực tiếp trong phiên chat (người dùng gửi outline cho bạn)
 1. Đọc outline (file trong `sources/` hoặc người dùng dán), guide, bible, cast. Hỏi độ dài mục tiêu và "góc nhìn của tôi" nếu thiếu.
 2. Lập beat sheet theo khung trong guide; tự chấm với danh sách `BEAT_CHECKS` (`packages/shared/src/writing.ts`), sửa tối đa 2 vòng.
 3. Trình dàn ý cho người dùng duyệt (dạng bảng ngắn). **Chờ duyệt.**

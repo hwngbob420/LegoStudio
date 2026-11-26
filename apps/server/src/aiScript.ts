@@ -1,15 +1,11 @@
-// AI đọc truyện/outline -> kịch bản thoại sạch + bảng tài nguyên (dùng lại diễn viên kho kênh, tạo diễn viên riêng cho tập).
-// Phương án A: "viết nhanh" một bước. Phương án B (dàn ý -> phê bình -> thoại -> sửa) ở aiWriting.ts dùng chung các hàm dưới đây.
+// Hàm dùng chung cho phòng biên kịch (aiWriting.ts): diễn viên mới, luật kênh, kiểm thoại bằng code, ghi script.json.
 import { existsSync, readFileSync } from "node:fs";
-import { promises as fs } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { CastRecipe, Script, linesForDuration, parseOrThrow } from "@lse/shared";
+import { CastRecipe, Script, parseOrThrow } from "@lse/shared";
 import { castRecipeFiles } from "@lse/director/io";
-import type { AiRequest, TextAI } from "./ai/types";
 import { writeJsonAtomic } from "./jsonStore";
-import { sourcesForPrompt } from "./sources";
-import { HttpError, assertValidId, type WorkspacePaths } from "./workspace";
+import type { WorkspacePaths } from "./workspace";
 
 const SKINS = ["yellow_classic", "skin_light", "skin_light_warm", "skin_medium", "skin_medium_brown", "skin_deep_brown"] as const;
 const COLORS = ["white", "black", "red", "brick_red", "blue", "blue_dark", "orange", "green", "green_bright", "lime", "teal_dark", "tan",
@@ -32,19 +28,6 @@ export const NewCast = z.object({
   default_expression: z.enum(["innocent_dot", "deadpan_tired", "smug_smirk", "happy_closed", "sweating_nervous", "angry_brow"]),
 });
 export type NewCast = z.infer<typeof NewCast>;
-
-const Line = z.object({ speaker: z.string(), text: z.string().min(2).max(160) });
-
-/** Khuôn kịch bản AI trả về; số câu theo độ dài mục tiêu (không còn trần cứng 24 câu). */
-export const scriptPlanSchema = (maxLines: number, minLines = 2) => z.object({
-  title: z.string().max(60),
-  logline: z.string().max(200),
-  new_cast: z.array(NewCast).max(3),
-  lines: z.array(Line).min(minLines).max(maxLines),
-});
-/** Khuôn mặc định (giữ tương thích): đủ cho tập 5 phút. */
-export const ScriptPlan = scriptPlanSchema(linesForDuration(300).max);
-export type ScriptPlan = z.infer<typeof ScriptPlan>;
 
 export function bibleText(paths: WorkspacePaths) {
   const f = path.join(paths.library, "series_bible.md");
@@ -76,38 +59,6 @@ export function writerSystem(paths: WorkspacePaths, role: string) {
     "\n# Hướng dẫn biên kịch của kênh\n" + guideText(paths),
     "\n# Series bible\n" + bibleText(paths),
   ].join("\n");
-}
-
-/** Đầu vào chung của phòng biên kịch. */
-export const WritingInput = z.object({
-  story: z.string().max(200_000).default(""),
-  sourceIds: z.array(z.string().regex(/^src_[a-f0-9]{10}$/)).max(10).default([]),
-  mood: z.string().max(60).default("Hài hước"),
-  viewpoint: z.string().max(1000).default(""),
-  targetSec: z.number().min(10).max(600).default(45),
-});
-export type WritingInput = z.infer<typeof WritingInput>;
-
-/** Gom truyện dán tay + tư liệu đã gửi thành khối lời nhắc; kiểm bắt buộc. */
-export async function gatherMaterial(paths: WorkspacePaths, episode: string, raw: unknown) {
-  assertValidId(episode, "ID tập");
-  const input = WritingInput.parse(raw ?? {});
-  if (!input.story.trim() && !input.sourceIds.length) throw new HttpError(400, "Chưa có truyện: dán truyện hoặc chọn ít nhất một file tư liệu.");
-  if (!input.viewpoint.trim()) throw new HttpError(400, "Hãy điền \"Góc nhìn của tôi\" (AI phải lồng quan điểm riêng vào kịch bản).");
-  const src = await sourcesForPrompt(paths, episode, input.sourceIds);
-  const budget = linesForDuration(input.targetSec);
-  const material = [
-    `Không khí: ${input.mood}`,
-    `Độ dài mục tiêu: ${input.targetSec} giây -> ${budget.min}–${budget.max} câu thoại.`,
-    `Góc nhìn của tác giả (phải lồng vào): ${input.viewpoint}`,
-    input.story.trim() ? `\nTruyện / ý tưởng dán tay:\n<outline_document name="dan_tay">\n${input.story}\n</outline_document>` : "",
-    src.text ? `\n${src.text}` : "",
-    src.visionFiles.length ? `\nTư liệu dạng ảnh chụp (không có lớp chữ), hãy đọc trực tiếp: ${src.visionFiles.join(", ")}` : "",
-  ].filter(Boolean).join("\n");
-  const attach: Pick<AiRequest<unknown>, "images" | "files"> = src.visionFiles.length
-    ? { files: src.visionFiles, images: src.visionFiles.map((f) => ({ mime: "application/pdf", base64: readFileSync(f).toString("base64") })) }
-    : {};
-  return { input, material, budget, attach };
 }
 
 /** Ghi diễn viên mới vào kho riêng của tập; trả danh sách id đã tạo. */
@@ -148,25 +99,4 @@ export async function writeScriptFile(paths: WorkspacePaths, episode: string, da
   }, "Kịch bản");
   await writeJsonAtomic(path.join(paths.projectDir(episode), "script.json"), Script, script);
   return script;
-}
-
-/** Phương án A: một lời gọi AI viết thẳng kịch bản (từ truyện dán tay và/hoặc file tư liệu). */
-export async function analyzeStory(ai: TextAI, paths: WorkspacePaths, episode: string, raw: unknown) {
-  const { input, material, budget, attach } = await gatherMaterial(paths, episode, raw);
-  const system = [
-    writerSystem(paths, "biên kịch"),
-    "Ưu tiên dùng lại diễn viên có sẵn; chỉ tạo diễn viên mới (new_cast) khi truyện thật sự cần, tối đa 3, khác nhau rõ về dáng/tóc/màu.",
-    "speaker của mỗi câu phải là id có sẵn hoặc id trong new_cast.",
-    `Đi đúng khung nhịp: hook -> setup -> leo thang có số liệu -> cú lật -> chốt bằng một câu 'Step N: ...'. Tổng ${budget.min}–${budget.max} câu.`,
-  ].join("\n");
-  const prompt = `Diễn viên có sẵn:\n${castSummary(paths, episode)}\n\n${material}`;
-  const { data } = await ai.json({ label: "phan_tich_truyen", system, prompt, schema: scriptPlanSchema(budget.max), ...attach });
-  const known = new Set([...knownCast(paths, episode), ...data.new_cast.map((c) => c.id)]);
-  const errs = lineErrors(data.lines, known);
-  if (errs.length) throw new HttpError(422, `${errs[0]}. Bấm lại để thử lần nữa.`);
-  const newCast = await materializeCast(paths, episode, data.new_cast);
-  const script = await writeScriptFile(paths, episode, data);
-  await fs.mkdir(path.join(paths.projectDir(episode), "writing"), { recursive: true });
-  await writeJsonAtomic(path.join(paths.projectDir(episode), "writing", "input.json"), WritingInput, input);
-  return { script, newCast };
 }

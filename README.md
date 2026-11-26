@@ -9,13 +9,14 @@ Quy trình làm theo mô hình **pixel-story-engine**: dán truyện → AI vi�
 ## Bắt đầu
 1. Cài **Node.js LTS**, **Python 3.10+**, **Blender 5.2**, **FFmpeg** (bản đầy đủ).
 2. Bấm đúp **`start.bat`**. Lần đầu nó tự cài thư viện và chuẩn bị tài nguyên, rồi mở Studio ở http://localhost:5174.
-3. (Tuỳ chọn) Để dùng AI, đổi tên `.env.example` thành `.env` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL`. Bạn có thể chép file `.env`
-   từ pixel-story-engine. Không có khoá thì Studio vẫn chạy với **đạo diễn tự động**, hoặc bật `AI_SESSION_QUEUE=1` để Claude Code trả lời (Hộp thư Claude).
+3. AI viết kịch bản là **Claude Code** trên máy bạn (dùng tài khoản Claude, kèm skill `screenwriter` của dự án). Lần đầu, hoặc khi Studio báo
+   "chưa đăng nhập", mở Terminal và gõ `claude auth login`. Muốn trả lời thủ công trong phiên Claude Code thì đặt `AI_SESSION_QUEUE=1` trong `.env` (Hộp thư Claude).
+   Gemini chỉ dùng khi đặt `AI_PROVIDER=gemini` trong `.env`.
 
 ## Studio 5 tab
 | Tab | Làm gì |
 |---|---|
-| **Kịch bản** | Gửi file outline (.docx, .pdf, .md, .txt, .fountain) hoặc dán truyện + "Góc nhìn của tôi" + độ dài → **Lập dàn ý** (AI tự chấm, tự sửa, bạn duyệt) rồi viết thoại, hoặc **Viết nhanh 1 bước**; sửa tay từng câu |
+| **Kịch bản** | Gửi file outline (.docx, .pdf, .md, .txt, .fountain) hoặc dán truyện, chọn ngôi kể, giọng văn (16 kiểu), độ dài (20 giây – 30 phút), thông điệp → **Generate kịch bản**: Claude lập dàn ý, tự chấm, viết thoại theo từng phần; sửa dàn ý rồi viết lại thoại được |
 | **Xưởng** | Ráp minifig xoay 3D (da, tóc, áo in, phụ kiện, giọng), vai quần chúng ngẫu nhiên, Lưu sang kho kênh, sơ đồ tập dạng nút |
 | **Giọng đọc** | Tạo giọng trên máy, hoặc nạp giọng thật từng câu rồi **Tự khớp giờ** bằng Whisper; khẩu hình 2D tự sinh |
 | **Đạo diễn & Xem trước** | **AI tạo Storyboard**; Player 3D xem ngay (Three.js); sửa thẻ cảnh (góc máy, biểu cảm, động tác, hiệu ứng); lỗi "thẻ chữ che mặt" hiện tức thì; **Kiểm khung** bằng Blender |

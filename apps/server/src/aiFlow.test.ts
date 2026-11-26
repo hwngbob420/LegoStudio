@@ -56,23 +56,6 @@ beforeAll(() => {
 });
 afterAll(() => { close?.(); rmSync(tmp, { recursive: true, force: true }); });
 
-describe("AI script (Tab 1)", () => {
-  it("writes the clean script and puts the new character in the EPISODE library", async () => {
-    const p = await api("POST", "/api/projects", { title: "Soup" });
-    const r = await api("POST", `/api/projects/${p.json.id}/ai/script`, { story: "A chef and a dev argue about salt.", viewpoint: "Taste before you trust a rule." });
-    expect(r.status).toBe(200);
-    expect(r.json.newCast).toEqual(["zoe_chef"]);
-    expect(existsSync(path.join(ws, "projects", p.json.id, "assets/cast/zoe_chef.json"))).toBe(true);
-    const lib = await api("GET", "/api/library");
-    expect(lib.json.castTier.max_dev).toBe("channel");
-    expect(lib.json.castTier.zoe_chef).toBe(p.json.id);
-    expect(r.json.script.lines.map((l: { speaker: string }) => l.speaker)).toEqual(["zoe_chef", "max_dev", "zoe_chef"]);
-  });
-  it("refuses without a viewpoint", async () => {
-    expect((await api("POST", "/api/projects/showcase_v1/ai/script", { story: "x" })).status).toBe(400);
-  });
-});
-
 describe("AI director (Tab 4)", () => {
   it("builds a storyboard from AI beats with zero face/UI collisions", async () => {
     const r = await api("POST", "/api/projects/showcase_v1/ai/storyboard", {});

@@ -1,6 +1,6 @@
 // Gọi server (vite proxy /api -> 127.0.0.1:8788).
 import type { Issue } from "@lse/director";
-import type { BeatSheet, CritiqueLog, Script, SourceEntry, Storyboard, Timing } from "@lse/shared";
+import type { BeatSheet, CritiqueLog, Script, SourceEntry, Storyboard, Timing, WritingInput } from "@lse/shared";
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
   const r = await fetch(url, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -59,9 +59,11 @@ export const api = {
   },
   writing: (id: string) => req<Writing>("GET", `/api/projects/${id}/writing`),
   saveBeats: (id: string, b: BeatSheet) => req<BeatSheet>("PUT", `/api/projects/${id}/writing/beats`, b),
+  generate: (id: string, body: { input?: WritingInput; from?: "dialogue" }) => req<Job>("POST", `/api/projects/${id}/writing/generate`, body),
+  aiStatus: () => req<{ ok: boolean; provider: string; message: string }>("GET", "/api/ai/status"),
 };
 
-export interface Writing { input: { story: string; sourceIds: string[]; mood: string; viewpoint: string; targetSec: number } | null; beats: BeatSheet | null; beatCritique: CritiqueLog | null; scriptCritique: CritiqueLog | null }
+export interface Writing { input: WritingInput | null; beats: BeatSheet | null; beatCritique: CritiqueLog | null; scriptCritique: CritiqueLog | null }
 
 /** Đường dẫn file trong workspace qua server, có tham số chống cache. */
 export const wsUrl = (p: string, bust?: string | number) => `/ws/${p}${bust ? `?v=${bust}` : ""}`;

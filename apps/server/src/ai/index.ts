@@ -8,6 +8,7 @@ import { FallbackAI } from "./fallback";
 import { GeminiAI } from "./gemini";
 import { OpenAICompatAI } from "./openaiCompat";
 import { SessionQueueAI } from "./sessionQueue";
+import { ClaudeCodeAI, findClaude } from "./claudeCode";
 import { AiError, type AiRequest, type AiResult, type TextAI } from "./types";
 
 /** Bọc một AI để ghi sổ chi phí sau mỗi lần gọi thành công. */
@@ -39,6 +40,11 @@ export function makeAI(root: string, workspaceRoot = path.join(root, "workspace"
   const cfg = readAiConfig();
   const log = path.join(workspaceRoot, "cost_log.jsonl");
   if (cfg.sessionQueue) return new CostLoggedAI(new SessionQueueAI({ dir: path.join(workspaceRoot, "claude_queue") }), log);
+  // Mặc định: Claude Code trên máy (kèm skill dự án). Gemini/Ollama chỉ dùng khi đặt rõ AI_PROVIDER=gemini trong .env.
+  if ((process.env.AI_PROVIDER ?? "claude").trim().toLowerCase() !== "gemini") {
+    if (!findClaude()) throw new AiError("Chưa thấy Claude Code trên máy. Cài Claude Code (bản dòng lệnh), hoặc bật AI_SESSION_QUEUE=1 để dùng Hộp thư Claude.", 503);
+    return new CostLoggedAI(new ClaudeCodeAI({ cwd: root, model: process.env.CLAUDE_MODEL?.trim() || undefined }), log);
+  }
   const chain: TextAI[] = [];
   if (cfg.gemini) chain.push(new GeminiAI({ apiKey: process.env.GEMINI_API_KEY!.trim(), model: cfg.model!, strongModel: cfg.storyboardModel,
     fallbackModels: cfg.geminiFallbackModels, onSwitch: (from, to, why) => console.log(`AI: Gemini ${from} lỗi (${why}), chuyển sang ${to}.`) }));

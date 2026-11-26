@@ -3,8 +3,8 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { LoaderCircle, CircleCheck, CircleAlert, Play } from "lucide-react";
 import { api, type Job } from "../api";
 
-interface Ctx { jobs: Job[]; run: (kind: string) => Promise<void>; busy: (kind?: string) => Job | undefined }
-const JobsCtx = createContext<Ctx>({ jobs: [], run: async () => {}, busy: () => undefined });
+interface Ctx { jobs: Job[]; run: (kind: string) => Promise<void>; busy: (kind?: string) => Job | undefined; refresh: () => Promise<void> }
+const JobsCtx = createContext<Ctx>({ jobs: [], run: async () => {}, busy: () => undefined, refresh: async () => {} });
 export const useJobs = () => useContext(JobsCtx);
 
 export const JobsProvider: React.FC<{ project: string; onJobDone: () => void; children: React.ReactNode }> = ({ project, onJobDone, children }) => {
@@ -25,10 +25,10 @@ export const JobsProvider: React.FC<{ project: string; onJobDone: () => void; ch
   }, [active, refresh]);
   const run = async (kind: string) => { await api.runJob(project, kind); await refresh(); };
   const busy = (kind?: string) => jobs.find((j) => (j.status === "running" || j.status === "queued") && (!kind || j.kind === kind));
-  return <JobsCtx.Provider value={{ jobs, run, busy }}>{children}</JobsCtx.Provider>;
+  return <JobsCtx.Provider value={{ jobs, run, busy, refresh }}>{children}</JobsCtx.Provider>;
 };
 
-const LABEL: Record<string, string> = { tts: "Tạo giọng", contact: "Kiểm khung", render: "Render 3D", publish: "Xuất bản trọn tập", recut: "Cắt lại chữ + tiếng", library: "Nướng kho" };
+const LABEL: Record<string, string> = { write_script: "Viết kịch bản", tts: "Tạo giọng", contact: "Kiểm khung", render: "Render 3D", publish: "Xuất bản trọn tập", recut: "Cắt lại chữ + tiếng", library: "Nướng kho" };
 
 /** Nút chạy một việc nền, kèm trạng thái và thanh tiến độ. */
 export const JobButton: React.FC<{ kind: string; label?: string; primary?: boolean; icon?: React.ReactNode }> = ({ kind, label, primary, icon }) => {

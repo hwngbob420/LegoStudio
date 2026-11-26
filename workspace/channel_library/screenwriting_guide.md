@@ -7,12 +7,16 @@ running gag), khung video giải thích ngắn (hook 0–3 giây, leo thang ba b
 AI viết truyện (dàn ý kỹ quan trọng hơn sửa câu; phê bình bằng danh sách đạt/không đạt; người thật chọn câu chốt).
 
 ## 1. Định dạng tập
-- Video giải thích hài 20 giây – 5 phút, nhiều minifig đối thoại (không phải một người kể). Mỗi tập giải thích **một ý thật**.
+- Video 20 giây – 30 phút. Mỗi tập giải thích **một ý thật** (tập dài: một ý lớn, mỗi chương một ý con).
+- Ngôi kể do người dùng chọn: đối thoại giữa minifig (mặc định), ngôi thứ hai "bạn" (người dẫn `classic_yellow` nói với khán giả, kiểu lanh-vcl), ngôi thứ nhất, hoặc ngôi thứ ba (người dẫn tài liệu). Có người dẫn thì nhân vật vẫn chen thoại ngắn để giữ chất hài.
+- Giọng văn do người dùng chọn (tối đa 2), ưu tiên hơn giọng mặc định trong series bible.
 - Thoại tiếng Anh tự nhiên (phụ đề các ngôn ngữ khác làm sau). Giọng đọc là máy: câu ngắn, có dấu chấm/phẩy để ngắt nhịp.
 - Không tên thương hiệu thật, không nhân vật có bản quyền, không bắt chước người thật, không chế giễu nhóm người.
 - Không viết thời gian, góc máy, toạ độ: code tự dàn dựng. Chỉ viết thoại + ý tưởng thẻ chữ (`on_screen`).
 
 ## 2. Dàn ý trước, thoại sau
+
+Tập trên 5 phút: chia 3–10 chương, mỗi chương là một vòng nhỏ (móc -> leo thang -> lật nhỏ) và kết bằng một câu hỏi kéo sang chương sau; giữ một running gag xuyên tập.
 Nghiên cứu cho thấy dàn ý chi tiết làm truyện mạch lạc và hấp dẫn hơn rõ rệt, còn bước "đánh bóng câu" sau cùng gần như không
 thêm gì. Vì vậy dành sức cho dàn ý.
 

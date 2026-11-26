@@ -12,8 +12,9 @@ import { check, createProject, listProjects, readProject, saveScript, saveStoryb
 import { HttpError, REPO, assertValidId, workspacePaths } from "./workspace";
 import { makeAI } from "./ai";
 import { AiError, type TextAI } from "./ai/types";
-import { analyzeStory } from "./aiScript";
-import { getWriting, makeBeats, saveBeats, writeFromBeats } from "./aiWriting";
+import { getWriting, saveBeats, saveInput } from "./aiWriting";
+import { claudeStatus } from "./ai/claudeCode";
+import { loadEnv } from "./ai/env";
 import multer from "multer";
 import { MAX_UPLOAD_BYTES, addSource, extOf, listSources, removeSource } from "./sources";
 import { costSummary } from "./ai";
@@ -21,13 +22,13 @@ import { listPending } from "./ai/sessionQueue";
 import { LANGS, createShorts, readLocale, saveLocale, translate } from "./publish";
 import { aiStoryboard, rewriteShot } from "./aiStoryboard";
 
-export interface AppOptions { workspaceRoot: string; repoRoot?: string; runner?: Runner; now?: () => string; ai?: TextAI }
+export interface AppOptions { workspaceRoot: string; repoRoot?: string; runner?: Runner; now?: () => string; ai?: TextAI; writerStatus?: () => Promise<{ ok: boolean; provider: string; message: string }> }
 
 const PY = process.platform === "win32" ? "python" : "python3";
 const NPX = process.platform === "win32" ? "npx.cmd" : "npx";
 
 /** Các việc nền Studio bấm được -> chuỗi lệnh. */
-export function jobSteps(kind: string, prod: string, repo: string, opts: { lang?: string } = {}): Step[] {
+export function jobSteps(kind: string, prod: string, repo: string, opts: { lang?: string; from?: string } = {}): Step[] {
   const produce = (...a: string[]) => ({ cmd: PY, args: [path.join(repo, "apps/brick-engine/produce.py"), prod, ...a], label: kind });
   const blender = (script: string) => ({ cmd: PY, args: [path.join(repo, "apps/brick-engine/gpu_renderer.py"), "--script", script], label: script });
   switch (kind) {
@@ -40,6 +41,7 @@ export function jobSteps(kind: string, prod: string, repo: string, opts: { lang?
       if (!opts.lang || !/^[a-z]{2}$/.test(opts.lang)) throw new HttpError(400, "Thiếu mã ngôn ngữ (ví dụ vi, en).");
       return [produce("--from", "overlay", "--to", "composite", "--lang", opts.lang)];
     }
+    case "write_script": return [{ cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/generate.ts"), prod, ...(opts.from === "dialogue" ? ["--from", "dialogue"] : [])], label: "write" }];
     case "align": return [{ cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/align.ts"), prod], label: "align" }];
     case "library": return [
       { cmd: PY, args: [path.join(repo, "apps/brick-engine/face_atlas_gen.py")], label: "faces" },
@@ -91,7 +93,13 @@ export function createApp(opts: AppOptions) {
     return jobs.enqueue(id, String(req.body?.kind ?? ""), jobSteps(String(req.body?.kind ?? ""), prod, repo, { lang: req.body?.lang }));
   }));
   const ai = () => opts.ai ?? makeAI(repo, paths.root);
-  app.post("/api/projects/:id/ai/script", h(async (req) => analyzeStory(ai(), paths, String(req.params.id), req.body ?? {})));
+  /** Ai sẽ viết kịch bản: Claude Code trên máy (mặc định) hoặc Hộp thư Claude. */
+  const writerStatus = async (): Promise<{ ok: boolean; provider: string; message: string }> => {
+    if (opts.writerStatus) return opts.writerStatus();
+    loadEnv(repo);
+    if (process.env.AI_SESSION_QUEUE?.trim() === "1") return { ok: true, provider: "mailbox", message: "Hộp thư Claude: sau khi bấm, gõ \"xử lý hộp thư\" trong Claude Code." };
+    return { provider: "claude_code", ...(await claudeStatus()) };
+  };
 
   // ---- phòng biên kịch: tư liệu gửi lên + dàn ý -> phê bình -> thoại (phương án B)
   // multer chỉ gắn vào đúng route này (không làm middleware chung), giữ trong bộ nhớ, giới hạn cứng; kiểm đuôi đồng bộ.
@@ -110,13 +118,20 @@ export function createApp(opts: AppOptions) {
   app.delete("/api/projects/:id/sources/:sid", h(async (req) => removeSource(paths, String(req.params.id), String(req.params.sid))));
   app.get("/api/projects/:id/writing", h(async (req) => getWriting(paths, String(req.params.id))));
   app.put("/api/projects/:id/writing/beats", h(async (req) => saveBeats(paths, String(req.params.id), req.body)));
-  app.post("/api/projects/:id/ai/beats", h(async (req) => makeBeats(ai(), paths, String(req.params.id), req.body ?? {})));
-  app.post("/api/projects/:id/ai/script-from-beats", h(async (req) => writeFromBeats(ai(), paths, String(req.params.id))));
+  /** Nút "Generate kịch bản": lưu thông tin người dùng điền, kiểm Claude sẵn sàng, xếp việc nền (Claude viết kịch bản). */
+  app.post("/api/projects/:id/writing/generate", h(async (req) => {
+    const id = String(req.params.id);
+    const from = req.body?.from === "dialogue" ? "dialogue" : "beats";
+    if (from === "beats") await saveInput(paths, id, req.body?.input);
+    const st = await writerStatus();
+    if (!st.ok) throw new HttpError(503, st.message);
+    return jobs.enqueue(id, "write_script", jobSteps("write_script", paths.projectDir(id), repo, { from }));
+  }));
   /** AI không cấu hình được thì trả null để rơi về đạo diễn tự động. */
   const aiOrNull = () => { try { return ai(); } catch { return null; } };
   app.post("/api/projects/:id/ai/storyboard", h(async (req) => aiStoryboard(aiOrNull(), paths, String(req.params.id), req.body ?? {})));
   app.post("/api/projects/:id/ai/rewrite-shot", h(async (req) => rewriteShot(aiOrNull(), paths, String(req.params.id), String(req.body?.shot ?? ""), String(req.body?.note ?? ""))));
-  app.get("/api/ai/status", h(async () => { try { return { ok: true, id: ai().id }; } catch (e) { return { ok: false, message: (e as Error).message }; } }));
+  app.get("/api/ai/status", h(async () => writerStatus()));
 
   /** Nạp giọng thật cho một câu (thân yêu cầu là file âm thanh). */
   app.post("/api/projects/:id/voice/:line", express.raw({ type: () => true, limit: "60mb" }), h(async (req) => {
