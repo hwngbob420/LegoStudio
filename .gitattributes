@@ -1,0 +1,3 @@
+*.pdf binary
+*.docx binary
+*.fountain text eol=lf
