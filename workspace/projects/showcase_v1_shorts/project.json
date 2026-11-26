@@ -1,0 +1,21 @@
+{
+  "id": "showcase_v1_shorts",
+  "title": "Bug Hunt (Shorts)",
+  "created": "2026-11-26T02:38:00.832Z",
+  "language": "vi",
+  "settings": {
+    "quality": "final",
+    "chunk_sec": 60
+  },
+  "stages": {},
+  "chunks": [
+    {
+      "index": 0,
+      "f0": 1,
+      "f1": 234,
+      "status": "done",
+      "file": "chunks/part_00.mp4"
+    }
+  ],
+  "timeline_hash": "272c12e46cb69f8b"
+}

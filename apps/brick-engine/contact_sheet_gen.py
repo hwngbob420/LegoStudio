@@ -32,8 +32,10 @@ def overlap(a, b):
 def main(prod):
     rep = json.load(open(os.path.join(prod, "build", "contact", "contact.json"), encoding="utf-8"))
     shots = rep["shots"]
-    cols = 3
-    tw, th = 640, 360
+    # ô giữ đúng tỉ lệ khung (Shorts dọc 9:16 không bị ép bẹt thành ô ngang)
+    with Image.open(shots[0]["png"]) as im0:
+        portrait = im0.height > im0.width
+    cols, (tw, th) = (5, (300, 533)) if portrait else (3, (640, 360))
     pad, head_h = 14, 34
     rows = (len(shots) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * (tw + pad) + pad, rows * (th + head_h + pad) + pad + 40), (18, 20, 26))

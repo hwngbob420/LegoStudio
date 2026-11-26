@@ -30,12 +30,14 @@ def main(prod):
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t:.3f}", "-i", mp4, "-frames:v", "1", "-q:v", "3", p], check=True)
         paths.append(p)
     from PIL import Image
-    ims = [Image.open(p).resize((640, 360)) for p in paths]
-    cols = 3
+    first = Image.open(paths[0])
+    # ô giữ đúng tỉ lệ khung (Shorts dọc 9:16 không bị ép bẹt)
+    cols, (tw, th) = (5, (300, 533)) if first.height > first.width else (3, (640, 360))
+    ims = [Image.open(p).resize((tw, th)) for p in paths]
     rows = (len(ims) + cols - 1) // cols
-    strip = Image.new("RGB", (cols * 640, rows * 360), (0, 0, 0))
+    strip = Image.new("RGB", (cols * tw, rows * th), (0, 0, 0))
     for i, im in enumerate(ims):
-        strip.paste(im, ((i % cols) * 640, (i // cols) * 360))
+        strip.paste(im, ((i % cols) * tw, (i // cols) * th))
     strip.save(os.path.join(out, "_strip.jpg"), quality=85)
     print(f"qa frames: {len(paths)} -> {out}")
 

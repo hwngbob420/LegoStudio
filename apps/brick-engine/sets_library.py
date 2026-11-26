@@ -18,8 +18,9 @@ import paths as P
 TEX = P.TEXTURES
 
 
-def _cyc_backdrop(coll, center, width=9.0, depth=5.0, height=4.0, cname="#C9D9E8"):
-    """Seamless studio cyclorama behind the diorama (curved floor-to-wall sweep)."""
+def _cyc_backdrop(coll, center, width=16.0, depth=5.0, height=8.0, cname="#C9D9E8"):
+    """Seamless studio cyclorama behind the diorama (curved floor-to-wall sweep).
+    Rộng/cao dư để khung dọc (Shorts) không bao giờ nhìn thấy mép phông."""
     import bmesh
     bm = bmesh.new()
     n = 16

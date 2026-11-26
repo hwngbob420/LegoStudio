@@ -54,8 +54,8 @@ def main():
         elif st == "audio":
             py("audio_design.py", prod)
         elif st == "overlay":
-            if "--lang" in a:  # phụ đề theo ngôn ngữ: dựng lại props lớp chữ với bản dịch
-                py("remotion_props.py", prod, "--lang", a[a.index("--lang") + 1])
+            # luôn dựng lại props lớp chữ đúng ngôn ngữ (không để sót bản dịch của lần xuất trước)
+            py("remotion_props.py", prod, *(["--lang", a[a.index("--lang") + 1]] if "--lang" in a else []))
             rs = P.VIDEO_ENGINE
             npx = "npx.cmd" if os.name == "nt" else "npx"
             props = os.path.join(prod, "build", "overlay_props.json")

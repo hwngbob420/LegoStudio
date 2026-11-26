@@ -13,13 +13,15 @@
       "index": 0,
       "f0": 1,
       "f1": 1440,
-      "status": "pending"
+      "status": "done",
+      "file": "chunks/part_00.mp4"
     },
     {
       "index": 1,
       "f0": 1441,
       "f1": 2277,
-      "status": "pending"
+      "status": "done",
+      "file": "chunks/part_01.mp4"
     }
   ],
   "timeline_hash": "13c9c881185e2079"

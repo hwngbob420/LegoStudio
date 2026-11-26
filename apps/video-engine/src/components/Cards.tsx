@@ -61,15 +61,18 @@ export const PartCallout: React.FC<{cue: any; W: number; H: number}> = ({cue, W,
   const w = r.width;
   const icons = Array.from({length: cue.count});
   const countShown = Math.min(cue.count, Math.max(0, Math.floor((local - 0.15) / 0.22) + 1));
+  // cốc tự co cho vừa bề ngang thẻ (không tràn ra ngoài, không chạm mặt); quá chật thì xuống dòng
+  const inner = w - 56 - 2 * OUTLINE - 4;
+  const mugSize = Math.max(44, Math.min(118, Math.floor((inner - 10 * (cue.count - 1)) / cue.count)));
   return (
     <div style={{...cardBase, left: r.left, top: r.top + r.height * 0.08, width: w, padding: 28, background: MANUAL_BLUE,
-      transform: `scale(${s})`, transformOrigin: 'center top'}}>
-      <div style={{display: 'flex', alignItems: 'flex-end', gap: 10, minHeight: 130}}>
+      transform: `scale(${s})`, transformOrigin: 'center top', overflow: 'hidden'}}>
+      <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 10, minHeight: mugSize + 12, maxWidth: inner}}>
         {icons.map((_, i) => {
           const k = spring({frame: (local - 0.15 - i * 0.22) * 60, fps: 60, config: {damping: 8, stiffness: 220}});
           return (
             <div key={i} style={{transform: `translateY(${(1 - k) * -70}px) scale(${0.4 + 0.6 * k})`, opacity: k > 0.02 ? 1 : 0}}>
-              <Mug size={118} color={['#FFFFFF', '#E0352B', '#0F6C77'][i % 3]} />
+              <Mug size={mugSize} color={['#FFFFFF', '#E0352B', '#0F6C77'][i % 3]} />
             </div>
           );
         })}
@@ -90,9 +93,11 @@ export const BrickChart: React.FC<{cue: any; W: number; H: number}> = ({cue, W, 
   const {s, visible, t} = usePop(cue.t0, cue.t1);
   if (!visible) return null;
   const r = px(cue.rect, W, H);
-  const brickH = 40;
   const barW = (r.width - 120) / cue.bars.length;
   const floorY = r.height - 120;
+  // viên gạch tự co để cột cao nhất vừa thẻ (thẻ thấp của Shorts dọc)
+  const maxVal = Math.max(...cue.bars.map((b: any) => b.value));
+  const brickH = Math.max(14, Math.min(40, (floorY - 90) / maxVal));
   return (
     <div style={{...cardBase, left: r.left, top: r.top, width: r.width, height: r.height, transform: `scale(${s})`, transformOrigin: 'center bottom', overflow: 'hidden'}}>
       <div style={{position: 'absolute', left: 30, top: 18, fontSize: 46, fontWeight: 900}}>{cue.title}</div>
@@ -133,7 +138,7 @@ export const BrickChart: React.FC<{cue: any; W: number; H: number}> = ({cue, W, 
               {b.label}
             </div>
             {collapsed ? (
-              <div style={{position: 'absolute', left: x + bw * 0.05, top: floorY - 340, fontSize: 96, fontWeight: 900, color: '#D7261E',
+              <div style={{position: 'absolute', left: x + bw * 0.05, top: Math.max(56, floorY - maxVal * brickH - 40), fontSize: 96, fontWeight: 900, color: '#D7261E',
                 transform: `scale(${spring({frame: (t - b.collapse_t - 0.25) * 60, fps: 60, config: {damping: 7}})}) rotate(-10deg)`, WebkitTextStroke: `4px ${INK}`}}>
                 ?!
               </div>

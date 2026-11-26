@@ -1,0 +1,14 @@
+{
+  "title": "Bug Hunt",
+  "logline": "A tired dev blames the bug. His lead runs the numbers. The bug is the coffee. Or him.",
+  "fps_world": 12,
+  "start_offset": 2.5,
+  "tail": 1.1,
+  "lines": [
+    {"id": "L1", "speaker": "max_dev", "text": "Three coffees. And I still can't find the bug.", "gap_before": 0.0},
+    {"id": "L2", "speaker": "priya_lead", "text": "Easy. One coffee is focus. Two is speed.", "gap_before": 0.35},
+    {"id": "L3", "speaker": "priya_lead", "text": "Three... is chaos.", "gap_before": 0.25},
+    {"id": "L4", "speaker": "max_dev", "text": "Wait. So the bug... is me?", "gap_before": 0.35},
+    {"id": "L5", "speaker": "priya_lead", "text": "Step two. Decaf.", "gap_before": 0.3}
+  ]
+}

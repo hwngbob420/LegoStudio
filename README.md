@@ -40,7 +40,9 @@ Quy trình làm theo mô hình **pixel-story-engine**: dán truyện → AI vi�
 ## Tập mẫu
 - `showcase_v1` "Bug Hunt": 19,5 giây, có thêm bản phụ đề tiếng Việt `output_final_vi.mp4`.
 - `ep01_foam_physics`: Kofi + Grandma Lin ở phố quán cà phê (storyboard do đạo diễn tự động dựng).
-- `ep02_the_to_do_list_trap`: tập dài 3 phút 10 giây, 52 câu, render chia chặng.
+- `ep02_the_to_do_list_trap`: tập dài 3 phút 10 giây, 52 câu, render chia chặng. Trên GitHub chỉ có bản xem trước `output_preview_720p.mp4`
+  (bản 1080p60 nặng 125 MB, vượt giới hạn GitHub; chạy `npm run produce` để tự render).
+- `showcase_v1_shorts`: bản Shorts dọc 1080x1920 của "Bug Hunt", tạo bằng nút "Tạo Shorts dọc".
 
 ## Lệnh cho người dùng nâng cao
 ```bash

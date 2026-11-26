@@ -48,8 +48,11 @@ export function planCamera(
   if (preset === "wide_establish" || preset === "assembly_high") {
     lens = spec.lens ?? (preset === "assembly_high" ? 30 : 35);
     fstop = spec.fstop ?? 1.0;
-    const back = (preset === "assembly_high" ? 3.1 : 2.85) * (aspect < 1 ? 1.6 : 1);
-    const up = preset === "assembly_high" ? 1.75 : 1.05;
+    // khung dọc: không cố thu trọn bề ngang bộ set (set bé, thừa phông trống trên/dưới); dolly lại gần theo đúng
+    // hướng nhìn (giữ góc chúc), cắt bớt hai mép set để nhân vật đọc được mặt
+    const dolly = aspect < 1 ? 0.7 : 1;
+    const back = (preset === "assembly_high" ? 3.1 : 2.85) * dolly;
+    const up = (preset === "assembly_high" ? 1.75 : 1.05) * dolly;
     look = add(setCenter, [0, 0.25, 0.22]);
     pos = add(setCenter, [Math.sin(yaw) * back, -Math.cos(yaw) * back, up]);
     focusPoint = add(setCenter, [0, -0.05, 0.25]);
