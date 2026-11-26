@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "lse-server", "runtimeExecutable": "npx", "runtimeArgs": ["tsx", "apps/server/src/server.ts"], "port": 8788 },
-    { "name": "lse-server-mailbox", "runtimeExecutable": "cmd", "runtimeArgs": ["/c", "set AI_SESSION_QUEUE=1&& npx tsx apps/server/src/server.ts"], "port": 8788 },
+    { "name": "lse-server-mailbox", "runtimeExecutable": "cmd", "runtimeArgs": ["/c", "set AI_SESSION_QUEUE=1&& set PORT=8789&& npx tsx apps/server/src/server.ts"], "port": 8789, "autoPort": false },
     { "name": "lse-studio-test", "runtimeExecutable": "cmd", "runtimeArgs": ["/c", "set LSE_SERVER_PORT=8789&& set STUDIO_PORT=5175&& npm run dev -w @lse/studio-ui"], "port": 5175, "autoPort": false },
     { "name": "lse-studio", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "-w", "@lse/studio-ui"], "port": 5174 }
   ]
