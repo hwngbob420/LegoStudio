@@ -50,3 +50,7 @@ workspace/_jobs/
 
 # Video gốc quá 100 MB (giới hạn GitHub) — chỉ commit bản xem trước output_preview_720p.mp4
 workspace/projects/ep02_the_to_do_list_trap/output_final.mp4
+
+# Dữ liệu chạy của AI (Hộp thư Claude, sổ chi phí) — riêng từng máy
+workspace/claude_queue/
+workspace/cost_log.jsonl

@@ -10,7 +10,7 @@ import { AiError, type AiRequest, type AiResult, type TextAI } from "./types";
  * ra tệp `<id>.response.json`; tool tự đọc, kiểm đúng khuôn như mọi nhà cung cấp AI khác, rồi chạy tiếp.
  * Sai khuôn thì ghi `<id>.error.txt` (liệt kê lỗi) và chờ bản sửa. Không có khóa, không có chi phí API.
  */
-export interface QueueRequest { id: string; label: string; tier: string; createdAt: string; system: string; prompt: string; schema: unknown; images?: number }
+export interface QueueRequest { id: string; label: string; tier: string; createdAt: string; system: string; prompt: string; schema: unknown; images?: number; files?: string[] }
 
 export class SessionQueueAI implements TextAI {
   readonly id = "claude_session";
@@ -23,7 +23,7 @@ export class SessionQueueAI implements TextAI {
     await fs.mkdir(this.opts.dir, { recursive: true });
     const id = `${new Date(this.now()).toISOString().replace(/[:.]/g, "-")}_${req.label.replace(/[^a-z0-9_]/gi, "").slice(0, 30)}`;
     const base = path.join(this.opts.dir, id);
-    const request: QueueRequest = { id, label: req.label, tier: req.tier ?? "default", createdAt: new Date(this.now()).toISOString(), system: req.system, prompt: req.prompt, schema: toGeminiSchema(req.schema), ...(req.images?.length ? { images: req.images.length } : {}) };
+    const request: QueueRequest = { id, label: req.label, tier: req.tier ?? "default", createdAt: new Date(this.now()).toISOString(), system: req.system, prompt: req.prompt, schema: toGeminiSchema(req.schema), ...(req.images?.length ? { images: req.images.length } : {}), ...(req.files?.length ? { files: req.files } : {}) };
     await fs.writeFile(`${base}.request.json`, JSON.stringify(request, null, 2) + "\n", "utf8");
     const deadline = this.now() + (this.opts.timeoutMs ?? 24 * 3_600_000);
     let lastIssue = "";

@@ -3,7 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { ACTIONS, Catalog, EXPRESSIONS, FX_KINDS, Script, Storyboard, Timing, parseOrThrow, storyboardRefErrors } from "@lse/shared";
+import { ACTIONS, BeatSheet, Catalog, EXPRESSIONS, FX_KINDS, Script, Storyboard, Timing, parseOrThrow, storyboardRefErrors } from "@lse/shared";
 import { BeatPlan, autoFix, autoPlan, bake, compose, overlayProps, validateLayout, type Beat } from "@lse/director";
 import { loadLibrary, timingPath } from "@lse/director/io";
 import { AiError, type TextAI } from "./ai/types";
@@ -66,6 +66,12 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
     try {
       const lines = ctx.script.lines;
       const beats: Beat[] = [];
+      // dàn ý đã duyệt ở phòng biên kịch: gợi ý thẻ chữ/biểu đồ theo nhịp
+      const bsFile = path.join(paths.projectDir(id), "writing", "beat_sheet.json");
+      const bs = existsSync(bsFile) ? BeatSheet.safeParse(JSON.parse(readFileSync(bsFile, "utf8"))) : null;
+      const beatHints = bs?.success && bs.data.approved
+        ? `Dàn ý đã duyệt (ý tưởng thẻ chữ theo nhịp, dùng làm gợi ý cho ui): ${bs.data.beats.map((b) => `${b.id} ${b.kind}: ${b.on_screen || b.summary}`).join(" | ")}`
+        : "";
       let set = "", ending = { step: "02", title: "Your turn" }, prevSummary = "";
       for (let i = 0; i < lines.length; i += BATCH) {
         const chunk = lines.slice(i, i + BATCH);
@@ -74,6 +80,7 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
           const prompt = [
             `Tập: ${ctx.script.title}. Lô ${i / BATCH + 1}/${Math.ceil(lines.length / BATCH)}.`,
             prevSummary ? `Tóm tắt các cảnh trước: ${prevSummary}` : "",
+            beatHints,
             set ? `Bộ set đã chọn: ${set} (giữ nguyên).` : "Chọn MỘT bộ set hợp truyện.",
             "Các câu (id | người nói | số từ | lời):",
             ...chunk.map((l) => `${l.id} | ${l.speaker} | ${ctx.timing.lines[l.id].words.length} | ${l.text}`),

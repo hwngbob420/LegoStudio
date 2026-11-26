@@ -13,6 +13,9 @@ import { HttpError, REPO, assertValidId, workspacePaths } from "./workspace";
 import { makeAI } from "./ai";
 import { AiError, type TextAI } from "./ai/types";
 import { analyzeStory } from "./aiScript";
+import { getWriting, makeBeats, saveBeats, writeFromBeats } from "./aiWriting";
+import multer from "multer";
+import { MAX_UPLOAD_BYTES, addSource, extOf, listSources, removeSource } from "./sources";
 import { costSummary } from "./ai";
 import { listPending } from "./ai/sessionQueue";
 import { LANGS, createShorts, readLocale, saveLocale, translate } from "./publish";
@@ -89,6 +92,26 @@ export function createApp(opts: AppOptions) {
   }));
   const ai = () => opts.ai ?? makeAI(repo, paths.root);
   app.post("/api/projects/:id/ai/script", h(async (req) => analyzeStory(ai(), paths, String(req.params.id), req.body ?? {})));
+
+  // ---- phòng biên kịch: tư liệu gửi lên + dàn ý -> phê bình -> thoại (phương án B)
+  // multer chỉ gắn vào đúng route này (không làm middleware chung), giữ trong bộ nhớ, giới hạn cứng; kiểm đuôi đồng bộ.
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 4, parts: 6, fieldSize: 1024 },
+    fileFilter: (_req, file, cb) => { try { extOf(file.originalname); cb(null, true); } catch (e) { cb(e as Error); } },
+  });
+  app.get("/api/projects/:id/sources", h(async (req) => listSources(paths, String(req.params.id))));
+  app.post("/api/projects/:id/sources", upload.single("file"), h(async (req) => {
+    if (!req.file) throw new HttpError(400, "Chưa chọn file.");
+    // tên file từ trình duyệt đến dạng latin1: đổi lại UTF-8 để hiện đúng tên tiếng Việt
+    const name = Buffer.from(req.file.originalname, "latin1").toString("utf8");
+    return addSource(paths, String(req.params.id), { originalname: name, buffer: req.file.buffer }, now());
+  }));
+  app.delete("/api/projects/:id/sources/:sid", h(async (req) => removeSource(paths, String(req.params.id), String(req.params.sid))));
+  app.get("/api/projects/:id/writing", h(async (req) => getWriting(paths, String(req.params.id))));
+  app.put("/api/projects/:id/writing/beats", h(async (req) => saveBeats(paths, String(req.params.id), req.body)));
+  app.post("/api/projects/:id/ai/beats", h(async (req) => makeBeats(ai(), paths, String(req.params.id), req.body ?? {})));
+  app.post("/api/projects/:id/ai/script-from-beats", h(async (req) => writeFromBeats(ai(), paths, String(req.params.id))));
   /** AI không cấu hình được thì trả null để rơi về đạo diễn tự động. */
   const aiOrNull = () => { try { return ai(); } catch { return null; } };
   app.post("/api/projects/:id/ai/storyboard", h(async (req) => aiStoryboard(aiOrNull(), paths, String(req.params.id), req.body ?? {})));
@@ -145,6 +168,10 @@ export function createApp(opts: AppOptions) {
 
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof HttpError) return res.status(err.status).json({ error: err.message });
+    if (err instanceof multer.MulterError) {
+      const msg = err.code === "LIMIT_FILE_SIZE" ? `File quá lớn (tối đa ${MAX_UPLOAD_BYTES / 1024 / 1024} MB).` : `Gửi file lỗi: ${err.code}`;
+      return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({ error: msg });
+    }
     if (err instanceof AiError) return res.status(err.status).json({ error: err.message });
     if (err instanceof ZodError) return res.status(400).json({ error: err.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") });
     console.error(err);

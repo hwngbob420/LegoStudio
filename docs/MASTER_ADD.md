@@ -57,6 +57,7 @@ Chỉ cài skill chính chủ: Remotion (`remotion-dev/skills`) và Gemini (`goo
 | Bản cuối 3D | Blender 5.2 EEVEE, chạy `-b --factory-startup` | Engine Python hiện có, đổi sang phát timeline đã nướng |
 | Server | Express + TS + `zod` | Phục vụ `workspace/`, chạy việc nền (Blender, Remotion) có tiến trình |
 | AI chữ | Cổng AI của PSE (Gemini + OpenAI-compat/Ollama dự phòng) | Model lấy từ `.env` |
+| Nhận file outline | `multer@2.5.0`, `mammoth@1.13.0` (.docx), `unpdf@2.2.2` (.pdf, cần Node 24+), `file-type@22.3.0`; `@types/multer` (dev) | Người dùng duyệt 2026-11-26. Ghim đúng bản (bản cũ có lỗi bảo mật) |
 | Giọng | Nạp giọng + Whisper (`@remotion/install-whisper-cpp`), TTS chạy trên máy, SAPI dự phòng | Lip-sync chung một đường |
 | Âm thanh | `audio_design.py` hiện có (tiếng clack, nhạc nền, hạ nhạc khi có lời) | Sau có thể chuyển sang TS |
 | Ghép | FFmpeg | Ghép hình nền 12 hình/s giữ 5 lần thành 60 hình/s, lớp chữ VP9 alpha, tiếng |
@@ -194,6 +195,7 @@ Mỗi giai đoạn: kế hoạch → người dùng duyệt → làm → `/phase
 | **3C. AI đạo diễn** | Storyboard theo lô + validator (luật không che mặt chạy không cần Blender) + tự sửa + "AI viết lại riêng cảnh này" | Truyện mới → storyboard 0 lỗi nặng, xem ngay trong Player, không sửa tay JSON |
 | **4A. Xuất bản dài** | Render chia chặng bằng Blender, làm tiếp khi bị tắt, render lại riêng chặng, trộn tiếng một lần | Xuất trọn một tập 3–5 phút. Chỗ nối không giật. Tắt giữa chừng mở lại làm tiếp được |
 | **4B. Đa ngôn ngữ, Shorts, Hộp thư Claude** | Phụ đề nhiều ngôn ngữ, Shorts dọc, hộp thư đẩy cảnh khó sang Claude, sổ chi phí AI | Xuất bản tiếng Anh và một Shorts dọc đúng bố cục |
+| **4C. Phòng biên kịch** | Gửi file outline (docx/pdf/md/txt/fountain), skill Screenwriter, viết nhanh 1 bước (A), dàn ý -> phê bình đạt/không đạt -> duyệt -> thoại -> sửa (B), số câu theo độ dài | Từ một file outline ra kịch bản qua cả hai đường, file độc bị chặn, kịch bản đi tiếp tới giọng + storyboard |
 
 ---
 

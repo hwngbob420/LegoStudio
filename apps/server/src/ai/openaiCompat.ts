@@ -99,8 +99,10 @@ export class OpenAICompatAI implements TextAI {
   }
 
   private async call(model: string, req: AiRequest<unknown>, prompt: string, schema: unknown, mode: "schema" | "object"): Promise<ChatResponse> {
-    const userContent = req.images?.length
-      ? [{ type: "text", text: mode === "object" ? `${prompt}\n\nTrả về JSON đúng schema sau:\n${JSON.stringify(schema)}` : prompt }, ...req.images.map((im) => ({ type: "image_url", image_url: { url: `data:${im.mime};base64,${im.base64}` } }))]
+    // kiểu OpenAI chỉ nhận ảnh; PDF ảnh chụp (application/pdf) bỏ qua
+    const imgs = (req.images ?? []).filter((im) => im.mime.startsWith("image/"));
+    const userContent = imgs.length
+      ? [{ type: "text", text: mode === "object" ? `${prompt}\n\nTrả về JSON đúng schema sau:\n${JSON.stringify(schema)}` : prompt }, ...imgs.map((im) => ({ type: "image_url", image_url: { url: `data:${im.mime};base64,${im.base64}` } }))]
       : mode === "object" ? `${prompt}\n\nTrả về JSON đúng schema sau:\n${JSON.stringify(schema)}` : prompt;
     const body = {
       model,

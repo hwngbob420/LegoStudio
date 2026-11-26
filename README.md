@@ -15,7 +15,7 @@ Quy trình làm theo mô hình **pixel-story-engine**: dán truyện → AI vi�
 ## Studio 5 tab
 | Tab | Làm gì |
 |---|---|
-| **Kịch bản** | Dán truyện + "Góc nhìn của tôi" → AI viết lời thoại, tạo diễn viên mới cho tập; sửa tay từng câu |
+| **Kịch bản** | Gửi file outline (.docx, .pdf, .md, .txt, .fountain) hoặc dán truyện + "Góc nhìn của tôi" + độ dài → **Lập dàn ý** (AI tự chấm, tự sửa, bạn duyệt) rồi viết thoại, hoặc **Viết nhanh 1 bước**; sửa tay từng câu |
 | **Xưởng** | Ráp minifig xoay 3D (da, tóc, áo in, phụ kiện, giọng), vai quần chúng ngẫu nhiên, Lưu sang kho kênh, sơ đồ tập dạng nút |
 | **Giọng đọc** | Tạo giọng trên máy, hoặc nạp giọng thật từng câu rồi **Tự khớp giờ** bằng Whisper; khẩu hình 2D tự sinh |
 | **Đạo diễn & Xem trước** | **AI tạo Storyboard**; Player 3D xem ngay (Three.js); sửa thẻ cảnh (góc máy, biểu cảm, động tác, hiệu ứng); lỗi "thẻ chữ che mặt" hiện tức thì; **Kiểm khung** bằng Blender |
@@ -46,7 +46,7 @@ Quy trình làm theo mô hình **pixel-story-engine**: dán truyện → AI vi�
 
 ## Lệnh cho người dùng nâng cao
 ```bash
-npm test                                                        # 55 test tự động
+npm test                                                        # 72 test tự động
 npm run doctor                                                  # kiểm sức khoẻ môi trường
 npm run produce -- workspace/projects/<tập>                     # làm trọn một tập ra output_final.mp4
 npm run produce -- workspace/projects/<tập> --from overlay --to composite --lang vi   # chỉ xuất lại phụ đề tiếng Việt

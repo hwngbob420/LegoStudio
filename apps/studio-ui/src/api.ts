@@ -1,6 +1,6 @@
 // Gọi server (vite proxy /api -> 127.0.0.1:8788).
 import type { Issue } from "@lse/director";
-import type { Script, Storyboard, Timing } from "@lse/shared";
+import type { BeatSheet, CritiqueLog, Script, SourceEntry, Storyboard, Timing } from "@lse/shared";
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
   const r = await fetch(url, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -47,7 +47,21 @@ export const api = {
   saveCast: (recipe: unknown, episode?: string) => req<any>("POST", `/api/library/cast${episode ? `?episode=${episode}` : ""}`, recipe),
   promote: (episode: string, id: string) => req<any>("POST", "/api/library/promote", { episode, id }),
   ai: (id: string, task: string, body: unknown) => req<any>("POST", `/api/projects/${id}/ai/${task}`, body),
+  sources: (id: string) => req<SourceEntry[]>("GET", `/api/projects/${id}/sources`),
+  deleteSource: (id: string, sid: string) => req<any>("DELETE", `/api/projects/${id}/sources/${sid}`),
+  uploadSource: async (id: string, file: File): Promise<SourceEntry> => {
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    const r = await fetch(`/api/projects/${id}/sources`, { method: "POST", body: fd });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((j as { error?: string }).error ?? `Lỗi ${r.status}`);
+    return j as SourceEntry;
+  },
+  writing: (id: string) => req<Writing>("GET", `/api/projects/${id}/writing`),
+  saveBeats: (id: string, b: BeatSheet) => req<BeatSheet>("PUT", `/api/projects/${id}/writing/beats`, b),
 };
+
+export interface Writing { input: { story: string; sourceIds: string[]; mood: string; viewpoint: string; targetSec: number } | null; beats: BeatSheet | null; beatCritique: CritiqueLog | null; scriptCritique: CritiqueLog | null }
 
 /** Đường dẫn file trong workspace qua server, có tham số chống cache. */
 export const wsUrl = (p: string, bust?: string | number) => `/ws/${p}${bust ? `?v=${bust}` : ""}`;

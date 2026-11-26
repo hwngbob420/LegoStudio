@@ -14,6 +14,8 @@ export interface AiRequest<T> {
   tier?: ModelTier;
   /** Ảnh gửi kèm để AI nhìn (ví dụ mô tả ảnh tư liệu). */
   images?: Array<{ mime: string; base64: string }>;
+  /** Đường dẫn file gốc gửi kèm (PDF ảnh chụp...): Hộp thư Claude ghi đường dẫn để Claude Code tự đọc. */
+  files?: string[];
 }
 
 export interface AiResult<T> {
