@@ -1,0 +1,26 @@
+{
+ "lang": "vi",
+ "lines": {
+  "L1": "Ba ly cà phê. Mà mình vẫn chưa tìm ra con bug.",
+  "L2": "Dễ thôi. Một ly là tập trung. Hai ly là tăng tốc.",
+  "L3": "Ba ly... là hỗn loạn.",
+  "L4": "Khoan. Vậy con bug... là mình à?",
+  "L5": "Bước hai. Cà phê không cafein."
+ },
+ "cues": [
+  {
+   "title": "Tìm con bug"
+  },
+  {
+   "label": "Cà phê",
+   "note": "Bug tìm được: 0"
+  },
+  {
+   "title": "Tập trung theo số ly"
+  },
+  {
+   "title": "Cà phê nhạt"
+  },
+  {}
+ ]
+}

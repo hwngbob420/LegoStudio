@@ -177,3 +177,18 @@ describe("real-voice visemes from words", () => {
     expect(v.some((x) => x[1] === 0 && x[0] === 0.3)).toBe(true);
   });
 });
+
+import { makeShorts } from "./shorts";
+describe("Shorts 1080x1920", () => {
+  it("re-frames the showcase vertically with no face under the cards or subtitles", () => {
+    const sb = parseOrThrow(Storyboard, makeShorts(storyboard, "showcase_v1_shorts"), "shorts");
+    expect(sb.resolution).toEqual([1080, 1920]);
+    const T = bake({ storyboard: sb, timing, ...lib });
+    const errs = validateLayout(T, sb, overlayProps(sb, timing, {})).filter((i) => i.level === "error");
+    expect(errs.map((e) => e.message)).toEqual([]);
+    // chủ thể cận ở giữa khung
+    const s2 = T.qa.find((q) => q.shot === "S2")!;
+    const bb = s2.samples.find((x) => x.f === s2.key_f)!.heads.max_dev;
+    expect(Math.abs((bb[0] + bb[2]) / 2 - 0.5)).toBeLessThan(0.12);
+  });
+});

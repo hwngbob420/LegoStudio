@@ -105,7 +105,7 @@ export function bake(inp: BakeInput): BakedTimeline {
     const mid = f0 + Math.floor((f1 - f0) / 2);
     const subj = s.subjects ?? [];
     const plan = planCamera({ ...s.camera, subject_zone: s.subject_zone }, f0, f1, subj.map((a) => headAt(a, mid)), subj,
-      subj.length ? facing[subj[0]] : 0, setOrigin(s.set), i * 31 + 7);
+      subj.length ? facing[subj[0]] : 0, setOrigin(s.set), i * 31 + 7, W / H);
     bshots.push({ id: s.id, f0, f1, lens: plan.lens, fstop: plan.fstop, shift: plan.shift, focus: plan.focus,
       keys: plan.keys.map((k) => r5v(k)) });
     if (i > 0 && s.whoosh) sfx.push({ t: s._t0 - 0.08, type: "whoosh", gain: 0.7 });

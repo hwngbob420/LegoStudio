@@ -20,10 +20,10 @@ def plate_input(prod, fps_world):
     return ["-framerate", str(fps_world), "-start_number", "1", "-i", os.path.join(prod, "frames", "f_%04d.png")]
 
 
-def composite(prod, fps_world=12, fps_out=60, crf=17):
+def composite(prod, fps_world=12, fps_out=60, crf=17, out_name="output_final.mp4"):
     overlay = os.path.join(prod, "build", "overlay.webm")
     mix = os.path.join(prod, "build", "mix.wav")
-    out = os.path.join(prod, "output_final.mp4")
+    out = os.path.join(prod, out_name)
     fc = (f"[0:v]fps={fps_out},noise=alls=3:allf=t,vignette=angle=PI/7,format=rgba[bg];"
           f"[1:v]format=rgba[ov];[bg][ov]overlay=0:0:format=auto:shortest=1,format=yuv420p[v]")
     cmd = ["ffmpeg", "-y", "-loglevel", "error",

@@ -8,5 +8,19 @@
     "chunk_sec": 120
   },
   "stages": {},
-  "chunks": []
+  "chunks": [
+    {
+      "index": 0,
+      "f0": 1,
+      "f1": 1440,
+      "status": "pending"
+    },
+    {
+      "index": 1,
+      "f0": 1441,
+      "f1": 2277,
+      "status": "pending"
+    }
+  ],
+  "timeline_hash": "13c9c881185e2079"
 }

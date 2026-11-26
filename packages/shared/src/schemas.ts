@@ -77,6 +77,8 @@ export const Camera = z.object({
   rise: z.number().min(-1).max(2).optional(),
   spread: z.number().min(0.1).max(0.9).optional(),
   shake: z.number().min(0).max(3).optional(),
+  /** lệch ống kính dọc (đơn vị chiều lớn của khung); dương = chủ thể thấp xuống */
+  shift_y: z.number().min(-0.3).max(0.3).optional(),
 });
 export const Fx = z.object({
   kind: z.enum(FX_KINDS),
@@ -106,7 +108,7 @@ export const Shot = z.object({
 export type Shot = z.infer<typeof Shot>;
 
 const CueBase = { t0: TimeRef, t1: TimeRef };
-const ZonedCue = { ...CueBase, zone: z.enum(["left_third", "right_third", "top_left", "top_right", "top_center"]) };
+const ZonedCue = { ...CueBase, zone: z.enum(["left_third", "right_third", "top_left", "top_right", "top_center", "upper"]) };
 export const UiCue = z.discriminatedUnion("type", [
   z.object({ type: z.literal("step_badge"), ...ZonedCue, step: z.string(), title: z.string(), check: z.boolean().optional() }),
   z.object({ type: z.literal("part_callout"), ...ZonedCue, count: z.number().int().min(1).max(9), label: z.string(),

@@ -14,3 +14,4 @@ export const DIRECTOR_VERSION = "1.0.0";
 export { overlayProps, validateLayout, type OverlayProps, type Issue } from "./overlay";
 export { compose, autoPlan, autoFix, Beat, BeatPlan, type ComposeContext } from "./compose";
 export { graphemeVisemes, lineVisemes } from "./voice";
+export { makeShorts, SHORTS_MAX_SEC } from "./shorts";

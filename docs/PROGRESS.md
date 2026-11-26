@@ -15,7 +15,7 @@ Tên giai đoạn phải khớp đúng với `docs/MASTER_ADD.md` mục 9.
 | 3B. Giọng & khớp giờ | Xong | 2026-11-25 | Nạp giọng thật từng câu, Tự khớp giờ bằng Whisper medium (dùng chung bộ cài PSE), khẩu hình suy từ chữ cái. Thử thật trên 5 câu: đầu/cuối câu lệch tối đa 0,025 s (yêu cầu < 0,3 s), trung vị lệch từ 0,11 s. |
 | 3C. AI đạo diễn | Xong (chưa thử Gemini thật) | 2026-11-25 | AI trả nhịp (beats) theo lô 8 câu, `compose` dựng storyboard + tự đặt thẻ chữ đối diện người nói, kiểm schema/ID/che mặt, gửi lại sửa tối đa 2 lần, tự bỏ thẻ che mặt. Không có khoá thì dùng đạo diễn tự động. "AI viết lại riêng cảnh này" giữ nguyên cảnh khác. Thử thật: tập mới Foam Physics (6 câu) -> 7 cảnh, 0 lỗi, xem được trong Player. |
 | 4A. Xuất bản dài | Đang làm | | Xong: render chia chặng (`chunk_renderer.py`), trạng thái chặng trong project.json, nối lại sau khi tắt (đã thử: tắt giữa chặng 1, chạy lại bỏ qua chặng 0 và làm nốt), render lại riêng chặng (`--redo N`), ghép concat. Bộ tự sửa bố cục `autoFix`. Showcase render lại từ 4 chặng (19,5 s, 1170 hình 60 fps). Còn: render tập dài `ep02_the_to_do_list_trap` (52 câu, 3 phút 10 giây, storyboard 0 lỗi) và soi chỗ nối. |
-| 4B. Đa ngôn ngữ, Shorts, Hộp thư Claude | Chưa làm | | |
+| 4B. Đa ngôn ngữ, Shorts, Hộp thư Claude | Đang làm | | Xong: phụ đề đa ngôn ngữ (`locales/<lang>.json`, AI dịch, xuất lại chỉ lớp chữ; showcase có bản tiếng Việt đủ dấu), Shorts dọc 1080x1920 (camera hiểu khung dọc, vùng thẻ `upper`, test 0 lỗi che mặt), Hộp thư Claude (AI_SESSION_QUEUE=1 + skill claude-mailbox), sổ chi phí AI. Còn: render Shorts thật và soi. |
 
 ## Ghi chú cho phiên sau
 - Đã chốt phương án C (2026-11-25): một bộ đạo diễn TypeScript nướng `baked_timeline.json`; Three.js xem trước, Blender EEVEE render bản cuối.

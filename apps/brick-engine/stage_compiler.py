@@ -27,7 +27,7 @@ import sets_library as SL
 UI_ZONES = {  # normalised [x0, y0, x1, y1], origin top-left
     "left_third": [0.035, 0.10, 0.365, 0.76], "right_third": [0.635, 0.10, 0.965, 0.76],
     "top_left": [0.035, 0.06, 0.40, 0.24], "top_right": [0.60, 0.06, 0.965, 0.24],
-    "top_center": [0.32, 0.05, 0.68, 0.22], "none": None,
+    "top_center": [0.32, 0.05, 0.68, 0.22], "upper": [0.06, 0.06, 0.94, 0.30], "none": None,
 }
 SUBTITLE_BAND = [0.12, 0.83, 0.88, 0.96]
 SUBJECT_SHIFT = {"left_third": 1 / 6, "right_third": -1 / 6, "center": 0.0}

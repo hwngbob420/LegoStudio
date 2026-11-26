@@ -14,6 +14,7 @@ export interface CameraSpec {
   rise?: number;
   spread?: number;
   shake?: number;
+  shift_y?: number;
   subject_zone?: string;
 }
 
@@ -36,7 +37,10 @@ export function planCamera(
   subjectFacingDeg: number,
   setCenter: V3,
   seed: number,
+  /** W/H của khung. Khung dọc (Shorts): cảm biến 36 mm nằm theo chiều cao, giống sensor_fit AUTO của Blender. */
+  aspect = 16 / 9,
 ): CameraPlan {
+  const halfSensorW = aspect >= 1 ? 18 : 18 * aspect;
   const preset = spec.preset;
   const zone = spec.subject_zone ?? "center";
   const yaw = (spec.yaw ?? 0) * DEG;
@@ -44,7 +48,7 @@ export function planCamera(
   if (preset === "wide_establish" || preset === "assembly_high") {
     lens = spec.lens ?? (preset === "assembly_high" ? 30 : 35);
     fstop = spec.fstop ?? 1.0;
-    const back = preset === "assembly_high" ? 3.1 : 2.85;
+    const back = (preset === "assembly_high" ? 3.1 : 2.85) * (aspect < 1 ? 1.6 : 1);
     const up = preset === "assembly_high" ? 1.75 : 1.05;
     look = add(setCenter, [0, 0.25, 0.22]);
     pos = add(setCenter, [Math.sin(yaw) * back, -Math.cos(yaw) * back, up]);
@@ -56,7 +60,7 @@ export function planCamera(
     const sep = len(sub(a, b));
     lens = spec.lens ?? 45;
     fstop = spec.fstop ?? 1.6;
-    const fov = 2 * Math.atan(18 / lens);
+    const fov = 2 * Math.atan(halfSensorW / lens);
     const d = sep / ((spec.spread ?? 0.46) * 2 * Math.tan(fov / 2));
     look = add(mid, [0, 0, -0.02]);
     pos = add(mid, [Math.sin(yaw) * d, -Math.cos(yaw) * d, 0.1 + (spec.rise ?? 0)]);
@@ -75,6 +79,7 @@ export function planCamera(
     focusPoint = h;
     shift = [SUBJECT_SHIFT[zone as keyof typeof SUBJECT_SHIFT] ?? 0, ecu ? 0 : 0.035];
   }
+  if (spec.shift_y !== undefined) shift = [shift[0], spec.shift_y];
   const wide = preset === "wide_establish" || preset === "assembly_high";
   const focus = subjectIds.length && !wide ? { actor: subjectIds[0] } : { distance: len(sub(pos, focusPoint)) };
   const move = spec.move ?? "none";
@@ -107,10 +112,12 @@ export function project(p: V3, key: CameraPlan["keys"][number], lens: number, sh
   const c = apply(invRigid(cameraMatrix(key)), p);
   if (c[2] >= -1e-6) return null;
   const u = c[0] / -c[2], v = c[1] / -c[2];
-  const w = 36 / lens;
-  const h = w * (H / W);
-  const xMin = -w / 2 + shift[0] * w;
-  const yMin = -h / 2 + shift[1] * w;
+  // cảm biến 36 mm theo chiều lớn hơn; lệch ống kính tính theo chiều lớn hơn (như Blender)
+  const big = 36 / lens;
+  const w = W >= H ? big : big * (W / H);
+  const h = W >= H ? big * (H / W) : big;
+  const xMin = -w / 2 + shift[0] * big;
+  const yMin = -h / 2 + shift[1] * big;
   return [(u - xMin) / w, 1 - (v - yMin) / h];
 }
 

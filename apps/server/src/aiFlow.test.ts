@@ -23,6 +23,9 @@ class FakeAI implements TextAI {
         skin: "skin_medium", hair_style: "bob", hair_color: "hair_red", torso_print: "apron", torso_color: "white", legs_color: "charcoal",
         glasses: "none", face_details: ["freckles"], voice: "female", default_expression: "smug_smirk" }],
         lines: [{ speaker: "zoe_chef", text: "Salt makes everything better." }, { speaker: "max_dev", text: "Even coffee?" }, { speaker: "zoe_chef", text: "Step two. Taste first." }] };
+    } else if (req.label === "dich_phu_de") {
+      const src = JSON.parse(req.prompt);
+      data = { lines: src.lines.map((l: { id: string; text: string }) => ({ id: l.id, text: `[vi] ${l.text}` })), cues: src.cues.map(() => ({ title: "Tiêu đề" })) };
     } else {
       const script = Script.parse(JSON.parse(readFileSync(path.join(ws, "projects/showcase_v1/script.json"), "utf8")));
       const plan = autoPlan(script, "Set_BrickCreatorDesk", {});
@@ -94,5 +97,53 @@ describe("AI director (Tab 4)", () => {
     expect(r.status).toBe(200);
     expect(r.json.storyboard.shots[1]).toEqual(before.shots[1]);
     expect(r.json.storyboard.shots.find((s: { id: string }) => s.id === "S3")).toBeDefined();
+  });
+});
+
+import { SessionQueueAI, listPending } from "./ai/sessionQueue";
+import { CostLoggedAI, costSummary } from "./ai";
+import { z } from "zod";
+
+describe("4B: subtitles, Shorts, costs, Claude mailbox", () => {
+  it("locale defaults to the original text, saves edits, and AI translation fills every line", async () => {
+    const d = await api("GET", "/api/projects/showcase_v1/locale/vi");
+    expect(d.json.lines.L1).toMatch(/Three coffees/);
+    const t = await api("POST", "/api/projects/showcase_v1/ai/translate", { lang: "vi" });
+    expect(t.status).toBe(200);
+    expect(t.json.lines.L3).toMatch(/^\[vi\]/);
+    const edited = { ...t.json, lines: { ...t.json.lines, L1: "Ba ly cà phê." } };
+    expect((await api("PUT", "/api/projects/showcase_v1/locale/vi", edited)).status).toBe(200);
+    expect((await api("GET", "/api/projects/showcase_v1/locale/vi")).json.lines.L1).toBe("Ba ly cà phê.");
+    expect((await api("GET", "/api/projects/showcase_v1/locale/xx")).status).toBe(400);
+  });
+  it("creates a vertical Shorts episode and queues its render", async () => {
+    const r = await api("POST", "/api/projects/showcase_v1/shorts", {});
+    expect(r.status).toBe(200);
+    expect(r.json.id).toBe("showcase_v1_shorts");
+    const st = await api("GET", "/api/projects/showcase_v1_shorts");
+    expect(st.json.storyboard.resolution).toEqual([1080, 1920]);
+    expect(st.json.issues.filter((i: { level: string }) => i.level === "error")).toEqual([]);
+    expect(r.json.job.kind).toBe("render");
+  });
+  it("cost log records every AI call", async () => {
+    const f = path.join(tmp, "cost.jsonl");
+    const ai = new CostLoggedAI(fake, f, () => "2026-11-26T00:00:00Z");
+    await ai.json({ label: "dich_phu_de", system: "", prompt: JSON.stringify({ lines: [], cues: [] }), schema: z.object({ lines: z.array(z.any()), cues: z.array(z.any()) }) });
+    expect(costSummary(f).calls).toBe(1);
+    expect(costSummary(f).by_label.dich_phu_de).toBe(1);
+  });
+  it("Claude mailbox: request file appears, a wrong answer is rejected, a right one is accepted", async () => {
+    const dir = path.join(tmp, "claude_queue");
+    const q = new SessionQueueAI({ dir, pollMs: 10 });
+    const p = q.json({ label: "dao_dien", system: "s", prompt: "p", schema: z.object({ ok: z.boolean() }) });
+    let pending: Awaited<ReturnType<typeof listPending>> = [];
+    for (let i = 0; i < 50 && !pending.length; i++) { await new Promise((r) => setTimeout(r, 10)); pending = await listPending(dir); }
+    expect(pending[0].label).toBe("dao_dien");
+    const { writeFileSync } = await import("node:fs");
+    writeFileSync(path.join(dir, `${pending[0].id}.response.json`), JSON.stringify({ ok: "yes" }));
+    await new Promise((r) => setTimeout(r, 60));
+    expect(existsSync(path.join(dir, `${pending[0].id}.error.txt`))).toBe(true);
+    writeFileSync(path.join(dir, `${pending[0].id}.response.json`), JSON.stringify({ ok: true }));
+    expect((await p).data).toEqual({ ok: true });
   });
 });

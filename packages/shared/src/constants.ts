@@ -12,7 +12,7 @@ export const PLATE = 0.032;
 export const CAMERA_PRESETS = ["assembly_high", "wide_establish", "mcu", "ecu", "two_shot"] as const;
 export const CAMERA_MOVES = ["none", "push_in", "pull_out", "drift_right", "crane_down"] as const;
 export const SUBJECT_ZONES = ["left_third", "center", "right_third"] as const;
-export const UI_ZONE_NAMES = ["left_third", "right_third", "top_left", "top_right", "top_center", "none"] as const;
+export const UI_ZONE_NAMES = ["left_third", "right_third", "top_left", "top_right", "top_center", "upper", "none"] as const;
 
 /** Vùng chữ chuẩn hoá [x0, y0, x1, y1], gốc trên-trái. Dùng chung cho Blender, Remotion và cửa kiểm. */
 export const UI_ZONES: Record<Exclude<(typeof UI_ZONE_NAMES)[number], "none">, [number, number, number, number]> = {
@@ -21,6 +21,8 @@ export const UI_ZONES: Record<Exclude<(typeof UI_ZONE_NAMES)[number], "none">, [
   top_left: [0.035, 0.06, 0.4, 0.24],
   top_right: [0.6, 0.06, 0.965, 0.24],
   top_center: [0.32, 0.05, 0.68, 0.22],
+  /** Shorts dọc: dải trên cho thẻ chữ, mặt nằm giữa khung */
+  upper: [0.06, 0.06, 0.94, 0.3],
 };
 /** Dải phụ đề dưới đáy: không mặt nào được chạm vào. */
 export const SUBTITLE_BAND: [number, number, number, number] = [0.12, 0.83, 0.88, 0.96];

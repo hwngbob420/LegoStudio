@@ -13,6 +13,9 @@ import { HttpError, REPO, assertValidId, workspacePaths } from "./workspace";
 import { makeAI } from "./ai";
 import { AiError, type TextAI } from "./ai/types";
 import { analyzeStory } from "./aiScript";
+import { costSummary } from "./ai";
+import { listPending } from "./ai/sessionQueue";
+import { LANGS, createShorts, readLocale, saveLocale, translate } from "./publish";
 import { aiStoryboard, rewriteShot } from "./aiStoryboard";
 
 export interface AppOptions { workspaceRoot: string; repoRoot?: string; runner?: Runner; now?: () => string; ai?: TextAI }
@@ -21,7 +24,7 @@ const PY = process.platform === "win32" ? "python" : "python3";
 const NPX = process.platform === "win32" ? "npx.cmd" : "npx";
 
 /** Các việc nền Studio bấm được -> chuỗi lệnh. */
-export function jobSteps(kind: string, prod: string, repo: string): Step[] {
+export function jobSteps(kind: string, prod: string, repo: string, opts: { lang?: string } = {}): Step[] {
   const produce = (...a: string[]) => ({ cmd: PY, args: [path.join(repo, "apps/brick-engine/produce.py"), prod, ...a], label: kind });
   const blender = (script: string) => ({ cmd: PY, args: [path.join(repo, "apps/brick-engine/gpu_renderer.py"), "--script", script], label: script });
   switch (kind) {
@@ -30,6 +33,10 @@ export function jobSteps(kind: string, prod: string, repo: string): Step[] {
     case "publish": return [produce()];
     case "render": return [produce("--from", "bake")];
     case "recut": return [produce("--from", "audio")];
+    case "export_lang": {
+      if (!opts.lang || !/^[a-z]{2}$/.test(opts.lang)) throw new HttpError(400, "Thiếu mã ngôn ngữ (ví dụ vi, en).");
+      return [produce("--from", "overlay", "--to", "composite", "--lang", opts.lang)];
+    }
     case "align": return [{ cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/align.ts"), prod], label: "align" }];
     case "library": return [
       { cmd: PY, args: [path.join(repo, "apps/brick-engine/face_atlas_gen.py")], label: "faces" },
@@ -78,9 +85,9 @@ export function createApp(opts: AppOptions) {
     assertValidId(id, "ID tập");
     const prod = paths.projectDir(id);
     if (!existsSync(prod)) throw new HttpError(404, `Không thấy tập "${id}".`);
-    return jobs.enqueue(id, String(req.body?.kind ?? ""), jobSteps(String(req.body?.kind ?? ""), prod, repo));
+    return jobs.enqueue(id, String(req.body?.kind ?? ""), jobSteps(String(req.body?.kind ?? ""), prod, repo, { lang: req.body?.lang }));
   }));
-  const ai = () => opts.ai ?? makeAI(repo);
+  const ai = () => opts.ai ?? makeAI(repo, paths.root);
   app.post("/api/projects/:id/ai/script", h(async (req) => analyzeStory(ai(), paths, String(req.params.id), req.body ?? {})));
   /** AI không cấu hình được thì trả null để rơi về đạo diễn tự động. */
   const aiOrNull = () => { try { return ai(); } catch { return null; } };
@@ -101,6 +108,19 @@ export function createApp(opts: AppOptions) {
     await fs.writeFile(path.join(dir, `${line}.${ext}`), req.body as Buffer);
     return { ok: true, file: `voice/${line}.${ext}`, bytes: (req.body as Buffer).length };
   }));
+
+  // ---- phụ đề đa ngôn ngữ, Shorts, chi phí AI, Hộp thư Claude
+  app.get("/api/langs", h(async () => LANGS));
+  app.get("/api/projects/:id/locale/:lang", h(async (req) => readLocale(paths, String(req.params.id), String(req.params.lang))));
+  app.put("/api/projects/:id/locale/:lang", h(async (req) => saveLocale(paths, String(req.params.id), { ...req.body, lang: String(req.params.lang) })));
+  app.post("/api/projects/:id/ai/translate", h(async (req) => translate(ai(), paths, String(req.params.id), String(req.body?.lang ?? ""))));
+  app.post("/api/projects/:id/shorts", h(async (req) => {
+    const r = await createShorts(paths, String(req.params.id), now());
+    const job = jobs.enqueue(r.id, "render", jobSteps("render", paths.projectDir(r.id), repo));
+    return { ...r, job };
+  }));
+  app.get("/api/costs", h(async () => costSummary(path.join(paths.root, "cost_log.jsonl"))));
+  app.get("/api/ai/queue", h(async () => listPending(path.join(paths.root, "claude_queue"))));
 
   app.get("/api/jobs", h(async (req) => jobs.list(typeof req.query.project === "string" ? req.query.project : undefined)));
   app.get("/api/jobs/:id", h(async (req) => {

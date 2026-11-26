@@ -13,11 +13,32 @@ from timeref import Timeline
 UI_ZONES = {
     "left_third": [0.035, 0.10, 0.365, 0.76], "right_third": [0.635, 0.10, 0.965, 0.76],
     "top_left": [0.035, 0.06, 0.40, 0.24], "top_right": [0.60, 0.06, 0.965, 0.24],
-    "top_center": [0.32, 0.05, 0.68, 0.22],
+    "top_center": [0.32, 0.05, 0.68, 0.22], "upper": [0.06, 0.06, 0.94, 0.30],
 }
 
 
-def build(prod):
+def apply_locale(prod, props, lang):
+    """Swap subtitle text + card text for a translated locale. Word timings are spread evenly over each line."""
+    f = os.path.join(prod, "locales", f"{lang}.json")
+    if not lang or not os.path.exists(f):
+        return props
+    loc = json.load(open(f, encoding="utf-8"))
+    for s in props["subtitles"]:
+        text = loc.get("lines", {}).get(s["id"])
+        if not text:
+            continue
+        toks = text.split()
+        dur = max(0.2, s["end"] - s["start"])
+        s["words"] = [{"t": round(s["start"] + dur * i / len(toks), 3), "text": w} for i, w in enumerate(toks)]
+    for c, o in zip(props["cues"], loc.get("cues", [])):
+        for k in ("title", "label", "note"):
+            if o.get(k) and k in c:
+                c[k] = o[k]
+    props["lang"] = lang
+    return props
+
+
+def build(prod, lang=None):
     ep = json.load(open(os.path.join(prod, "storyboard.json"), encoding="utf-8"))
     timing = json.load(open(os.path.join(prod, "build", "timing.json"), encoding="utf-8"))
     tl = Timeline(timing)
@@ -47,6 +68,7 @@ def build(prod):
                      "start": L["start"], "end": L["end"], "words": words})
     props = {"fps": ep.get("fps_out", 60), "duration": duration, "width": ep["resolution"][0], "height": ep["resolution"][1],
              "cues": cues, "subtitles": subs, "shots": [{"id": s["id"], "t0": s["_t0"], "t1": s["_t1"]} for s in ep["shots"]]}
+    props = apply_locale(prod, props, lang)
     out = os.path.join(prod, "build", "overlay_props.json")
     json.dump(props, open(out, "w"), indent=1)
     print("props ->", out, f"({len(cues)} cues, {len(subs)} subtitle lines, {duration:.2f}s)")
@@ -54,4 +76,5 @@ def build(prod):
 
 
 if __name__ == "__main__":
-    build(os.path.abspath(sys.argv[1]))
+    a = sys.argv[1:]
+    build(os.path.abspath(a[0]), a[a.index("--lang") + 1] if "--lang" in a else None)

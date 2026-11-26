@@ -40,10 +40,10 @@ export function cameraParams(T: BakedTimeline, f: number, rig: RigModel, W: numb
   const key = s.keys[Math.min(s.keys.length - 1, Math.max(0, f - s.f0))];
   const m = toThree(cameraMatrix(key));
   const matrixWorld = ZUP_TO_YUP.clone().multiply(m);
-  const sensorH = 36 * (H / W);
+  const sensorH = W >= H ? 36 * (H / W) : 36;
   const fovDeg = THREE.MathUtils.radToDeg(2 * Math.atan(sensorH / 2 / s.lens));
   // shift tính theo bề rộng khung: dời khung nhìn sang phải shift_x*W pixel, lên trên shift_y*W pixel
-  const offset: [number, number] = [s.shift[0] * W, -s.shift[1] * W];
+  const offset: [number, number] = [s.shift[0] * Math.max(W, H), -s.shift[1] * Math.max(W, H)];
   let focusDistance: number;
   if ("actor" in s.focus) {
     const a = T.actors[s.focus.actor];

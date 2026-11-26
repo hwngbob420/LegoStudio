@@ -54,6 +54,8 @@ def main():
         elif st == "audio":
             py("audio_design.py", prod)
         elif st == "overlay":
+            if "--lang" in a:  # phụ đề theo ngôn ngữ: dựng lại props lớp chữ với bản dịch
+                py("remotion_props.py", prod, "--lang", a[a.index("--lang") + 1])
             rs = P.VIDEO_ENGINE
             npx = "npx.cmd" if os.name == "nt" else "npx"
             props = os.path.join(prod, "build", "overlay_props.json")
@@ -63,7 +65,8 @@ def main():
         elif st == "composite":
             import master_compositor as MC
             ep = json.load(open(os.path.join(prod, "storyboard.json"), encoding="utf-8"))
-            out = MC.composite(prod, ep.get("fps_world", 12), ep.get("fps_out", 60))
+            lang = a[a.index("--lang") + 1] if "--lang" in a else None
+            out = MC.composite(prod, ep.get("fps_world", 12), ep.get("fps_out", 60), out_name=f"output_final_{lang}.mp4" if lang else "output_final.mp4")
             log["output"] = out
             log["probe"] = MC.probe(out)
         elif st == "qa":

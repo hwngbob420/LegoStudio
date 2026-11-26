@@ -49,3 +49,18 @@ Benchmark: `productions/showcase_v1`, 19.5 s, 1920×1080, 2 actors, 5 shots, abo
 - Persistent Blender worker (skip about 2 s startup and 2 s scene build per stage).
 - Render only frames that changed: hold frames where nothing moves (set-dressing beats) could be deduplicated by hashing keyed state.
 - `--fast` preview mode (8 samples) for animatics: already wired, not benchmarked yet.
+
+## v2 (Lego Studio Engine, phương án C)
+13. **Nướng một lần, phát hai nơi.** `packages/director` tính toàn bộ chuyển động một lần (~50 ms cho 20 s). Blender không còn chạy logic diễn xuất
+    (dựng cảnh 2–3 s). Player Three.js xem trước tức thì nên phần lớn chỉnh sửa không cần render Blender.
+14. **Kiểm "không che mặt" không cần Blender.** Hộp đầu dự đoán bằng toán (lệch 0,000008 so với Blender), nên AI đạo diễn tự kiểm và tự sửa trong vài mili giây.
+15. **Render chia chặng + nén ngay.** PNG của mỗi chặng 120 s được nén thành mp4 rồi xoá. Tập 3 phút cần khoảng 0,3 GB tạm thay vì khoảng 3,5 GB PNG.
+    Nối lại sau khi tắt: bỏ qua hình đã có, làm lại hình cuối (có thể ghi dở).
+16. **Phụ đề đa ngôn ngữ không render lại 3D.** Chỉ dựng lại lớp chữ (~100 s cho 20 s video) rồi ghép với các chặng 3D đã có.
+17. **Nướng kho 15 s.** Minifig mới: atlas + texture + manifest + `.glb` qua một việc nền; xem nhanh ngay từ bộ mảnh trước khi nướng.
+18. **Whisper dùng chung bộ cài với PSE** (1,5 GB model medium, không tải lại). Đầu/cuối câu lấy theo đường bao âm lượng nên lệch 0,025 s.
+
+| Đo | Kết quả |
+|---|---|
+| Showcase render chia 4 chặng (có tắt giữa chừng rồi làm tiếp) | 215 s cho 234 hình |
+| Tập dài 3 phút 10 giây | 2277 hình, ~1,17 s/hình |
