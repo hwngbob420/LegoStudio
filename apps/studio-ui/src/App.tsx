@@ -33,8 +33,12 @@ export const App: React.FC = () => {
 
   const reload = useCallback(async () => {
     try {
-      const [ps, st, l] = await Promise.all([api.projects(), api.project(pid), api.library()]);
-      setProjects(ps); setState(st); setLib(l); setErr(null); setRev((r) => r + 1);
+      const ps = await api.projects();
+      setProjects(ps);
+      // tập nhớ từ lần trước đã bị xóa/đổi tên: chuyển sang tập đầu tiên thay vì kẹt ở "Đang tải..."
+      if (ps.length && !ps.some((p) => p.id === pid)) { setPid(ps[0].id); return; }
+      const [st, l] = await Promise.all([api.project(pid), api.library()]);
+      setState(st); setLib(l); setErr(null); setRev((r) => r + 1);
     } catch (e) { setErr((e as Error).message); }
   }, [pid]);
   useEffect(() => { localStorage.setItem("lse.project", pid); void reload(); }, [pid]);
