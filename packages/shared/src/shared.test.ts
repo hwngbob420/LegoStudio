@@ -21,7 +21,7 @@ describe("schemas parse the real channel library", () => {
   it("every lighting preset and set entry", () => {
     for (const f of readdirSync(path.join(LIB, "lighting"))) parseOrThrow(LightingPreset, read(path.join(LIB, "lighting", f)), f);
     const sets = readdirSync(path.join(LIB, "sets"));
-    expect(sets.length).toBe(3);
+    expect(sets.length).toBeGreaterThanOrEqual(10); // 3 set cũ + 7 set 3 vòng (Gđ 6)
     for (const f of sets) parseOrThrow(SetEntry, read(path.join(LIB, "sets", f)), f);
   });
 });

@@ -1,0 +1,23 @@
+{
+ "id": "Set_CityStreetCorner",
+ "name": "Phố góc quán cà phê (nhiều khối)",
+ "lighting": "cozy_golden_hour",
+ "moods": {
+  "day": "day_city",
+  "golden_hour": "cozy_golden_hour",
+  "night": "night_neon"
+ },
+ "anchors": [
+  "cafe_table",
+  "sidewalk_left",
+  "sidewalk_right",
+  "crosswalk",
+  "book_door",
+  "bench",
+  "center"
+ ],
+ "notes": "corner street: cafe facade with awning + bookshop, sidewalk tables, crosswalk, traffic light, parked car, bench; side streets and skyline all around",
+ "best_for": "walks, chance encounters, crowd gags, high-angle traffic establish",
+ "builder": "build_city_street",
+ "rings": 3
+}

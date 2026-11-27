@@ -50,6 +50,18 @@ export function castSummary(paths: WorkspacePaths, episode?: string) {
 export const knownCast = (paths: WorkspacePaths, episode?: string) =>
   Object.keys(castRecipeFiles(paths.library));
 
+/** Gđ 6: bối cảnh trong kho kênh (đọc catalog mỗi lần -> set mới dựng xong là biên kịch thấy ngay). */
+function catalogSets(paths: WorkspacePaths): Record<string, { lighting: string; anchors: string[]; notes?: string; best_for?: string; moods?: Record<string, string>; rings?: number }> {
+  try { return JSON.parse(readFileSync(path.join(paths.library, "catalog.json"), "utf8")).sets ?? {}; } catch { return {}; }
+}
+export function setsSummary(paths: WorkspacePaths) {
+  return Object.entries(catalogSets(paths))
+    .sort((a, b) => (b[1].rings ?? 0) - (a[1].rings ?? 0))
+    .map(([id, s]) => `- ${id}${s.rings ? " (3 vòng, đủ mọi góc máy)" : " (set cũ, hợp cảnh ngang tầm mắt)"}: ${s.notes ?? ""}${s.best_for ? ` | hợp: ${s.best_for}` : ""}${s.moods ? ` | mood: ${Object.keys(s.moods).join("/")}` : ""}`)
+    .join("\n");
+}
+export const knownSets = (paths: WorkspacePaths) => new Set(Object.keys(catalogSets(paths)));
+
 /** Lời dặn chung cho mọi bước viết. */
 export function writerSystem(paths: WorkspacePaths, role: string) {
   return [
@@ -92,11 +104,12 @@ export function lineErrors(lines: { speaker: string; text: string }[], known: Se
   return errs;
 }
 
-export async function writeScriptFile(paths: WorkspacePaths, episode: string, data: { title: string; logline: string; lines: { speaker: string; text: string; beat?: string; block?: string }[] }) {
+export async function writeScriptFile(paths: WorkspacePaths, episode: string, data: { title: string; logline: string; lines: { speaker: string; text: string; beat?: string; block?: string; location?: string; visual?: string; prop_cue?: string }[] }) {
   const script = parseOrThrow(Script, {
     title: data.title, logline: data.logline, fps_world: 12, start_offset: 2.5, tail: 1.2,
     lines: data.lines.map((l, i) => ({ id: `L${i + 1}`, speaker: l.speaker, text: l.text.trim(), gap_before: i === 0 ? 0 : 0.35,
-      ...(l.beat ? { beat: l.beat } : {}), ...(l.block ? { block: l.block } : {}) })),
+      ...(l.beat ? { beat: l.beat } : {}), ...(l.block ? { block: l.block } : {}),
+      ...(l.location ? { location: l.location } : {}), ...(l.visual ? { visual: l.visual } : {}), ...(l.prop_cue ? { prop_cue: l.prop_cue } : {}) })),
   }, "Kịch bản");
   await writeJsonAtomic(path.join(paths.projectDir(episode), "script.json"), Script, script);
   return script;

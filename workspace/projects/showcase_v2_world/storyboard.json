@@ -1,0 +1,720 @@
+{
+ "episode": "showcase_v2_world",
+ "title": "The Snooze Commute",
+ "fps_world": 12,
+ "fps_out": 60,
+ "resolution": [
+  1920,
+  1080
+ ],
+ "samples": 32,
+ "sets": [
+  {
+   "id": "Set_ApartmentCutaway",
+   "lighting": "studio_bright"
+  },
+  {
+   "id": "Set_BusStop",
+   "lighting": "day_city"
+  },
+  {
+   "id": "Set_InstructionVoid",
+   "lighting": "studio_void"
+  },
+  {
+   "id": "Set_CityStreetCorner",
+   "lighting": "cozy_golden_hour"
+  },
+  {
+   "id": "Set_OfficeFloor",
+   "lighting": "office_daylight"
+  }
+ ],
+ "cast": [
+  {
+   "id": "max_dev",
+   "set": "Set_ApartmentCutaway",
+   "mark": "living_center"
+  },
+  {
+   "id": "priya_lead",
+   "set": "Set_ApartmentCutaway",
+   "mark": "bedroom_door"
+  }
+ ],
+ "shots": [
+  {
+   "id": "S1",
+   "t0": 0,
+   "t1": "L1.start-0.1",
+   "set": "Set_ApartmentCutaway",
+   "summary": "Lắp ráp bộ set",
+   "camera": {
+    "preset": "assembly_high",
+    "move": "push_in"
+   },
+   "subject_zone": "center",
+   "ui_safe_zone": "top_left",
+   "key_t": 1.9000000000000001,
+   "assembly": {
+    "t0": 0.1,
+    "t1": 1.4000000000000001
+   },
+   "actors": {
+    "max_dev": {
+     "appear": 1.6,
+     "expr": [
+      {
+       "t": 0,
+       "e": "deadpan_tired"
+      }
+     ]
+    },
+    "priya_lead": {
+     "appear": 1.75,
+     "expr": [
+      {
+       "t": 0,
+       "e": "smug_smirk"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "S2",
+   "t0": "L1.start-0.1",
+   "t1": "L2.start-0.12",
+   "set": "Set_ApartmentCutaway",
+   "summary": "Seven alarms. Zero socks. Monday.",
+   "subjects": [
+    "max_dev",
+    "priya_lead"
+   ],
+   "camera": {
+    "preset": "ws",
+    "move": "none",
+    "angle": "birds_eye"
+   },
+   "subject_zone": "center",
+   "ui_safe_zone": "none",
+   "key_t": "L1.w3",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L1.start",
+       "t1": "L1.end"
+      }
+     ],
+     "expr": [
+      {
+       "t": "L1.start",
+       "e": "deadpan_tired"
+      }
+     ]
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S3",
+   "t0": "L2.start-0.12",
+   "t1": "L3.start-0.12",
+   "set": "Set_ApartmentCutaway",
+   "summary": "You live four minutes from the office, Max.",
+   "subjects": [
+    "priya_lead",
+    "max_dev"
+   ],
+   "camera": {
+    "preset": "ots",
+    "move": "none"
+   },
+   "subject_zone": "right_third",
+   "ui_safe_zone": "none",
+   "key_t": "L2.w4",
+   "whoosh": true,
+   "actors": {
+    "priya_lead": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L2.start",
+       "t1": "L2.end",
+       "mirror": true
+      }
+     ],
+     "expr": [
+      {
+       "t": "L2.start",
+       "e": "smug_smirk"
+      }
+     ]
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S4",
+   "t0": "L3.start-0.12",
+   "t1": "L4.start-0.12",
+   "set": "Set_ApartmentCutaway",
+   "summary": "Exactly. So I can leave at nine.",
+   "subjects": [
+    "max_dev"
+   ],
+   "camera": {
+    "preset": "cu",
+    "move": "push_in"
+   },
+   "subject_zone": "left_third",
+   "ui_safe_zone": "none",
+   "key_t": "L3.w4",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L3.start",
+       "t1": "L3.end"
+      }
+     ],
+     "expr": [
+      {
+       "t": "L3.start",
+       "e": "deadpan_tired"
+      }
+     ]
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S5e",
+   "t0": "L4.start-0.12",
+   "t1": "L4.w3",
+   "set": "Set_BusStop",
+   "summary": "Mở cảnh Set_BusStop",
+   "subjects": [],
+   "camera": {
+    "preset": "ews",
+    "move": "crane_reveal",
+    "angle": "high_angle"
+   },
+   "subject_zone": "center",
+   "ui_safe_zone": "none",
+   "whoosh": true,
+   "actors": {
+    "priya_lead": {
+     "at": {
+      "mark": "curb_left",
+      "set": "Set_BusStop"
+     }
+    },
+    "max_dev": {
+     "at": {
+      "mark": "curb_right",
+      "set": "Set_BusStop"
+     }
+    }
+   }
+  },
+  {
+   "id": "S5",
+   "t0": "L4.w3",
+   "t1": "L5.start-0.12",
+   "set": "Set_BusStop",
+   "summary": "I live one hour away, and I am always early.",
+   "subjects": [
+    "priya_lead"
+   ],
+   "camera": {
+    "preset": "mls",
+    "move": "dolly_in",
+    "angle": "low_angle"
+   },
+   "subject_zone": "right_third",
+   "ui_safe_zone": "none",
+   "key_t": "L4.w5",
+   "whoosh": true,
+   "actors": {
+    "priya_lead": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L4.start",
+       "t1": "L4.end",
+       "mirror": true
+      }
+     ],
+     "expr": [
+      {
+       "t": "L4.start",
+       "e": "smug_smirk"
+      }
+     ]
+    },
+    "max_dev": {
+     "acts": [],
+     "expr": []
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S6",
+   "t0": "L5.start-0.12",
+   "t1": "L6.start-0.12",
+   "set": "Set_BusStop",
+   "summary": "That is not fair. You have a bus.",
+   "subjects": [
+    "max_dev",
+    "priya_lead"
+   ],
+   "camera": {
+    "preset": "ots",
+    "move": "none"
+   },
+   "subject_zone": "left_third",
+   "ui_safe_zone": "none",
+   "key_t": "L5.w4",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L5.start",
+       "t1": "L5.end"
+      }
+     ],
+     "expr": [
+      {
+       "t": "L5.start",
+       "e": "deadpan_tired"
+      }
+     ]
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S7",
+   "t0": "L6.start-0.12",
+   "t1": "L7.start-0.12",
+   "set": "Set_BusStop",
+   "summary": "You have legs.",
+   "subjects": [
+    "priya_lead"
+   ],
+   "camera": {
+    "preset": "cu",
+    "move": "push_in"
+   },
+   "subject_zone": "right_third",
+   "ui_safe_zone": "none",
+   "key_t": "L6.w2",
+   "whoosh": true,
+   "actors": {
+    "priya_lead": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L6.start",
+       "t1": "L6.end",
+       "mirror": true
+      }
+     ],
+     "expr": [
+      {
+       "t": "L6.start",
+       "e": "smug_smirk"
+      }
+     ]
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S8e",
+   "t0": "L7.start-0.12",
+   "t1": "L7.w3",
+   "set": "Set_InstructionVoid",
+   "summary": "Mở cảnh Set_InstructionVoid",
+   "subjects": [],
+   "camera": {
+    "preset": "ews",
+    "move": "crane_reveal"
+   },
+   "subject_zone": "center",
+   "ui_safe_zone": "none",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "at": {
+      "mark": "narrator",
+      "set": "Set_InstructionVoid"
+     }
+    },
+    "priya_lead": {
+     "at": {
+      "mark": "pedestal",
+      "set": "Set_InstructionVoid"
+     }
+    }
+   }
+  },
+  {
+   "id": "S8",
+   "t0": "L7.w3",
+   "t1": "L8.start-0.12",
+   "set": "Set_InstructionVoid",
+   "summary": "Fine. Show me the math, then.",
+   "subjects": [
+    "max_dev"
+   ],
+   "camera": {
+    "preset": "ms",
+    "move": "dolly_in"
+   },
+   "subject_zone": "left_third",
+   "ui_safe_zone": "none",
+   "key_t": "L7.w3",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L7.start",
+       "t1": "L7.end"
+      }
+     ],
+     "expr": [
+      {
+       "t": "L7.start",
+       "e": "deadpan_tired"
+      }
+     ]
+    },
+    "priya_lead": {
+     "acts": [],
+     "expr": []
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S9",
+   "t0": "L8.start-0.12",
+   "t1": "L9.start-0.12",
+   "set": "Set_InstructionVoid",
+   "summary": "Short trip, nine snoozes. Long trip, one snooze.",
+   "subjects": [
+    "priya_lead"
+   ],
+   "camera": {
+    "preset": "ms",
+    "move": "dolly_out"
+   },
+   "subject_zone": "right_third",
+   "ui_safe_zone": "left_third",
+   "key_t": "L8.w4",
+   "whoosh": true,
+   "actors": {
+    "priya_lead": {
+     "acts": [
+      {
+       "a": "point_explain",
+       "t0": "L8.start",
+       "t1": "L8.end"
+      }
+     ],
+     "expr": [
+      {
+       "t": "L8.start",
+       "e": "smug_smirk"
+      }
+     ]
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S10",
+   "t0": "L9.start-0.12",
+   "t1": "L10.start-0.12",
+   "set": "Set_CityStreetCorner",
+   "summary": "So the city is not the problem at all?",
+   "subjects": [],
+   "camera": {
+    "preset": "ews",
+    "move": "crane_reveal",
+    "angle": "high_angle"
+   },
+   "subject_zone": "center",
+   "ui_safe_zone": "none",
+   "key_t": "L9.w5",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "at": {
+      "mark": "sidewalk_left",
+      "set": "Set_CityStreetCorner"
+     },
+     "acts": [
+      {
+       "a": "shrug_confused",
+       "t0": "L9.start",
+       "t1": "L9.end"
+      }
+     ],
+     "expr": [
+      {
+       "t": "L9.start",
+       "e": "side_glance"
+      }
+     ]
+    },
+    "priya_lead": {
+     "at": {
+      "mark": "sidewalk_right",
+      "set": "Set_CityStreetCorner"
+     },
+     "acts": [],
+     "expr": [
+      {
+       "t": "L9.start+0.3",
+       "e": "deadpan_tired"
+      }
+     ]
+    }
+   },
+   "fx": [
+    {
+     "kind": "question",
+     "actor": "max_dev",
+     "t0": "L9.w1",
+     "t1": "L9.end+0.4",
+     "size": 0.05
+    }
+   ]
+  },
+  {
+   "id": "S11",
+   "t0": "L10.start-0.12",
+   "t1": "L11.start-0.12",
+   "set": "Set_CityStreetCorner",
+   "summary": "The problem has nine buttons. You press all of them.",
+   "subjects": [
+    "priya_lead",
+    "max_dev"
+   ],
+   "camera": {
+    "preset": "ots",
+    "move": "none"
+   },
+   "subject_zone": "right_third",
+   "ui_safe_zone": "none",
+   "key_t": "L10.w5",
+   "whoosh": true,
+   "actors": {
+    "priya_lead": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L10.start",
+       "t1": "L10.end",
+       "mirror": true
+      }
+     ],
+     "expr": [
+      {
+       "t": "L10.start",
+       "e": "smug_smirk"
+      }
+     ]
+    }
+   },
+   "fx": []
+  },
+  {
+   "id": "S12e",
+   "t0": "L11.start-0.12",
+   "t1": "L11.w3",
+   "set": "Set_OfficeFloor",
+   "summary": "Mở cảnh Set_OfficeFloor",
+   "subjects": [],
+   "camera": {
+    "preset": "ews",
+    "move": "crane_reveal"
+   },
+   "subject_zone": "center",
+   "ui_safe_zone": "none",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "at": {
+      "mark": "desk_a",
+      "set": "Set_OfficeFloor"
+     }
+    },
+    "priya_lead": {
+     "at": {
+      "mark": "desk_b",
+      "set": "Set_OfficeFloor"
+     }
+    }
+   }
+  },
+  {
+   "id": "S12",
+   "t0": "L11.w3",
+   "t1": "L12.start-0.12",
+   "set": "Set_OfficeFloor",
+   "summary": "Nine minutes late. New personal best!",
+   "subjects": [
+    "max_dev"
+   ],
+   "camera": {
+    "preset": "mls",
+    "move": "dolly_in",
+    "angle": "low_angle"
+   },
+   "subject_zone": "left_third",
+   "ui_safe_zone": "none",
+   "key_t": "L11.w3",
+   "whoosh": true,
+   "actors": {
+    "max_dev": {
+     "acts": [
+      {
+       "a": "shock_jump",
+       "t0": "L11.start",
+       "t1": "L11.end"
+      }
+     ],
+     "expr": [
+      {
+       "t": "L11.start",
+       "e": "shocked_wide"
+      }
+     ]
+    },
+    "priya_lead": {
+     "acts": [],
+     "expr": [
+      {
+       "t": "L11.start+0.3",
+       "e": "sweating_nervous"
+      }
+     ]
+    }
+   },
+   "fx": [
+    {
+     "kind": "exclaim",
+     "actor": "max_dev",
+     "t0": "L11.w1",
+     "t1": "L11.end+0.4",
+     "size": 0.05
+    }
+   ]
+  },
+  {
+   "id": "S13",
+   "t0": "L12.start-0.12",
+   "t1": "END",
+   "set": "Set_OfficeFloor",
+   "summary": "Step two. Set one alarm. Not nine.",
+   "subjects": [
+    "priya_lead",
+    "max_dev"
+   ],
+   "camera": {
+    "preset": "two_shot",
+    "move": "push_in"
+   },
+   "subject_zone": "center",
+   "ui_safe_zone": "top_center",
+   "key_t": "L12.w4",
+   "whoosh": true,
+   "actors": {
+    "priya_lead": {
+     "acts": [
+      {
+       "a": "talk_gestures",
+       "t0": "L12.start",
+       "t1": "L12.end",
+       "mirror": true
+      }
+     ],
+     "expr": [
+      {
+       "t": "L12.start",
+       "e": "smug_smirk"
+      }
+     ]
+    }
+   },
+   "fx": []
+  }
+ ],
+ "ui": [
+  {
+   "type": "step_badge",
+   "t0": 1,
+   "t1": "S1.t1",
+   "zone": "top_left",
+   "step": "01",
+   "title": "The Snooze Commute"
+  },
+  {
+   "type": "brick_chart",
+   "t0": "L8.start-0.2",
+   "t1": "S9.t1-0.15",
+   "zone": "left_third",
+   "title": "Snoozes",
+   "bars": [
+    {
+     "label": "Near",
+     "value": 9,
+     "color": "#3E9D4A",
+     "t": "L8.w1"
+    },
+    {
+     "label": "Far",
+     "value": 1,
+     "color": "#F2A20C",
+     "t": "L8.w5"
+    }
+   ]
+  },
+  {
+   "type": "step_badge",
+   "t0": "L12.w1",
+   "t1": "END",
+   "zone": "top_center",
+   "step": "02",
+   "title": "One alarm",
+   "check": true
+  }
+ ],
+ "sfx": [
+  {
+   "t": "L12.w1",
+   "type": "ding",
+   "gain": 0.8
+  }
+ ],
+ "subtitles": {
+  "speaker_colors": {
+   "max_dev": "#5CE1E6",
+   "priya_lead": "#FFD43B"
+  }
+ }
+}

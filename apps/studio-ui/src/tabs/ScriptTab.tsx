@@ -11,6 +11,12 @@ import { BeatEditor, CritiquePanel, SourcesPanel } from "../components/WritingRo
 const fmtSec = (s: number) => (s < 60 ? `${s} giây` : `${s / 60} phút`);
 const chip = (on: boolean) => `rounded-md border px-2 py-0.5 text-sm ${on ? "border-stud bg-stud/15" : "border-ink-700 hover:border-ink-500"}`;
 
+/** Gđ 6: ý đồ hình ảnh mà biên kịch ghi cho câu (hiện dưới ô bối cảnh). */
+const VISUAL_VI: Record<string, string> = {
+  establishing_scale: "Mở cảnh toàn rộng", intimate_deadpan: "Cận mặt deadpan", satirical_low_angle: "Góc thấp châm biếm", overhead_chaos: "Nhìn từ trên (hỗn loạn)",
+  cutaway_gag: "Cắt gag sang nơi khác", conversation: "Đối đáp qua vai", reveal: "Hé lộ (lùi / nâng máy)", isolation: "Cô lập (góc cao)",
+};
+
 export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Library; onScript: (s: Script) => void; onReload: () => void; onPreviewReady?: () => void }> = ({ pid, state, lib, onScript, onReload, onPreviewReady }) => {
   const { busy, jobs, refresh } = useJobs();
   const [sc, setSc] = useState<Script | null>(state.script);
@@ -165,7 +171,7 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
             <Field label="Đuôi cuối (giây)"><input className="field" type="number" step={0.1} value={sc.tail} onChange={(e) => setSc({ ...sc, tail: Number(e.target.value) })} /></Field>
           </div>
           <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-ink-300"><tr><th className="w-12">Block</th><th className="w-14">ID</th><th className="w-44">Người nói</th><th>Lời thoại</th><th className="w-20">Nghỉ trước</th><th className="w-10" /></tr></thead>
+            <thead className="text-left text-xs uppercase text-ink-300"><tr><th className="w-12">Block</th><th className="w-14">ID</th><th className="w-44">Người nói</th><th>Lời thoại</th><th className="w-44">Bối cảnh</th><th className="w-20">Nghỉ trước</th><th className="w-10" /></tr></thead>
             <tbody>
               {sc.lines.map((L, i) => (
                 <tr key={i} className={`align-top ${i > 0 && L.block && L.block !== sc.lines[i - 1].block ? "border-t-2 border-stud/40" : ""}`}>
@@ -173,6 +179,14 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
                   <td className="py-1 font-mono text-ink-300">{L.id}</td>
                   <td className="py-1 pr-2"><select className="field" value={L.speaker} onChange={(e) => setLine(i, { speaker: e.target.value })}>{speakers.map((s) => <option key={s} value={s}>{lib.cast[s]?.name ?? s}</option>)}</select></td>
                   <td className="py-1 pr-2"><input className="field" value={L.text} onChange={(e) => setLine(i, { text: e.target.value })} /></td>
+                  <td className="py-1 pr-2">
+                    <select className="field" title={L.visual ? `Ý đồ hình: ${VISUAL_VI[L.visual] ?? L.visual}` : "Bối cảnh (bộ set) của câu"} value={L.location ?? ""}
+                      onChange={(e) => setLine(i, { location: e.target.value || undefined })}>
+                      <option value="">(theo câu trước)</option>
+                      {Object.values(lib.sets).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                    {L.visual ? <div className="mt-0.5 text-[11px] text-ink-500">{VISUAL_VI[L.visual] ?? L.visual}</div> : null}
+                  </td>
                   <td className="py-1 pr-2"><input className="field" type="number" step={0.05} value={L.gap_before ?? 0.3} onChange={(e) => setLine(i, { gap_before: Number(e.target.value) })} /></td>
                   <td className="py-1"><button className="btn" onClick={() => setSc({ ...sc, lines: sc.lines.filter((_, k) => k !== i) })}><Trash2 className="h-3.5 w-3.5" /></button></td>
                 </tr>

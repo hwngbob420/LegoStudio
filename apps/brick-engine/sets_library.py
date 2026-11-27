@@ -252,3 +252,8 @@ def build_office_stage(origin=(0, 0, 0)):
 
 SETS = {"Set_BrickCreatorDesk": build_creator_desk, "Set_BrickCafeStreet": build_cafe_street,
         "Set_BrickOfficeStage": build_office_stage}
+
+# Gđ 6: bộ set 3 vòng (sets_world.py). Set cũ ở trên giữ nguyên để tập cũ render y hệt.
+from sets_world import WORLD_SETS  # noqa: E402
+
+SETS.update(WORLD_SETS)

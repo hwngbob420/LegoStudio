@@ -30,3 +30,5 @@ so the perspective doesn't change.
 **Moves:** push_in, pull_out, drift_right, crane_down, plus Gaussian micro-shake (1.2 mm, 0.05°) keyed per frame. That is handheld miniature, not drone.
 
 **Markers.** One camera per shot, bound to a timeline marker at the shot start. A single `render(animation=True)` cuts between them.
+
+**Gđ 6:** thang cỡ cảnh đầy đủ (ews, ws, mls, ms, cu, ots), góc máy (low/high/birds_eye), chuyển động dolly/truck/crane và dàn cảnh nhiều set nằm ở skill `cinematic-camera-blocking`. Toán máy quay giờ ở `packages/director/src/camera.ts` (Blender chỉ phát lại khoá máy đã nướng).

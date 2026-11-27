@@ -64,3 +64,13 @@ Benchmark: `productions/showcase_v1`, 19.5 s, 1920×1080, 2 actors, 5 shots, abo
 |---|---|
 | Showcase render chia 4 chặng (có tắt giữa chừng rồi làm tiếp) | 215 s cho 234 hình |
 | Tập dài 3 phút 10 giây | 2277 hình, ~1,17 s/hình |
+
+## Gđ 6: thế giới 3 vòng (2026-11-27)
+| Đo | Kết quả |
+|---|---|
+| Dựng 7 set mới trong Blender (export_manifest, gồm cả set cũ + diễn viên) | ~28 s |
+| Kích thước `.glb` mỗi set 3 vòng (vòng 2/3 gộp lưới theo vật liệu) | 2,8–3,6 MB, 189–660 node |
+| Contact sheet ma trận 10 khung / set (`--fast`) | 8–27 s mỗi set |
+| `showcase_v2_world` contact 16 cảnh (5 set, 2050 vật) | 28 s; khớp bộ đạo diễn 0,000034 |
+| Three.js: vật liệu dùng chung theo màu thay vì mỗi viên một vật liệu | số shader giảm từ hàng trăm còn vài chục mỗi set |
+

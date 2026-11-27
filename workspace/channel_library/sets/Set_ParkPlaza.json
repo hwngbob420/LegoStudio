@@ -1,0 +1,23 @@
+{
+ "id": "Set_ParkPlaza",
+ "name": "Quảng trường công viên / đài ngắm phố",
+ "lighting": "cozy_golden_hour",
+ "moods": {
+  "golden_hour": "cozy_golden_hour",
+  "day": "day_city",
+  "night": "moody_night_desk"
+ },
+ "anchors": [
+  "bench_left",
+  "bench_right",
+  "fountain",
+  "overlook",
+  "path_center",
+  "path_left",
+  "center"
+ ],
+ "notes": "park plaza on an overlook: fountain, cross paths, benches, trees, flower bed, railing over a lower city and a sunset skyline",
+ "best_for": "wide reflective moments, bird's-eye scale, golden-hour dialogue",
+ "builder": "build_park_plaza",
+ "rings": 3
+}

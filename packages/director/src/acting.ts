@@ -113,6 +113,10 @@ export interface ActorBakeInput {
    * block không phụ thuộc độ dài các block trước. Mặc định một block từ khung 1.
    */
   segments?: { f0: number; seed: number }[];
+  /** Gđ 6: diễn viên chuyển chỗ (sang mốc/set khác) từ khung f0; sắp theo f0. Không có = đứng ở home cả tập. */
+  moves?: { f0: number; home: V3; facingDeg: number }[];
+  /** Gđ 6: quay người tạm thời trong [f0, f1] (ví dụ hai người nhìn nhau ở cảnh qua vai) */
+  turns?: { f0: number; f1: number; deg: number }[];
 }
 
 /** Block chứa khung f (danh sách đã sắp theo f0, phần tử đầu có f0 = 1). */
@@ -135,8 +139,11 @@ export function bakeActor(inp: ActorBakeInput): { root: [number, number, number,
   });
   const joints: Record<string, V3[]> = Object.fromEntries(POSED_BONES.map((b) => [b, [] as V3[]]));
   const rootOut: [number, number, number, number][] = [];
-  const ang = inp.facingDeg * DEG;
+  const moves = inp.moves ?? [];
   for (let f = 1; f <= inp.frames; f++) {
+    let home = inp.home, ang = inp.facingDeg * DEG;
+    for (const m of moves) if (m.f0 <= f) { home = m.home; ang = m.facingDeg * DEG; }
+    for (const tn of inp.turns ?? []) if (tn.f0 <= f && f <= tn.f1) ang = tn.deg * DEG;
     const t = (f - 1) / inp.fps;
     const { seg, index } = segmentAt(segs, f);
     const { pose, root } = poseAt(inp.clips, t, undefined, (seg.f0 - 1) / inp.fps);
@@ -147,11 +154,11 @@ export function bakeActor(inp: ActorBakeInput): { root: [number, number, number,
       joints[b].push([(v[0] + j[0]) * DEG, (v[1] + j[1]) * DEG, (v[2] + j[2]) * DEG]);
     }
     const off: V3 = [root[0] * Math.cos(ang) - root[1] * Math.sin(ang), root[0] * Math.sin(ang) + root[1] * Math.cos(ang), root[2]];
-    let loc: V3 = [inp.home[0] + off[0], inp.home[1] + off[1], inp.home[2] + off[2]];
+    let loc: V3 = [home[0] + off[0], home[1] + off[1], home[2] + off[2]];
     if (inp.appear !== undefined) {
       // nhân vật rơi xuống sân khấu lúc "appear": ở trên cao, chạm gần đất 1 khung, rồi đứng hẳn
-      if (t < inp.appear - 1.5 / inp.fps) loc = [inp.home[0], inp.home[1], inp.home[2] + 6];
-      else if (t < inp.appear - 0.5 / inp.fps) loc = [inp.home[0], inp.home[1], inp.home[2] + 0.18];
+      if (t < inp.appear - 1.5 / inp.fps) loc = [home[0], home[1], home[2] + 6];
+      else if (t < inp.appear - 0.5 / inp.fps) loc = [home[0], home[1], home[2] + 0.18];
     }
     rootOut.push([loc[0], loc[1], loc[2], ang]);
   }

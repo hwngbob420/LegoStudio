@@ -1,14 +1,17 @@
 // Tab 4 — Đạo diễn & Xem trước: Player tức thì (Three.js), dãy thẻ cảnh, bảng sửa cảnh, lỗi bố cục, Kiểm khung (Blender).
 import React, { useMemo, useRef, useState } from "react";
 import { AlertTriangle, Plus, Trash2, Copy, ScanEye, Sparkles, Wand2, LoaderCircle } from "lucide-react";
-import { ACTIONS, CAMERA_MOVES, CAMERA_PRESETS, EXPRESSIONS, FX_KINDS, SUBJECT_ZONES, UI_ZONE_NAMES, type Shot, type Storyboard } from "@lse/shared";
+import { ACTIONS, CAMERA_ANGLES, CAMERA_MOVES, CAMERA_PRESETS, EXPRESSIONS, FX_KINDS, SUBJECT_ZONES, UI_ZONE_NAMES, type Shot, type Storyboard } from "@lse/shared";
 import { api, wsUrl, type Library, type ProjectState } from "../api";
 import { PlayerPane, type PlayerPaneHandle } from "../components/PlayerPane";
 import { Field, NumberInput, Select, TimeInput } from "../components/Fields";
 import { JobButton } from "../components/jobs";
 
-const PRESET_VI: Record<string, string> = { assembly_high: "Toàn cao (lắp ráp)", wide_establish: "Toàn", mcu: "Trung cận", ecu: "Cận mặt", two_shot: "Hai người" };
-const MOVE_VI: Record<string, string> = { none: "Đứng yên", push_in: "Đẩy vào", pull_out: "Lùi ra", drift_right: "Trượt phải", crane_down: "Hạ cần" };
+const PRESET_VI: Record<string, string> = { assembly_high: "Toàn cao (lắp ráp)", wide_establish: "Toàn (cũ)", mcu: "Trung cận", ecu: "Cận sát", two_shot: "Hai người",
+  ews: "Toàn cực rộng (mở cảnh)", ws: "Toàn", mls: "Trung toàn (thấy dáng)", ms: "Trung (hội thoại)", cu: "Cận mặt", ots: "Qua vai" };
+const MOVE_VI: Record<string, string> = { none: "Đứng yên", push_in: "Đẩy vào", pull_out: "Lùi ra", drift_right: "Trượt phải", crane_down: "Hạ cần",
+  dolly_in: "Dolly vào", dolly_out: "Dolly ra", truck_pan: "Trượt ngang (thị sai)", crane_reveal: "Cần cẩu nâng lên" };
+const ANGLE_VI: Record<string, string> = { eye_level: "Ngang tầm mắt", low_angle: "Góc thấp (hất lên)", high_angle: "Góc cao (chúc xuống)", birds_eye: "Nhìn từ trên xuống" };
 const ZONE_VI: Record<string, string> = { left_third: "1/3 trái", center: "Giữa", right_third: "1/3 phải", top_left: "Trên trái", top_right: "Trên phải", top_center: "Trên giữa", none: "Không có" };
 
 export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Library; rev: number; onStoryboard: (sb: Storyboard) => void; onReload: () => void }> = ({ pid, state, lib, rev, onStoryboard, onReload }) => {
@@ -47,6 +50,8 @@ export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Libr
   const setShot = (patch: Partial<Shot>) => {
     const next = structuredClone(sb);
     next.shots[shotIdx] = { ...next.shots[shotIdx], ...patch };
+    // Gđ 6: chọn bộ set chưa có trong tập -> thêm vào danh sách set (ánh sáng mặc định của kho)
+    if (patch.set && !next.sets.some((x) => x.id === patch.set)) next.sets.push({ id: patch.set, lighting: lib.sets[patch.set]?.lighting ?? "studio_bright" });
     onStoryboard(next);
   };
   const setCam = (patch: Partial<Shot["camera"]>) => setShot({ camera: { ...shot.camera, ...patch } });
@@ -136,7 +141,7 @@ export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Libr
         <div className="grid grid-cols-2 gap-2">
           <Field label="Bắt đầu"><TimeInput value={shot.t0} onChange={(v) => setShot({ t0: v })} /></Field>
           <Field label="Kết thúc"><TimeInput value={shot.t1} onChange={(v) => setShot({ t1: v })} /></Field>
-          <Field label="Bộ set"><Select value={shot.set} options={sb.sets.map((s) => s.id)} onChange={(v) => setShot({ set: v })} labels={Object.fromEntries(Object.values(lib.sets).map((s) => [s.id, s.name]))} /></Field>
+          <Field label="Bộ set"><Select value={shot.set} options={[...new Set([...sb.sets.map((s) => s.id), ...Object.keys(lib.sets)])]} onChange={(v) => setShot({ set: v })} labels={Object.fromEntries(Object.values(lib.sets).map((s) => [s.id, s.name]))} /></Field>
           <Field label="Khung duyệt"><TimeInput value={shot.key_t} onChange={(v) => setShot({ key_t: v })} placeholder="giữa cảnh" /></Field>
         </div>
         <div className="rounded-lg border border-ink-700 p-2">
@@ -144,6 +149,7 @@ export const DirectorTab: React.FC<{ pid: string; state: ProjectState; lib: Libr
           <div className="grid grid-cols-2 gap-2">
             <Field label="Cỡ cảnh"><Select value={shot.camera.preset} options={CAMERA_PRESETS} labels={PRESET_VI} onChange={(v) => setCam({ preset: v })} /></Field>
             <Field label="Chuyển động"><Select value={shot.camera.move ?? "none"} options={CAMERA_MOVES} labels={MOVE_VI} onChange={(v) => setCam({ move: v })} /></Field>
+            <Field label="Góc máy"><Select value={shot.camera.angle ?? "eye_level"} options={CAMERA_ANGLES} labels={ANGLE_VI} onChange={(v) => setCam({ angle: v === "eye_level" ? undefined : v })} /></Field>
             <Field label={`Góc ngang (${shot.camera.yaw ?? 0}°)`}><input type="range" min={-40} max={40} value={shot.camera.yaw ?? 0} onChange={(e) => setCam({ yaw: Number(e.target.value) })} className="w-full" /></Field>
             <Field label="Khoảng cách (m)"><NumberInput step={0.05} value={shot.camera.distance} onChange={(v) => setCam({ distance: v })} /></Field>
             <Field label="Tiêu cự (mm)"><NumberInput value={shot.camera.lens} onChange={(v) => setCam({ lens: v })} /></Field>

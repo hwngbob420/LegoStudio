@@ -1,0 +1,26 @@
+{
+ "showcase_v1": {
+  "sha256": "a8091cc6640bca63ff9cdd47ac69c03d0df665689c8d1d0730dfee77b5ea4e60",
+  "blocks": [
+   "974dda9fd4bc0958"
+  ]
+ },
+ "showcase_v1_shorts": {
+  "sha256": "4af31ecc5351757d468dfb78a01baa26c003c338611c52f16cce71d57dbd25f4",
+  "blocks": [
+   "9bd44327f16a93f4"
+  ]
+ },
+ "ep01_foam_physics": {
+  "sha256": "6962e8fc6dd66966c6c78d852fe1aff31efd798f585e95de422fdf6f803b1d2d",
+  "blocks": [
+   "f9536ccf06d4c291"
+  ]
+ },
+ "ep02_the_to_do_list_trap": {
+  "sha256": "06468268e49e6c13657db014137cca8b5072aa6ac2a364a3ffd874cc5be0dd36",
+  "blocks": [
+   "70441e878f5d5970"
+  ]
+ }
+}

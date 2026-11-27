@@ -1,0 +1,11 @@
+{
+  "name": "Studio Void",
+  "hdri": "studio_small_09_2k.hdr", "hdri_strength": 0.8, "hdri_rotation_deg": 40, "world_tint": "#FFFFFF",
+  "world_color": "#E8EEF6",
+  "lights": [
+    {"name": "Key", "type": "AREA", "offset": [-1.6, -2.0, 2.0], "energy": 320, "color": "#FFF6EA", "size": 2.0},
+    {"name": "Fill", "type": "AREA", "offset": [2.0, -1.4, 1.2], "energy": 120, "color": "#E6EEFF", "size": 2.4},
+    {"name": "Rim", "type": "AREA", "offset": [1.0, 1.8, 1.4], "energy": 260, "color": "#FFFFFF", "size": 0.7, "aim_offset": [0, 0, 0.25]},
+    {"name": "Rim2", "type": "AREA", "offset": [-1.3, 1.6, 1.2], "energy": 160, "color": "#DCE8FF", "size": 0.7, "aim_offset": [0, 0, 0.25]}
+  ]
+}

@@ -54,7 +54,7 @@ export function sliceOverlay(ov: OverlayProps, t0: number, t1: number): OverlayP
 export interface Issue {
   level: "error" | "warn";
   shot: string;
-  code: "cue_over_face" | "zone_over_face" | "face_in_subtitles" | "head_clipped" | "short_shot";
+  code: "cue_over_face" | "zone_over_face" | "face_in_subtitles" | "head_clipped" | "short_shot" | "ots_cover";
   message: string;
   t?: number;
 }
@@ -70,8 +70,18 @@ export function validateLayout(T: BakedTimeline, sb: Storyboard, ov: OverlayProp
     const shot = T.shots[i];
     if (shot.f1 - shot.f0 + 1 < 6) issues.push({ level: "warn", shot: s.id, code: "short_shot", message: `Cảnh ${s.id} chỉ dài ${shot.f1 - shot.f0 + 1} khung (dưới 0,5 giây).` });
     const zone = s.ui_safe_zone !== "none" ? UI_ZONES[s.ui_safe_zone] : null;
+    // OTS: đầu người đứng trước máy (subjects[1]) là gáy mờ ở tiền cảnh, không phải mặt -> bỏ qua luật chữ/phụ đề,
+    // nhưng không được che quá 25% mặt người được quay
+    const fg = s.camera.preset === "ots" ? s.subjects?.[1] : undefined;
     for (const smp of q.samples) {
+      if (fg && smp.heads[fg] && s.subjects?.[0] && smp.heads[s.subjects[0]]) {
+        const a = smp.heads[s.subjects[0]];
+        const area = Math.max(1e-6, (a[2] - a[0]) * (a[3] - a[1]));
+        if (overlap(a, smp.heads[fg]) / area > 0.25)
+          issues.push({ level: "error", shot: s.id, code: "ots_cover", t: smp.t, message: `Cảnh ${s.id}: vai ${fg} che mặt ${s.subjects[0]} (qua vai quá sát).` });
+      }
       for (const [aid, bb] of Object.entries(smp.heads)) {
+        if (aid === fg) continue;
         if (zone && overlap(bb, zone) > 0)
           issues.push({ level: "error", shot: s.id, code: "zone_over_face", t: smp.t, message: `Cảnh ${s.id}: mặt ${aid} chạm vùng chữ ${s.ui_safe_zone}. Đặt chủ thể sang 1/3 đối diện.` });
         if (overlap(bb, SUBTITLE_BAND) > 0.0005)

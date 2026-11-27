@@ -1,7 +1,7 @@
 // Block ~2 phút (5B/5C): danh sách block cho tab Duyệt, nhận xét tự động, góp ý của người dùng, xem trước riêng từng block.
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { sliceOverlay, sliceTimeline, type Issue } from "@lse/director";
+import { sliceOverlay, sliceTimeline, type Issue, visualLint } from "@lse/director";
 import {
   BLOCK_TARGET_SEC, BlockReview, CritiqueLog, Review, ReviewComment, SCRIPT_CHECKS, Script, assignBlocks, blockList, estimateLineSec,
   parseOrThrow, type BakedTimeline, type ReviewNote, type Storyboard, type Timing,
@@ -38,7 +38,7 @@ export interface BlockView {
 
 /** Nhận xét tự động cho từng block: độ dài, lỗi bố cục (không che mặt...), đổi góc máy, phiếu chấm thoại của Claude. */
 export function autoNotes(T: BakedTimeline, sb: Storyboard, issues: Issue[], blocks: { id: string; f0: number; f1: number; shots: string[] }[],
-  critique: CritiqueLog | null): Record<string, ReviewNote[]> {
+  critique: CritiqueLog | null, timing?: Timing | null): Record<string, ReviewNote[]> {
   const out: Record<string, ReviewNote[]> = {};
   const last = blocks.length - 1;
   blocks.forEach((b, i) => {
@@ -60,11 +60,17 @@ export function autoNotes(T: BakedTimeline, sb: Storyboard, issues: Issue[], blo
       const where = g.shots.length === 1 ? `Cảnh ${g.shots[0]}` : `${g.shots.length} cảnh (${g.shots.slice(0, 6).join(", ")}${g.shots.length > 6 ? ", ..." : ""})`;
       notes.push({ id: `${b.id}_v${k}`, source: "auto", kind: "visual", level: g.level, text: `${where}: ${g.text.charAt(0).toUpperCase()}${g.text.slice(1)}`, shot: g.shots[0] });
     });
-    // đổi góc máy: block toàn một cỡ cảnh thì nhàm
-    const presets = sb.shots.filter((s) => b.shots.includes(s.id)).map((s) => s.camera.preset);
-    if (presets.length >= 6) {
-      const top = Math.max(...Object.values(presets.reduce<Record<string, number>>((a, p) => ((a[p] = (a[p] ?? 0) + 1), a), {})));
-      if (top / presets.length > 0.7) notes.push({ id: `${b.id}_var`, source: "auto", kind: "visual", level: "info", text: `${Math.round((100 * top) / presets.length)}% cảnh cùng một cỡ cảnh. Thêm cận mặt hoặc hai người cho đỡ đều.` });
+    // Gđ 6: bộ lọc đơn điệu hình ảnh (cùng cỡ cảnh > 22 s, cùng bối cảnh + góc > 60 s, một kiểu máy > 1/2 số cảnh)
+    if (timing) {
+      const own = { ...sb, shots: sb.shots.filter((s) => b.shots.includes(s.id)) };
+      if (own.shots.length) visualLint(own, timing).forEach((v, k) => notes.push({ id: `${b.id}_mono${k}`, source: "auto", kind: "visual",
+        level: v.code === "low_variety" ? "info" : "warn", text: `Hình đơn điệu: ${v.message} Gợi ý: ${v.suggest}.`, shot: v.shots[0] }));
+    } else {
+      const presets = sb.shots.filter((s) => b.shots.includes(s.id)).map((s) => s.camera.preset);
+      if (presets.length >= 6) {
+        const top = Math.max(...Object.values(presets.reduce<Record<string, number>>((a, p) => ((a[p] = (a[p] ?? 0) + 1), a), {})));
+        if (top / presets.length > 0.7) notes.push({ id: `${b.id}_var`, source: "auto", kind: "visual", level: "info", text: `${Math.round((100 * top) / presets.length)}% cảnh cùng một cỡ cảnh. Thêm cận mặt hoặc hai người cho đỡ đều.` });
+      }
     }
     // phiếu chấm thoại của Claude cho block này (lúc viết)
     const round = critique?.rounds.find((r) => r.label?.startsWith(`Block ${b.id}`));
@@ -98,7 +104,7 @@ export async function listBlocks(paths: WorkspacePaths, id: string) {
   }));
   const critFile = path.join(paths.projectDir(id), "writing", "script_critique.json");
   const crit = existsSync(critFile) ? CritiqueLog.safeParse(JSON.parse(readFileSync(critFile, "utf8"))) : null;
-  const notes = autoNotes(T, st.storyboard, r.issues, ranges, crit?.success ? crit.data : null);
+  const notes = autoNotes(T, st.storyboard, r.issues, ranges, crit?.success ? crit.data : null, st.timing);
   const byBlock = new Map(blockList(lines).map((b) => [b.id, b.lineIds]));
   const outFile = path.join(paths.projectDir(id), "build", "block_outputs.json");
   const outputs: { id: string; file: string; hash: string }[] = existsSync(outFile) ? JSON.parse(readFileSync(outFile, "utf8")) : [];

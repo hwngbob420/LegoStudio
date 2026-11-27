@@ -1,0 +1,23 @@
+{
+ "id": "Set_ApartmentCutaway",
+ "name": "Căn hộ cắt mái",
+ "lighting": "studio_bright",
+ "moods": {
+  "day": "studio_bright",
+  "golden_hour": "cozy_golden_hour",
+  "night": "moody_night_desk"
+ },
+ "anchors": [
+  "couch",
+  "living_center",
+  "window_view",
+  "bed",
+  "bedroom_door",
+  "tv_watch",
+  "center"
+ ],
+ "notes": "cutaway apartment: living room (sofa, TV, rug, floor lamp, window to the city) + bedroom (bed, night lamp); ceiling and walls hide for top shots",
+ "best_for": "everyday relatable stories, late-night spirals, morning routines, overhead isolation shots",
+ "builder": "build_apartment",
+ "rings": 3
+}

@@ -1,6 +1,6 @@
 // Đọc file của một tập + kho kênh, kiểm schema, nướng, ghi atomic.
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CastRecipe, Storyboard, Timing, parseOrThrow, type BakedTimeline, type Manifest } from "@lse/shared";
@@ -13,6 +13,7 @@ export const LIBRARY = path.join(REPO, "workspace", "channel_library");
 const readJson = (p: string) => JSON.parse(readFileSync(p, "utf8"));
 
 export function writeJsonAtomic(p: string, data: unknown, pretty = false) {
+  mkdirSync(path.dirname(p), { recursive: true });
   const tmp = `${p}.tmp`;
   writeFileSync(tmp, pretty ? JSON.stringify(data, null, 1) : JSON.stringify(data));
   renameSync(tmp, p);

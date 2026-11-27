@@ -8,11 +8,11 @@ import path from "node:path";
 import { z, type ZodType } from "zod";
 import {
   BEAT_CHECKS, BLOCK_TARGET_SEC, BeatSheet, blockId, CheckResult, CritiqueLog, POVS, SCRIPT_CHECKS, TONES, WritingInput, linesForDuration, passRate,
-  type Beat,
+  type Beat, VISUAL_INTENTS, locationArcErrors,
 } from "@lse/shared";
 import type { TextAI } from "./ai/types";
 import { ClaudeSession, type SessionOpts } from "./ai/claudeCode";
-import { NewCast, castSummary, guideText, bibleText, knownCast, lineErrors, materializeCast, writeScriptFile } from "./aiScript";
+import { NewCast, castSummary, guideText, bibleText, knownCast, knownSets, lineErrors, materializeCast, setsSummary, writeScriptFile } from "./aiScript";
 import { readJson, writeJsonAtomic } from "./jsonStore";
 import { listSources, sourcesForPrompt } from "./sources";
 import { HttpError, assertValidId, type WorkspacePaths } from "./workspace";
@@ -77,6 +77,12 @@ export async function buildContext(paths: WorkspacePaths, ep: string, input: Wri
     "# Diễn viên có sẵn (id: tên — tính cách)",
     castSummary(paths),
     "",
+    "# Bối cảnh có sẵn trong kho (location = id bộ set; mood = không khí ánh sáng)",
+    setsSummary(paths),
+    "Cỡ cảnh máy quay có được: ews (toàn cực rộng mở cảnh), ws (toàn), mls (trung toàn, thấy dáng), ms (trung, hội thoại), cu (cận mặt), ots (qua vai); góc: eye_level, low_angle, high_angle, birds_eye.",
+    `Ý đồ hình ảnh (visual) cho từng nhịp/câu: ${VISUAL_INTENTS.join(", ")}.`,
+    "Nghĩ như một showrunner hình ảnh, không phải kịch truyền thanh: mỗi block ~2 phút đi qua 2–4 bối cảnh có chủ đích. Cần nơi chưa có trong kho thì dùng nơi gần nhất và ghi đề xuất set mới vào prop_cue của nhịp (\"NEW_SET: ...\").",
+    "",
     "# Hướng dẫn biên kịch của kênh",
     guideText(paths),
     "",
@@ -103,14 +109,16 @@ export const BeatPlanOut = BeatSheet.omit({ approved: true }).extend({
 type BeatPlanOut = z.infer<typeof BeatPlanOut>;
 
 export const ChunkOut = z.object({
-  lines: z.array(z.object({ beat: z.string().regex(/^B\d{1,3}$/), speaker: z.string(), text: z.string().min(1).max(220) })).min(1).max(CHUNK_LINES * 2 + 10),
+  lines: z.array(z.object({ beat: z.string().regex(/^B\d{1,3}$/), speaker: z.string(), text: z.string().min(1).max(220),
+    /** Gđ 6: bối cảnh / ý đồ hình ảnh riêng của câu (không ghi = theo nhịp) */
+    location: z.string().regex(/^[A-Za-z0-9_]+$/).optional(), visual: z.enum(VISUAL_INTENTS).optional() })).min(1).max(CHUNK_LINES * 2 + 10),
   checks: checksSchema(SCRIPT_CHECKS),
   revisions: z.number().int().min(0).max(5).default(0),
 });
 type ChunkOut = z.infer<typeof ChunkOut>;
 
 /** Kiểm dàn ý bằng code. */
-export function beatErrors(d: BeatPlanOut, known: Set<string>, budget: { min: number; max: number }, pov: WritingInput["pov"]): string[] {
+export function beatErrors(d: BeatPlanOut, known: Set<string>, budget: { min: number; max: number }, pov: WritingInput["pov"], sets?: Set<string>): string[] {
   const errs: string[] = [];
   const all = new Set([...known, ...d.new_cast.map((c) => c.id)]);
   const unknown = [...new Set([...d.cast, ...d.beats.flatMap((b) => b.speakers)].filter((c) => !all.has(c)))];
@@ -122,13 +130,19 @@ export function beatErrors(d: BeatPlanOut, known: Set<string>, budget: { min: nu
   const total = d.beats.reduce((a, b) => a + b.est_lines, 0);
   if (total < budget.min || total > Math.ceil(budget.max * 1.1)) errs.push(`Tổng est_lines = ${total}, phải trong ${budget.min}–${budget.max}.`);
   if ((pov === "second" || pov === "third") && !d.cast.includes("classic_yellow")) errs.push("Ngôi kể có người dẫn: cast phải có classic_yellow làm người dẫn.");
+  if (sets?.size) {
+    const bad = [...new Set(d.beats.map((b) => b.location).filter((l): l is string => !!l && !sets.has(l)))];
+    if (bad.length) errs.push(`location không có trong kho bộ set: ${bad.join(", ")} (chỉ dùng: ${[...sets].join(", ")}).`);
+  }
   return errs;
 }
 
 /** Kiểm một phần thoại bằng code. */
-export function chunkErrors(d: ChunkOut, beats: Beat[], known: Set<string>): string[] {
+export function chunkErrors(d: ChunkOut, beats: Beat[], known: Set<string>, sets?: Set<string>): string[] {
   const ids = beats.map((b) => b.id);
   const errs = lineErrors(d.lines, known);
+  const bad = [...new Set(d.lines.map((l) => l.location).filter((l): l is string => !!l && !!sets?.size && !sets.has(l)))];
+  if (bad.length) errs.push(`location không có trong kho bộ set: ${bad.join(", ")}.`);
   const stray = [...new Set(d.lines.filter((l) => !ids.includes(l.beat)).map((l) => l.beat))];
   if (stray.length) errs.push(`Câu gắn nhịp không thuộc phần này: ${stray.join(", ")} (chỉ dùng ${ids.join(", ")}).`);
   const missing = ids.filter((id) => !d.lines.some((l) => l.beat === id));
@@ -207,6 +221,7 @@ export function beatTask(input: WritingInput) {
     `Tổng est_lines của mọi nhịp phải nằm trong ${budget.min}–${budget.max}.`,
     long ? "Tập dài: chia 3–10 chương (ghi tên ở field chapter của mỗi nhịp); mỗi chương có móc riêng, leo thang và một lật nhỏ; nhịp 3–8 câu. Giữ một running gag xuyên tập." : "",
     "Ưu tiên diễn viên có sẵn; chỉ thêm new_cast khi tư liệu thật sự cần (tối đa 3). cast/speakers chỉ dùng id có sẵn hoặc trong new_cast.",
+    "Mỗi nhịp ghi location (id bộ set trong danh sách bối cảnh), mood nếu cần (ví dụ night cho cửa hàng tiện lợi), visual (ý đồ hình ảnh) và prop_cue nếu có vật minh hoạ lắp bằng gạch. Mỗi khoảng ~2 phút (~35 câu) đi qua 2–4 bối cảnh: mở rộng -> nơi chính -> cảnh cắt gag (set khác hoặc Set_InstructionVoid) -> cận mặt chốt.",
     "Sau khi lập xong, TỰ CHẤM theo danh sách dưới (ĐẠT/KHÔNG ĐẠT + một dòng lý do, khó tính thật), tự sửa tối đa 2 vòng, rồi mới trả bản cuối.",
     "Trả checks là kết quả chấm của BẢN CUỐI; revisions là số vòng đã sửa.",
     checklist(BEAT_CHECKS),
@@ -220,6 +235,7 @@ export function chunkTask(part: Beat[], k: number, n: number, prev: { speaker: s
     `Các nhịp của phần này (viết đúng thứ tự, mỗi câu gắn beat, số câu mỗi nhịp xấp xỉ est_lines):\n${JSON.stringify(part)}`,
     prev.length ? `Các câu ngay trước phần này (nối mạch, không lặp lại):\n${prev.map((l) => `${l.speaker}: ${l.text}`).join("\n")}` : "",
     "Chỉ dùng người nói trong dàn ý. Punch đặt cuối câu. Câu ngắn nói được bằng giọng máy.",
+    "Câu theo location/visual của nhịp; câu nào cần khác (ví dụ một câu cắt gag sang sân khấu hướng dẫn, một cận mặt deadpan) thì ghi location/visual riêng cho câu đó. Thoại nhắc tới thứ người xem THẤY ở bối cảnh.",
     k === n ? "Đây là phần CUỐI: câu cuối cùng là câu chốt 'Step N: ...' của nhịp button, gọi lại running gag." : "",
     "Viết xong, TỰ CHẤM phần này theo danh sách dưới, tự sửa chỗ KHÔNG ĐẠT rồi mới trả. checks là kết quả của bản cuối.",
     checklist(SCRIPT_CHECKS),
@@ -244,12 +260,14 @@ export async function generateScript(paths: WorkspacePaths, ep: string, session:
     log("== beats ==");
     log("[progress] write 0/1");
     const known = new Set(knownCast(paths));
-    const plan = await session.ask("lap_dan_y", beatTask(input), BeatPlanOut, (d) => beatErrors(d, known, budget, input.pov));
+    const plan = await session.ask("lap_dan_y", beatTask(input), BeatPlanOut, (d) => beatErrors(d, known, budget, input.pov, knownSets(paths)));
     await materializeCast(paths, ep, plan.new_cast);
     const { new_cast: _nc, checks, revisions, ...rest } = plan;
     sheet = await writeJsonAtomic(WF.beats(paths, ep), BeatSheet, { ...rest, approved: true });
-    const codeChecks: Check[] = [{ id: "length_fit", pass: true, reason: `Tổng ${rest.beats.reduce((a, b) => a + b.est_lines, 0)} câu, trong khoảng ${budget.min}–${budget.max}.` }];
-    const merged = [...checks.filter((c) => c.id !== "length_fit"), ...codeChecks];
+    const arc = locationArcErrors(chunkBeats(rest.beats, blockLines(input.targetSec)), input.targetSec);
+    const codeChecks: Check[] = [{ id: "length_fit", pass: true, reason: `Tổng ${rest.beats.reduce((a, b) => a + b.est_lines, 0)} câu, trong khoảng ${budget.min}–${budget.max}.` },
+      { id: "location_arc", pass: !arc.length, reason: (arc.length ? arc.join(" ") : "Mỗi block đi qua 2–4 bối cảnh (code đếm).").slice(0, 290) }];
+    const merged = [...checks.filter((c) => c.id !== "length_fit" && c.id !== "location_arc"), ...codeChecks];
     await writeJsonAtomic(WF.beatLog(paths, ep), CritiqueLog, { stage: "beats", rounds: [{ round: 1, pass_rate: passRate({ checks: merged, fixes: [] }), checks: merged, fixes: [], applied: revisions > 0 }] });
     log(`dàn ý: ${sheet.beats.length} nhịp, Claude tự sửa ${revisions} vòng`);
   }
@@ -261,8 +279,10 @@ export async function generateScript(paths: WorkspacePaths, ep: string, session:
   const rounds: CritiqueLog["rounds"] = [];
   for (let k = 0; k < parts.length; k++) {
     log(`[progress] write ${k + 1}/${steps(parts.length)}`);
-    const out = await session.ask(`viet_thoai_${k + 1}`, chunkTask(parts[k], k + 1, parts.length, lines.slice(-4), sheet), ChunkOut, (d) => chunkErrors(d, parts[k], known));
-    lines.push(...out.lines.map((l) => ({ speaker: l.speaker, text: l.text, beat: l.beat, block: blockId(k) })));
+    const out = await session.ask(`viet_thoai_${k + 1}`, chunkTask(parts[k], k + 1, parts.length, lines.slice(-4), sheet), ChunkOut, (d) => chunkErrors(d, parts[k], known, knownSets(paths)));
+    const beatOf = (id: string) => parts[k].find((b) => b.id === id);
+    lines.push(...out.lines.map((l) => ({ speaker: l.speaker, text: l.text, beat: l.beat, block: blockId(k),
+      location: l.location ?? beatOf(l.beat)?.location, visual: l.visual ?? beatOf(l.beat)?.visual, prop_cue: beatOf(l.beat)?.prop_cue })));
     rounds.push({ round: k + 1, label: parts.length > 1 ? `Block ${blockId(k)} (${parts[k][0].id}–${parts[k].at(-1)!.id})` : `Block ${blockId(k)}`, pass_rate: passRate({ checks: out.checks, fixes: [] }), checks: out.checks, fixes: [], applied: out.revisions > 0 });
     log(`thoại phần ${k + 1}/${parts.length}: ${out.lines.length} câu`);
   }

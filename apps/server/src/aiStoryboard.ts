@@ -24,7 +24,8 @@ async function load(paths: WorkspacePaths, id: string) {
     throw new HttpError(409, `Câu ${L.id} đã đổi sau khi tạo giọng. Bấm "Tạo giọng" lại để mốc giờ khớp kịch bản.`);
   const cat = await readJson(path.join(paths.library, "catalog.json"), Catalog);
   const lib = loadLibrary(paths.library);
-  const sets = Object.fromEntries(Object.entries(cat.sets).map(([k, v]) => [k, { anchors: v.anchors, lighting: v.lighting }]));
+  const sets = Object.fromEntries(Object.entries(cat.sets).map(([k, v]) => [k, { anchors: v.anchors, lighting: v.lighting,
+    ...((v as { rings?: number }).rings ? { rings: (v as { rings?: number }).rings } : {}), ...((v as { moods?: Record<string, string> }).moods ? { moods: (v as { moods?: Record<string, string> }).moods } : {}) }]));
   return { dir, script, timing, cat, lib, sets };
 }
 
@@ -41,7 +42,10 @@ function evaluate(sb: Storyboard, ctx: Awaited<ReturnType<typeof load>>, episode
 function systemPrompt(paths: WorkspacePaths, ctx: Awaited<ReturnType<typeof load>>) {
   return [
     "Bạn là đạo diễn hình ảnh của kênh video giải thích hài phong cách mô hình gạch dừng hình. Chỉ trả JSON đúng schema.",
-    "Mỗi câu thoại (line) là một beat. Chọn shot: mcu (trung cận người nói), ecu (cận mặt, cho câu sốc/cú lật), two_shot (cả hai, cho phản ứng), wide_establish (toàn cảnh, ít dùng).",
+    "Mỗi câu thoại (line) là một beat. Chọn shot theo thang cỡ cảnh: ews (toàn cực rộng, mở bối cảnh), ws (toàn, người trong bối cảnh), mls (trung toàn, thấy dáng + đạo cụ), ms (trung, hội thoại), cu (cận mặt deadpan 2D), ots (qua vai, đối đáp), two_shot (cả hai, phản ứng), mcu/ecu (trung cận / cận sát, kiểu cũ).",
+    "angle (tuỳ chọn): low_angle (đẩy cái tôi / châm biếm), high_angle (nhỏ bé, cô lập), birds_eye (nhìn từ trên: hỗn loạn, mê cung, đám đông; trần/tường tự dỡ). move (tuỳ chọn): dolly_in, dolly_out, truck_pan, crane_reveal, push_in, pull_out.",
+    "location: id bộ set của beat. Câu đã có @location do biên kịch chọn thì giữ nguyên. Không để quá ~22 giây cùng một cỡ cảnh, quá ~60 giây cùng bối cảnh + góc. Code tự chèn cảnh mở EWS khi đổi bối cảnh và tự dời diễn viên sang set mới.",
+    "Bộ set 3 vòng (rings) quay được mọi góc không lộ mép; set cũ chỉ nên quay ngang tầm mắt.",
     "Biểu cảm dựng cung cảm xúc (ví dụ deadpan_tired -> shocked_wide -> smug_smirk); punch.word là số thứ tự từ (bắt đầu từ 1) nơi biểu cảm đổi.",
     "listener_expr: biểu cảm phản ứng của người nghe. action chỉ chọn trong danh sách. fx tối đa 1 mỗi beat, dùng tiết kiệm.",
     "ui: tối đa một thẻ cho mỗi 2–3 câu: part_callout (đếm đồ vật, ví dụ 3 cốc cà phê) hoặc brick_chart (2–4 cột số liệu, collapse_last cho cú lật). Còn lại type none.",
@@ -49,7 +53,7 @@ function systemPrompt(paths: WorkspacePaths, ctx: Awaited<ReturnType<typeof load
     "ending.step: số bước của câu chốt cuối tập, 2 chữ số (ví dụ câu cuối nói \"Step five\" thì step là \"05\").",
     "Code sẽ tự đặt thẻ chữ ở 1/3 đối diện người nói và tự lo mốc giờ; bạn KHÔNG viết toạ độ hay thời gian.",
     "Không dùng tên thương hiệu thật trong chữ hiển thị.",
-    `Bộ set: ${Object.entries(ctx.cat.sets).map(([k, v]) => `${k} (${(v as { notes?: string }).notes ?? ""})`).join("; ")}`,
+    `Bộ set: ${Object.entries(ctx.cat.sets).map(([k, v]) => `${k}${(v as { rings?: number }).rings ? " [3 vòng]" : ""} (${(v as { notes?: string }).notes ?? ""})`).join("; ")}`,
     `Động tác: ${ACTIONS.join(", ")}. Biểu cảm: ${EXPRESSIONS.join(", ")}. Hiệu ứng: ${FX_KINDS.join(", ")}.`,
     "\n# Series bible\n" + bibleText(paths),
   ].join("\n");
@@ -102,6 +106,7 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
   const auto0 = autoPlan(ctx.script, oldPlan?.set ?? (opts.set && ctx.sets[opts.set] ? opts.set : "Set_BrickCreatorDesk"), ctx.lib.defaultExpr);
   let plan: BeatPlan = scoped ? { ...oldPlan!, beats: merged(auto0.beats.filter((b) => target(b.line))) } : auto0;
   const lines = ctx.script.lines.filter((l) => target(l.id));
+  const hasLoc = ctx.script.lines.some((l) => l.location);
   const nBatch = Math.ceil(lines.length / BATCH);
   if (opts.mode !== "auto" && ai) {
     try {
@@ -122,9 +127,10 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
             `Tập: ${ctx.script.title}. Lô ${i / BATCH + 1}/${nBatch}${scoped ? ` (chỉ dựng lại block ${[...scoped].join(", ")}; các block khác giữ nguyên)` : ""}.`,
             prevSummary ? `Tóm tắt các cảnh trước: ${prevSummary}` : "",
             beatHints,
-            set ? `Bộ set đã chọn: ${set} (giữ nguyên).` : "Chọn MỘT bộ set hợp truyện.",
-            "Các câu (id | người nói | số từ | lời):",
-            ...chunk.map((l) => `${l.id} | ${l.speaker} | ${ctx.timing.lines[l.id].words.length} | ${l.text}`),
+            hasLoc ? "Biên kịch đã chọn bối cảnh cho từng câu (@location) và ý đồ hình (~visual): giữ trong beat.location và chọn shot/angle hợp ý đồ." :
+              set ? `Bộ set đã chọn: ${set} (giữ nguyên).` : "Chọn MỘT bộ set hợp truyện (có thể đặt location riêng cho beat khi truyện chuyển nơi).",
+            "Các câu (id | người nói | số từ | bối cảnh, ý đồ | lời):",
+            ...chunk.map((l) => `${l.id} | ${l.speaker} | ${ctx.timing.lines[l.id].words.length} | ${l.location ? `@${l.location}` : "-"}${l.visual ? ` ~${l.visual}` : ""} | ${l.text}`),
             opts.note ? `Ghi chú của đạo diễn: ${opts.note}` : "",
             feedback ? `Lần trước bị lỗi, hãy sửa: ${feedback}` : "",
           ].filter(Boolean).join("\n");
@@ -155,6 +161,17 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
   } else if (!ai) note = "Chưa cấu hình AI: đã dùng đạo diễn tự động theo luật (xem trước được ngay; thêm khóa AI trong .env để đạo diễn sáng tạo hơn).";
   // thẻ STEP kết: số bước lấy từ chính câu thoại cuối ("Step five" -> 05), không tin số AI đoán; luôn 2 chữ số
   plan = { ...plan, ending: { ...plan.ending, step: endingStep(ctx.script, plan.ending.step) } };
+  // Gđ 6: không khí ánh sáng theo dàn ý (mood của nhịp -> preset ánh sáng của bộ set đó)
+  {
+    const bsFile = path.join(paths.projectDir(id), "writing", "beat_sheet.json");
+    const bs = existsSync(bsFile) ? BeatSheet.safeParse(JSON.parse(readFileSync(bsFile, "utf8"))) : null;
+    const lighting: Record<string, string> = { ...(plan.lighting ?? {}) };
+    for (const b of bs?.success ? bs.data.beats : []) {
+      const moods = b.location ? ctx.sets[b.location]?.moods : undefined;
+      if (b.location && b.mood && moods?.[b.mood] && !lighting[b.location]) lighting[b.location] = moods[b.mood];
+    }
+    if (Object.keys(lighting).length) plan = { ...plan, lighting };
+  }
   // tự sửa bố cục: lật bên chủ thể -> cận thành trung cận -> bỏ thẻ chữ ở cảnh còn che mặt
   const fixed = autoFix(plan, composeCtx, ctx.lib);
   plan = fixed.plan;

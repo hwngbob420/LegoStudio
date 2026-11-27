@@ -1,0 +1,23 @@
+{
+ "id": "Set_OfficeFloor",
+ "name": "Văn phòng mở",
+ "lighting": "office_daylight",
+ "moods": {
+  "day": "office_daylight",
+  "night": "moody_night_desk"
+ },
+ "anchors": [
+  "desk_a",
+  "desk_b",
+  "aisle",
+  "whiteboard",
+  "meeting_left",
+  "meeting_right",
+  "cooler",
+  "center"
+ ],
+ "notes": "open office: 2 desk clusters with monitors, glass meeting room with long table and a whiteboard chart, water cooler, big windows to towers",
+ "best_for": "workplace satire, deadpan corporate humor, whiteboard/chart beats",
+ "builder": "build_office_floor",
+ "rings": 3
+}

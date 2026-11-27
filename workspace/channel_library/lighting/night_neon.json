@@ -1,0 +1,12 @@
+{
+  "name": "Night Neon",
+  "hdri": "studio_small_09_2k.hdr", "hdri_strength": 0.1, "hdri_rotation_deg": 0, "world_tint": "#5A5FA0",
+  "world_color": "#141A30",
+  "lights": [
+    {"name": "Interior", "type": "AREA", "offset": [0, 0.3, 1.5], "energy": 260, "color": "#EFFBFF", "size": 2.4, "aim_offset": [0, 0, 0]},
+    {"name": "Neon", "type": "AREA", "offset": [0.2, -1.6, 1.0], "energy": 120, "color": "#7CF0FF", "size": 1.2, "aim_offset": [0, 0, 0.3]},
+    {"name": "Pink", "type": "POINT", "offset": [1.3, -1.5, 0.9], "energy": 35, "color": "#FF6FB5", "size": 0.2},
+    {"name": "Street", "type": "POINT", "offset": [-2.4, -2.6, 0.8], "energy": 60, "color": "#FFD27A", "size": 0.3},
+    {"name": "Rim", "type": "AREA", "offset": [1.2, 1.8, 1.2], "energy": 200, "color": "#9FA8FF", "size": 0.6, "aim_offset": [0, 0, 0.25]}
+  ]
+}

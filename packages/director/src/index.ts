@@ -17,3 +17,8 @@ export { graphemeVisemes, lineVisemes } from "./voice";
 export { makeShorts, SHORTS_MAX_SEC } from "./shorts";
 export { sliceTimeline, sliceHash, sha256Hex, stableJson } from "./slice";
 export { segmentAt } from "./acting";
+// Gđ 6: dàn cảnh nhiều set, kiểm bố cục, lọc đơn điệu
+export { visualLint, SAME_SCALE_MAX, STATIC_MAX, type VisualNote } from "./visualLint";
+export { checkStage, floatingObjects, matrixEpisode, CAMERA_MATRIX, type LayoutIssue } from "./layout";
+export { usesStage, setOrigins, cutawayHidden, visibilitySchedule } from "./stage";
+export { VISUAL_TO_SHOT } from "./compose";

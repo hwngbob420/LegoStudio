@@ -78,7 +78,7 @@ Chỉ cài skill chính chủ: Remotion (`remotion-dev/skills`) và Gemini (`goo
 
 ---
 
-## 5. Giao diện Studio (5 tab, chép khung PSE)
+## 5. Giao diện Studio (6 tab, chép khung PSE; tab Duyệt block thêm ở Gđ 5C)
 Nền tối, Lucide, chỉ báo `Đã tự lưu`, ô chọn tập và nút `Tập mới`.
 - **Tab 1 — Kịch bản & Kế hoạch:** ô dán truyện, không khí, khuôn tập, ô **Góc nhìn của tôi**, nút `Phân tích bằng AI`; thẻ kịch bản sạch, thẻ bảng tài nguyên.
 - **Tab 2 — Xưởng:** không gian kéo thả dạng nút như PSE mục 5.1, gồm nhóm Định hướng, Diễn viên, Bộ set & đạo cụ, Âm thanh, Chương/Cảnh.
@@ -200,6 +200,10 @@ Mỗi giai đoạn: kế hoạch → người dùng duyệt → làm → `/phase
 | **5B. Block 2 phút** | Tập chia block ~2 phút cắt ở ranh giới câu/cảnh (`block` trên từng câu). Đầu block khớp lưới khung. Bộ đạo diễn tính nhiễu, chớp mắt, vòng lặp động tác theo block, nên mỗi block nướng ra lát timeline độc lập (`sliceTimeline`) có mã băm riêng | Test: thêm khoảng lặng ở block 1 thì lát block 2 giữ nguyên mã băm. Nướng 2 lần cùng sha256. Player xem riêng từng block |
 | **5C. Một nút ra bản xem trước + bảng nhận xét** | Gửi file -> nút "Làm bản xem trước": Claude viết kịch bản theo block -> giọng -> khớp giờ -> AI đạo diễn (việc nền) -> tab Duyệt: từng block có Player, lời thoại, nhận xét tự động, ô góp ý; "Claude sửa block này" chỉ viết lại/dựng lại block đó | Từ một file outline ra bản xem trước theo block không cần bấm từng tab. Góp ý một block -> chỉ block đó đổi, block khác giữ mã băm |
 | **5D. Render từng block** | Render bản cuối theo block (Blender + lớp chữ + tiếng), lưu theo mã băm lát, mỗi block ra một MP4 xem được, ghép bản cuối bằng nối video + một bản trộn tiếng | Sửa một block rồi xuất lại: chỉ block đó render lại. Chỗ nối không giật, khẩu hình không lệch |
+| **6A. Nghiên cứu bố cục + skill** | Khảo sát mã nguồn mở về thành phố thủ tục, WFC, LLM dựng cảnh, máy quay tự động, skill quay phim -> `docs/LAYOUT_RESEARCH.md` (chọn/bỏ có lý do); 2 skill `brick-world-layout-architect`, `cinematic-camera-blocking` | Báo cáo có link + số sao + quyết định; skill nạp được |
+| **6B. Ngữ pháp máy + dàn cảnh nhiều set** | Preset `ews/ws/mls/ms/cu/ots`, góc `low/high/birds_eye`, chuyển động `dolly_in/out, truck_pan, crane_reveal`, tilt-shift theo cỡ cảnh; diễn viên chuyển set (`actors[id].at`); xếp set theo bán kính vòm; đèn + trời theo set của từng cảnh; cutaway hợp nhất với lắp ráp (`T.stage`) ở cả Blender và Three.js | 4 tập cũ nướng ra y hệt (test sha256); birds-eye không lật trục; Blender khớp bộ đạo diễn ≤ 0,00004 |
+| **6C. Thế giới 3 vòng** | `world_kit.py` + 7 set mới (sân diễn, trung cảnh gộp lưới, chân trời, vòm), biển hiệu chung chung, 4 preset ánh sáng mới, catalog có `moods`/`best_for`; bộ kiểm bố cục (`layout.ts`): vật lơ lửng, che mặt, ra ngoài vòm; ma trận 10 khung máy cho mọi set | `layout.test.ts` xanh cho mọi set; contact sheet ma trận từng set; visual-qa PASS |
+| **6D. Biên kịch hình ảnh + lọc đơn điệu** | Nhịp/câu có `location`, `mood`, `visual`, `prop_cue`; biên kịch thấy danh sách bối cảnh sống; mục chấm `location_arc` (code đếm) + `visual_story`; storyboard tự chèn cảnh mở khi đổi nơi; `visualLint` ở tab Duyệt block và khi Claude sửa block; tab Đạo diễn có góc máy + mọi set, tab Kịch bản có cột bối cảnh | `showcase_v2_world` 30–45 giây, ≥ 4 set, đủ EWS / nhìn từ trên / góc thấp / qua vai / cận mặt, 0 lỗi che mặt; `npm test` xanh |
 
 ---
 

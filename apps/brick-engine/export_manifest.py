@@ -19,7 +19,7 @@ R = lambda v, n=5: [round(float(x), n) for x in v]
 
 def source_hash():
     h = hashlib.sha1()
-    for fn in ("brick_builder.py", "sets_library.py", "minifig_builder.py"):
+    for fn in ("brick_builder.py", "sets_library.py", "minifig_builder.py", "sets_world.py", "world_kit.py"):
         h.update(open(os.path.join(P.ENGINE, fn), "rb").read().replace(b"\r\n", b"\n"))
     return h.hexdigest()[:12]
 
@@ -34,9 +34,35 @@ def main():
     for sid, builder in SL.SETS.items():
         sb = builder(origin=(0, 0, 0))
         bpy.context.view_layer.update()
-        objs = [{"name": o.name, "step": int(o.get("step", 0)), "loc": R(o.matrix_world.translation, 6)} for o in sb.objects]
+        world = getattr(sb, "extent", None) is not None
+        objs = []
+        for o in sb.objects:
+            e = {"name": o.name, "step": int(o.get("step", 0)), "loc": R(o.matrix_world.translation, 6)}
+            if world:  # Gđ 6: thêm hộp bao + thẻ cho bộ kiểm bố cục / cutaway (set cũ giữ đúng định dạng cũ)
+                pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
+                e["bb"] = R([min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts),
+                             max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)], 5)
+                for k in ("cut", "ring"):
+                    if k in o.keys():
+                        e[k] = o[k] if k == "cut" else int(o[k])
+                if o.get("float_ok"):
+                    e["float_ok"] = True
+                if "label" in o.keys():
+                    e["label"] = str(o["label"])
+                mats = [sl.material.name for sl in o.material_slots if sl.material]
+                if o.get("see_through") or (mats and all(("_trans" in m) or m.startswith(("Win_", "Fridge_", "Glass_")) for m in mats)):
+                    e["see_through"] = True
+                if "parts" in o.keys():
+                    flat = list(o["parts"])
+                    c0 = o.matrix_world.translation
+                    e["parts"] = [R([flat[i] + c0.x, flat[i + 1] + c0.y, flat[i + 2] + c0.z, flat[i + 3] + c0.x, flat[i + 4] + c0.y,
+                                     flat[i + 5] + c0.z], 5) for i in range(0, len(flat), 6)]
+            objs.append(e)
         out["sets"][sid] = {"anchors": {k: {"location": R(v["location"], 6), "facing_deg": v["facing_deg"]} for k, v in sb.anchors.items()},
                             "objects": objs}
+        if world:
+            out["sets"][sid].update({"extent": sb.extent, "dome_h": sb.dome_h, "floor_z": round(sb.floor_z, 6),
+                                     "center": R(Vector(sb.center), 6)})
     for cid in sorted(P.cast_recipe_files()):
         rig = MB.build_minifig(cid)
         bpy.context.view_layer.update()

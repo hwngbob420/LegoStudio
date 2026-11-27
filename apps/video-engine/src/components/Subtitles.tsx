@@ -14,6 +14,12 @@ export const Subtitles: React.FC<{lines: Line[]; W: number; H: number}> = ({line
   if (!L) return null;
   const a = interpolate(t, [L.start - 0.08, L.start + 0.04, L.end + 0.18, L.end + 0.3], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const y = interpolate(a, [0, 1], [18, 0]);
+  // cân dòng: ước lượng bề rộng chữ, nếu phải xuống dòng thì chia đều để dòng cuối không còn một chữ đứng trơ trọi
+  const wordPx = (s: string) => s.length * 52 * 0.6 + 22;
+  const total = L.words.reduce((acc, w) => acc + wordPx(w.text), 0);
+  const avail = W * 0.76 - 46 - (L.speaker.length * 22 + 70) - 18;
+  const nLines = Math.max(1, Math.ceil(total / avail));
+  const wrapW = nLines > 1 ? Math.min(avail, Math.ceil(total / nLines) + 60) : undefined;
   return (
     <div style={{position: 'absolute', left: 0, width: W, top: H * 0.835, display: 'flex', justifyContent: 'center', opacity: a,
       transform: `translateY(${y}px)`, fontFamily: FONT}}>
@@ -23,7 +29,7 @@ export const Subtitles: React.FC<{lines: Line[]; W: number; H: number}> = ({line
           border: `4px solid ${INK}`, whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: 1}}>
           {L.speaker}
         </div>
-        <div style={{fontSize: 52, fontWeight: 900, color: 'white', lineHeight: 1.15, display: 'flex', flexWrap: 'wrap', columnGap: 22}}>
+        <div style={{fontSize: 52, fontWeight: 900, color: 'white', lineHeight: 1.15, display: 'flex', flexWrap: 'wrap', columnGap: 22, maxWidth: wrapW}}>
           {L.words.map((w, i) => {
             const next = L.words[i + 1]?.t ?? L.end;
             const active = t >= w.t && t < next;

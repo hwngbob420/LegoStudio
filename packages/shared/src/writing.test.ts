@@ -20,7 +20,8 @@ describe("writing room schemas", () => {
   });
   it("critique pass rate is a fraction of pass/fail checks", () => {
     const c = Critique.parse({ checks: Object.keys(BEAT_CHECKS).map((id, i) => ({ id, pass: i % 2 === 0, reason: "x" })) });
-    expect(passRate(c)).toBeCloseTo(0.5);
+    const n = Object.keys(BEAT_CHECKS).length;
+    expect(passRate(c)).toBeCloseTo(Math.ceil(n / 2) / n);
   });
   it("source index only accepts server-made ids", () => {
     expect(() => SourceIndex.parse({ sources: [{ id: "../evil", name: "a", ext: "pdf", bytes: 1, chars: 1, added: "t" }] })).toThrow();

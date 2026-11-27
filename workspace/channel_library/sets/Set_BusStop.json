@@ -1,0 +1,22 @@
+{
+ "id": "Set_BusStop",
+ "name": "Trạm xe buýt",
+ "lighting": "day_city",
+ "moods": {
+  "day": "day_city",
+  "golden_hour": "cozy_golden_hour",
+  "night": "night_neon"
+ },
+ "anchors": [
+  "shelter",
+  "curb_left",
+  "curb_right",
+  "stop_sign",
+  "bus_door",
+  "center"
+ ],
+ "notes": "bus stop: glass shelter with bench and map panel, route-7 sign pole, generic white/teal bus at the curb, street and shops behind",
+ "best_for": "commuter comedy, internal monologue, waiting gags",
+ "builder": "build_bus_stop",
+ "rings": 3
+}

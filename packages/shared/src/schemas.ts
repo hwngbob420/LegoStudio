@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  ACTIONS, CAMERA_MOVES, CAMERA_PRESETS, EXPRESSIONS, FX_KINDS, SFX_TYPES, SUBJECT_ZONES, UI_ZONE_NAMES,
+  ACTIONS, CAMERA_ANGLES, CAMERA_MOVES, CAMERA_PRESETS, LIGHTING_MOODS, VISUAL_INTENTS, EXPRESSIONS, FX_KINDS, SFX_TYPES, SUBJECT_ZONES, UI_ZONE_NAMES,
 } from "./constants";
 import { TIME_REF_RX } from "./timeref";
 
@@ -28,6 +28,12 @@ export const ScriptLine = z.object({
   block: z.string().regex(/^b\d{2,3}$/).optional(),
   /** nhịp trong dàn ý (B1, B2...) mà câu này phục vụ */
   beat: z.string().regex(/^B\d{1,3}$/).optional(),
+  /** Gđ 6: bối cảnh (id bộ set trong kho) mà biên kịch chọn cho câu này */
+  location: Id.optional(),
+  /** Gđ 6: ý đồ hình ảnh (cỡ cảnh / góc máy) cho câu này */
+  visual: z.enum(VISUAL_INTENTS).optional(),
+  /** Gđ 6: vật được lắp ráp bằng gạch để minh hoạ (chữ tự do, ngắn) */
+  prop_cue: z.string().max(80).optional(),
 });
 export const Script = z.object({
   title: z.string(),
@@ -71,9 +77,13 @@ export const ActorInShot = z.object({
   appear: TimeRef.optional(),
   acts: z.array(ActClip).optional(),
   expr: z.array(ExprKey).optional(),
+  /** Gđ 6: chuyển diễn viên tới mốc này (của set ghi ở đây, mặc định set của cảnh) từ đầu cảnh. Cắt cảnh che bước dịch chuyển. */
+  at: z.object({ mark: Id, set: Id.optional() }).optional(),
 });
 export const Camera = z.object({
   preset: z.enum(CAMERA_PRESETS),
+  /** Gđ 6: góc máy; không ghi = eye_level (preset cũ giữ nguyên toán cũ) */
+  angle: z.enum(CAMERA_ANGLES).optional(),
   move: z.enum(CAMERA_MOVES).optional(),
   yaw: z.number().min(-60).max(60).optional(),
   lens: z.number().min(12).max(200).optional(),
@@ -132,7 +142,7 @@ export const Storyboard = z.object({
   fps_out: z.number().int().positive().default(60),
   resolution: z.tuple([z.number().int(), z.number().int()]).default([1920, 1080]),
   samples: z.number().int().min(1).max(256).optional(),
-  sets: z.array(z.object({ id: Id, lighting: z.string() })).min(1),
+  sets: z.array(z.object({ id: Id, lighting: z.string(), mood: z.enum(LIGHTING_MOODS).optional() })).min(1),
   cast: z.array(z.object({ id: Id, set: Id, mark: Id, props: z.array(z.literal("mug")).optional(),
     prop_color: z.string().optional() })),
   shots: z.array(Shot).min(1),
@@ -186,6 +196,10 @@ export const SetEntry = z.object({
   anchors: z.array(Id).min(1),
   notes: z.string().optional(),
   builder: z.string(),
+  /** Gđ 6: preset ánh sáng theo không khí (day, golden_hour, night, moody) */
+  moods: z.partialRecord(z.enum(LIGHTING_MOODS), z.string()).optional(),
+  best_for: z.string().optional(),
+  rings: z.number().int().optional(),
 });
 export type SetEntry = z.infer<typeof SetEntry>;
 
@@ -248,7 +262,16 @@ export function storyboardRefErrors(sb: Storyboard, cat: Catalog): string[] {
     for (const a of Object.keys(sh.actors ?? {})) if (!castIds.has(a)) errs.push(`Cảnh ${sh.id}: diễn viên "${a}" không có trong cast.`);
     for (const f of sh.fx ?? []) if (!castIds.has(f.actor)) errs.push(`Cảnh ${sh.id}: hiệu ứng gắn vào "${f.actor}" không có trong cast.`);
     if (sh.camera.preset === "two_shot" && (sh.subjects?.length ?? 0) < 2) errs.push(`Cảnh ${sh.id}: two_shot cần 2 chủ thể.`);
-    if (["mcu", "ecu"].includes(sh.camera.preset) && !(sh.subjects?.length)) errs.push(`Cảnh ${sh.id}: ${sh.camera.preset} cần 1 chủ thể.`);
+    if (["mcu", "ecu", "cu", "ms", "mls"].includes(sh.camera.preset) && !(sh.subjects?.length)) errs.push(`Cảnh ${sh.id}: ${sh.camera.preset} cần 1 chủ thể.`);
+    if (sh.camera.preset === "ots" && (sh.subjects?.length ?? 0) < 2) errs.push(`Cảnh ${sh.id}: ots cần 2 chủ thể (người được quay, người đứng trước máy).`);
+    for (const [a, A] of Object.entries(sh.actors ?? {})) {
+      if (!A.at) continue;
+      const setId = A.at.set ?? sh.set;
+      const set = cat.sets[setId];
+      if (!set) errs.push(`Cảnh ${sh.id}: ${a} chuyển tới bộ set "${setId}" không có trong kho.`);
+      else if (!set.anchors.includes(A.at.mark)) errs.push(`Cảnh ${sh.id}: mốc "${A.at.mark}" không có trong bộ set "${setId}".`);
+      if (!sb.sets.some((s) => s.id === setId)) errs.push(`Cảnh ${sh.id}: bộ set "${setId}" chưa khai báo ở "sets".`);
+    }
   }
   return errs;
 }

@@ -2,9 +2,9 @@
 
 Studio làm video giải thích hài **phong cách mô hình gạch 3D**, chạy hoàn toàn trên máy Windows của bạn. Minifig có **gương mặt 2D**
 đổi biểu cảm tức thì, bộ set gạch không logo, chữ và biểu đồ kiểu sách hướng dẫn lắp ráp.
-Quy trình làm theo mô hình **pixel-story-engine**: dán truyện → AI viết JSON → sửa trong Studio 5 tab → xuất video.
+Quy trình làm theo mô hình **pixel-story-engine**: gửi outline → Claude viết JSON → sửa trong Studio 6 tab → xuất video.
 
-![contact sheet](workspace/projects/showcase_v1/contact_sheet.jpg)
+![contact sheet](workspace/projects/showcase_v2_world/contact_sheet.jpg)
 
 ## Bắt đầu
 1. Cài **Node.js LTS**, **Python 3.10+**, **Blender 5.2**, **FFmpeg** (bản đầy đủ).
@@ -31,15 +31,33 @@ Quy trình làm theo mô hình **pixel-story-engine**: dán truyện → AI vi�
 | Thư mục | Nội dung |
 |---|---|
 | `packages/shared` | Schema zod cho mọi JSON, hằng số, mốc thời gian, căn chữ Whisper |
-| `packages/director` | Động tác stop-motion, mặt + khẩu hình, camera (1/3, tilt-shift, khung dọc), lắp ráp, kiểm "không che mặt", dựng storyboard từ nhịp AI, tự sửa bố cục, Shorts |
-| `apps/brick-engine` | Python + Blender 5.2: gạch không logo, minifig rig 10 khớp, bộ set, xuất `.glb` + manifest, render chia chặng, TTS SAPI, âm thanh, ghép FFmpeg |
+| `packages/director` | Động tác stop-motion, mặt + khẩu hình, camera đủ thang cỡ cảnh (EWS → CU, qua vai) và góc (thấp, cao, nhìn từ trên), dolly / trượt ngang / cần cẩu, tilt-shift theo cỡ cảnh, dàn cảnh nhiều bối cảnh + cutaway, kiểm "không che mặt" + kiểm bố cục set, lọc đơn điệu hình ảnh, dựng storyboard từ nhịp AI, Shorts |
+| `apps/brick-engine` | Python + Blender 5.2: gạch không logo, minifig rig 10 khớp, bộ set 3 vòng (sân diễn + trung cảnh + chân trời + vòm trời), xuất `.glb` + manifest, render theo block, TTS SAPI, âm thanh, ghép FFmpeg |
 | `apps/video-engine` | Remotion: lớp chữ hướng dẫn lắp ráp (thẻ STEP, part callout, biểu đồ gạch, mũi tên, phụ đề) + máy chiếu Three.js |
 | `apps/server` | Express: API tập/kho/xem trước, hàng đợi việc nền, cổng AI (Gemini + dự phòng + Hộp thư Claude), Whisper |
-| `apps/studio-ui` | React + Vite + Tailwind: Studio 5 tab |
+| `apps/studio-ui` | React + Vite + Tailwind: Studio 6 tab |
 | `workspace/channel_library` | Kho kênh: diễn viên, bộ set, gương mặt, ánh sáng, manifest, series bible |
 | `workspace/projects/<tập>` | Kịch bản, storyboard, bản dịch, video |
 
+## Thế giới gạch 3 vòng (Gđ 6)
+- **10 bộ set** gồm 3 set cũ và 7 set mới khép kín. Bảy set mới:
+  - phố góc quán cà phê;
+  - căn hộ cắt mái;
+  - văn phòng mở;
+  - cửa hàng tiện lợi (đèn neon đêm);
+  - quảng trường / đài ngắm phố;
+  - trạm xe buýt;
+  - sân khấu sách hướng dẫn.
+- Mỗi set mới có sân diễn chi tiết, trung cảnh, chân trời gạch và vòm trời. Máy quay ở góc nào cũng không lộ mép trống. Trần và tường tự dỡ khi máy chúc cao hoặc nhìn từ trên.
+- Biên kịch chọn **bối cảnh + ý đồ hình ảnh** cho từng nhịp. Mỗi block 2 phút đi qua 2–4 nơi. Đạo diễn tự chèn cảnh mở toàn rộng khi đổi nơi và tự dời diễn viên sang set mới.
+- Tab Duyệt block có thêm nhận xét **"Hình đơn điệu"**. Nó báo khi cùng một cỡ cảnh quá 22 giây, hoặc cùng bối cảnh và góc máy quá 60 giây.
+- Nghiên cứu nguồn mở và quyết định chọn / bỏ: `docs/LAYOUT_RESEARCH.md`. Skill: `brick-world-layout-architect`, `cinematic-camera-blocking`.
+
 ## Tập mẫu
+- `showcase_v2_world` "The Snooze Commute":
+  - 45 giây, 5 bối cảnh, 16 cảnh;
+  - đủ thang máy: toàn cực rộng mở cảnh, nhìn từ trên vào căn hộ đã dỡ trần, góc thấp châm biếm, qua vai, cận mặt;
+  - có biểu đồ gạch ở sân khấu hướng dẫn.
 - `showcase_v1` "Bug Hunt": 19,5 giây, có thêm bản phụ đề tiếng Việt `output_final_vi.mp4`.
 - `ep01_foam_physics`: Kofi + Grandma Lin ở phố quán cà phê (storyboard do đạo diễn tự động dựng).
 - `ep02_the_to_do_list_trap`: tập dài 3 phút 10 giây, 52 câu, render chia chặng. Trên GitHub chỉ có bản xem trước `output_preview_720p.mp4`

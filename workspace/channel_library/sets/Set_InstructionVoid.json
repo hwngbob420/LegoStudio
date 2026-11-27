@@ -1,0 +1,19 @@
+{
+ "id": "Set_InstructionVoid",
+ "name": "Sân khấu sách hướng dẫn",
+ "lighting": "studio_void",
+ "moods": {
+  "day": "studio_void"
+ },
+ "anchors": [
+  "narrator",
+  "pedestal",
+  "left",
+  "right",
+  "center"
+ ],
+ "notes": "clean instruction-manual studio sweep: pedestal where a small house assembles step by step, 3-step brick bar chart, giant pale bricks far away",
+ "best_for": "visual metaphors, comparisons, fast explanatory cutaways (assembly)",
+ "builder": "build_instruction_void",
+ "rings": 3
+}

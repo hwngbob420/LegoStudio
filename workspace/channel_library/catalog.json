@@ -1,45 +1,368 @@
 {
   "_purpose": "The ONLY catalog the showrunner reads. Every id here is valid in episode_shotlist.json.",
   "version": 1,
-  "world": {"fps_world": 12, "fps_out": 60, "resolution": [1920, 1080], "units": "1 stud = 0.08 m (10x real)"},
+  "world": {
+    "fps_world": 12,
+    "fps_out": 60,
+    "resolution": [
+      1920,
+      1080
+    ],
+    "units": "1 stud = 0.08 m (10x real)"
+  },
   "cast": {
-    "max_dev":        {"name": "Max", "vibe": "tired indie dev, deadpan", "default_expr": "deadpan_tired", "voice": "David -1st", "props_ok": ["mug"]},
-    "priya_lead":     {"name": "Priya", "vibe": "confident team lead, smug", "default_expr": "smug_smirk", "voice": "Zira +0.5st", "props_ok": ["mug"]},
-    "kofi_barista":   {"name": "Kofi", "vibe": "warm booming barista, delighted", "default_expr": "happy_closed", "voice": "David -3st", "props_ok": ["mug"]},
-    "grandma_lin":    {"name": "Grandma Lin", "vibe": "retired engineer, unimpressed", "default_expr": "deadpan_tired", "voice": "Zira -2st", "props_ok": ["mug"]},
-    "classic_yellow": {"name": "Bricky", "vibe": "classic yellow everyfig, innocent narrator", "default_expr": "innocent_dot", "voice": "David +2st", "props_ok": ["mug"]}
+    "max_dev": {
+      "name": "Max",
+      "vibe": "tired indie dev, deadpan",
+      "default_expr": "deadpan_tired",
+      "voice": "David -1st",
+      "props_ok": [
+        "mug"
+      ]
+    },
+    "priya_lead": {
+      "name": "Priya",
+      "vibe": "confident team lead, smug",
+      "default_expr": "smug_smirk",
+      "voice": "Zira +0.5st",
+      "props_ok": [
+        "mug"
+      ]
+    },
+    "kofi_barista": {
+      "name": "Kofi",
+      "vibe": "warm booming barista, delighted",
+      "default_expr": "happy_closed",
+      "voice": "David -3st",
+      "props_ok": [
+        "mug"
+      ]
+    },
+    "grandma_lin": {
+      "name": "Grandma Lin",
+      "vibe": "retired engineer, unimpressed",
+      "default_expr": "deadpan_tired",
+      "voice": "Zira -2st",
+      "props_ok": [
+        "mug"
+      ]
+    },
+    "classic_yellow": {
+      "name": "Bricky",
+      "vibe": "classic yellow everyfig, innocent narrator",
+      "default_expr": "innocent_dot",
+      "voice": "David +2st",
+      "props_ok": [
+        "mug"
+      ]
+    }
   },
   "sets": {
-    "Set_BrickCreatorDesk": {"lighting": "studio_bright", "anchors": ["max_mark", "priya_mark", "priya_offstage", "desk_center", "center"],
-                             "notes": "creator room: standing desk, monitor with code, 3 mugs, bookshelf, window, poster, rug"},
-    "Set_BrickCafeStreet":  {"lighting": "cozy_golden_hour", "anchors": ["cafe_left", "cafe_right", "door", "center"],
-                             "notes": "street + sidewalk, cafe facade with glowing window, striped awning, tables, lamp, tree"},
-    "Set_BrickOfficeStage": {"lighting": "moody_night_desk", "anchors": ["stage_center", "stage_left", "stage_right", "floor_center", "center"],
-                             "notes": "keynote stage, giant chart screen, podium, spot cans"}
+    "Set_BrickCreatorDesk": {
+      "lighting": "studio_bright",
+      "anchors": [
+        "max_mark",
+        "priya_mark",
+        "priya_offstage",
+        "desk_center",
+        "center"
+      ],
+      "notes": "creator room: standing desk, monitor with code, 3 mugs, bookshelf, window, poster, rug"
+    },
+    "Set_BrickCafeStreet": {
+      "lighting": "cozy_golden_hour",
+      "anchors": [
+        "cafe_left",
+        "cafe_right",
+        "door",
+        "center"
+      ],
+      "notes": "street + sidewalk, cafe facade with glowing window, striped awning, tables, lamp, tree"
+    },
+    "Set_BrickOfficeStage": {
+      "lighting": "moody_night_desk",
+      "anchors": [
+        "stage_center",
+        "stage_left",
+        "stage_right",
+        "floor_center",
+        "center"
+      ],
+      "notes": "keynote stage, giant chart screen, podium, spot cans"
+    },
+    "Set_CityStreetCorner": {
+      "lighting": "cozy_golden_hour",
+      "moods": {
+        "day": "day_city",
+        "golden_hour": "cozy_golden_hour",
+        "night": "night_neon"
+      },
+      "anchors": [
+        "cafe_table",
+        "sidewalk_left",
+        "sidewalk_right",
+        "crosswalk",
+        "book_door",
+        "bench",
+        "center"
+      ],
+      "rings": 3,
+      "notes": "corner street: cafe facade with awning + bookshop, sidewalk tables, crosswalk, traffic light, parked car, bench; side streets and skyline all around",
+      "best_for": "walks, chance encounters, crowd gags, high-angle traffic establish"
+    },
+    "Set_ApartmentCutaway": {
+      "lighting": "studio_bright",
+      "moods": {
+        "day": "studio_bright",
+        "golden_hour": "cozy_golden_hour",
+        "night": "moody_night_desk"
+      },
+      "anchors": [
+        "couch",
+        "living_center",
+        "window_view",
+        "bed",
+        "bedroom_door",
+        "tv_watch",
+        "center"
+      ],
+      "rings": 3,
+      "notes": "cutaway apartment: living room (sofa, TV, rug, floor lamp, window to the city) + bedroom (bed, night lamp); ceiling and walls hide for top shots",
+      "best_for": "everyday relatable stories, late-night spirals, morning routines, overhead isolation shots"
+    },
+    "Set_OfficeFloor": {
+      "lighting": "office_daylight",
+      "moods": {
+        "day": "office_daylight",
+        "night": "moody_night_desk"
+      },
+      "anchors": [
+        "desk_a",
+        "desk_b",
+        "aisle",
+        "whiteboard",
+        "meeting_left",
+        "meeting_right",
+        "cooler",
+        "center"
+      ],
+      "rings": 3,
+      "notes": "open office: 2 desk clusters with monitors, glass meeting room with long table and a whiteboard chart, water cooler, big windows to towers",
+      "best_for": "workplace satire, deadpan corporate humor, whiteboard/chart beats"
+    },
+    "Set_MiniMart": {
+      "lighting": "night_neon",
+      "moods": {
+        "night": "night_neon",
+        "day": "office_daylight"
+      },
+      "anchors": [
+        "clerk",
+        "customer",
+        "aisle",
+        "fridge",
+        "entrance",
+        "center"
+      ],
+      "rings": 3,
+      "notes": "convenience store: 3 shelf aisles of colourful generic boxes, red checkout counter, glowing fridges, glass shopfront with generic MART / 24H / OPEN neon",
+      "best_for": "night-shift stories, quirky customers, suspense and satire"
+    },
+    "Set_ParkPlaza": {
+      "lighting": "cozy_golden_hour",
+      "moods": {
+        "golden_hour": "cozy_golden_hour",
+        "day": "day_city",
+        "night": "moody_night_desk"
+      },
+      "anchors": [
+        "bench_left",
+        "bench_right",
+        "fountain",
+        "overlook",
+        "path_center",
+        "path_left",
+        "center"
+      ],
+      "rings": 3,
+      "notes": "park plaza on an overlook: fountain, cross paths, benches, trees, flower bed, railing over a lower city and a sunset skyline",
+      "best_for": "wide reflective moments, bird's-eye scale, golden-hour dialogue"
+    },
+    "Set_BusStop": {
+      "lighting": "day_city",
+      "moods": {
+        "day": "day_city",
+        "golden_hour": "cozy_golden_hour",
+        "night": "night_neon"
+      },
+      "anchors": [
+        "shelter",
+        "curb_left",
+        "curb_right",
+        "stop_sign",
+        "bus_door",
+        "center"
+      ],
+      "rings": 3,
+      "notes": "bus stop: glass shelter with bench and map panel, route-7 sign pole, generic white/teal bus at the curb, street and shops behind",
+      "best_for": "commuter comedy, internal monologue, waiting gags"
+    },
+    "Set_InstructionVoid": {
+      "lighting": "studio_void",
+      "moods": {
+        "day": "studio_void"
+      },
+      "anchors": [
+        "narrator",
+        "pedestal",
+        "left",
+        "right",
+        "center"
+      ],
+      "rings": 3,
+      "notes": "clean instruction-manual studio sweep: pedestal where a small house assembles step by step, 3-step brick bar chart, giant pale bricks far away",
+      "best_for": "visual metaphors, comparisons, fast explanatory cutaways (assembly)"
+    }
   },
-  "expressions": ["innocent_dot", "deadpan_tired", "shocked_wide", "smug_smirk", "sweating_nervous", "angry_brow", "happy_closed", "side_glance", "blink"],
+  "expressions": [
+    "innocent_dot",
+    "deadpan_tired",
+    "shocked_wide",
+    "smug_smirk",
+    "sweating_nervous",
+    "angry_brow",
+    "happy_closed",
+    "side_glance",
+    "blink"
+  ],
   "mouths_auto": "lip-sync is automatic from audio; non-speaking frames use the expression's rest mouth",
   "actions": {
-    "idle_breathe": "always-on base layer", "talk_gestures": "loop, right-hand gestures (mirror:true = left)",
-    "talk_both_hands": "loop", "shrug_confused": "one-shot", "point_explain": "one-shot, right arm points to figure's right (screen-left when facing camera)",
-    "slump_tired": "one-shot hold", "shock_jump": "one-shot with hop", "walk_stopmotion": "loop", "sip_coffee": "one-shot (needs mug prop)",
-    "nod_yes": "loop", "shake_no": "loop", "hands_on_hips": "one-shot hold", "facepalm": "one-shot", "wave": "one-shot", "lean_in": "one-shot hold"
+    "idle_breathe": "always-on base layer",
+    "talk_gestures": "loop, right-hand gestures (mirror:true = left)",
+    "talk_both_hands": "loop",
+    "shrug_confused": "one-shot",
+    "point_explain": "one-shot, right arm points to figure's right (screen-left when facing camera)",
+    "slump_tired": "one-shot hold",
+    "shock_jump": "one-shot with hop",
+    "walk_stopmotion": "loop",
+    "sip_coffee": "one-shot (needs mug prop)",
+    "nod_yes": "loop",
+    "shake_no": "loop",
+    "hands_on_hips": "one-shot hold",
+    "facepalm": "one-shot",
+    "wave": "one-shot",
+    "lean_in": "one-shot hold"
   },
   "camera_presets": {
-    "assembly_high": "high wide for the brick-assembly opener", "wide_establish": "eye-level wide",
-    "mcu": "medium close-up of subjects[0], honours subject_zone via lens shift", "ecu": "extreme close-up of the face",
-    "two_shot": "frames subjects[0..1]"
+    "assembly_high": "high wide for the brick-assembly opener",
+    "wide_establish": "eye-level wide",
+    "mcu": "medium close-up of subjects[0], honours subject_zone via lens shift",
+    "ecu": "extreme close-up of the face",
+    "two_shot": "frames subjects[0..1]",
+    "ews": "extreme wide / establishing: whole set + midground + skyline (no subject needed)",
+    "ws": "wide: characters inside the environment (subjects optional)",
+    "mls": "medium long: full body language + props (1 subject)",
+    "ms": "medium: conversational waist-up (1 subject)",
+    "cu": "close-up: deadpan 2D face reaction (1 subject)",
+    "ots": "over-the-shoulder: subjects[0] is filmed, subjects[1] is the blurred shoulder in front"
   },
-  "camera_moves": ["none", "push_in", "pull_out", "drift_right", "crane_down"],
-  "fx": ["sweat_drop", "shock_lines", "question", "exclaim", "sparkle", "anger", "steam", "motion_arcs"],
+  "camera_moves": [
+    "none",
+    "push_in",
+    "pull_out",
+    "drift_right",
+    "crane_down",
+    "dolly_in",
+    "dolly_out",
+    "truck_pan",
+    "crane_reveal"
+  ],
+  "fx": [
+    "sweat_drop",
+    "shock_lines",
+    "question",
+    "exclaim",
+    "sparkle",
+    "anger",
+    "steam",
+    "motion_arcs"
+  ],
   "ui_cues": {
-    "step_badge": {"fields": ["step", "title", "check?"], "zones": ["top_left", "top_right", "top_center"]},
-    "part_callout": {"fields": ["count", "label", "icon", "note"], "zones": ["left_third", "right_third"]},
-    "brick_chart": {"fields": ["title", "bars[{label,value,color,t,collapse_t?}]"], "zones": ["left_third", "right_third"]},
-    "arrow": {"fields": ["from[x,y]", "to[x,y]"], "note": "normalised screen coords, must not end on a face"}
+    "step_badge": {
+      "fields": [
+        "step",
+        "title",
+        "check?"
+      ],
+      "zones": [
+        "top_left",
+        "top_right",
+        "top_center"
+      ]
+    },
+    "part_callout": {
+      "fields": [
+        "count",
+        "label",
+        "icon",
+        "note"
+      ],
+      "zones": [
+        "left_third",
+        "right_third"
+      ]
+    },
+    "brick_chart": {
+      "fields": [
+        "title",
+        "bars[{label,value,color,t,collapse_t?}]"
+      ],
+      "zones": [
+        "left_third",
+        "right_third"
+      ]
+    },
+    "arrow": {
+      "fields": [
+        "from[x,y]",
+        "to[x,y]"
+      ],
+      "note": "normalised screen coords, must not end on a face"
+    }
   },
   "ui_zone_rule": "A shot with a card/chart sets subject_zone to the OPPOSITE third of its ui_safe_zone. Subtitles own the bottom band (y>0.83).",
-  "sfx": ["clack", "pop", "boing", "whoosh", "ding", "tumble"],
+  "sfx": [
+    "clack",
+    "pop",
+    "boing",
+    "whoosh",
+    "ding",
+    "tumble"
+  ],
   "time_refs": "seconds, or 'L2.start', 'L2.end', 'L3.w2' (2nd word), 'S1.t1', 'END', with +/- offsets",
-  "lighting_presets": ["studio_bright", "cozy_golden_hour", "moody_night_desk"]
+  "lighting_presets": [
+    "cozy_golden_hour",
+    "day_city",
+    "moody_night_desk",
+    "night_neon",
+    "office_daylight",
+    "studio_bright",
+    "studio_void"
+  ],
+  "camera_angles": {
+    "eye_level": "default",
+    "low_angle": "looks up: heroic or satirical ego boost",
+    "high_angle": "looks down: vulnerable, small",
+    "birds_eye": "top-down pattern / maze / crowd; ceilings and walls hide automatically"
+  },
+  "visual_intents": {
+    "establishing_scale": "EWS/WS, often high angle",
+    "intimate_deadpan": "CU eye level",
+    "satirical_low_angle": "MLS/MS low angle",
+    "overhead_chaos": "WS birds-eye",
+    "cutaway_gag": "quick cut to another set or the instruction stage",
+    "conversation": "OTS / two_shot / MS",
+    "reveal": "crane_reveal or dolly_out",
+    "isolation": "WS high angle, subject small"
+  }
 }

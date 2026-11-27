@@ -162,6 +162,81 @@ def menu_board(w=800, h=500):
     return img
 
 
+def _font(px):
+    from PIL import ImageFont
+    for f in ("arialbd.ttf", "Arial Bold.ttf", "DejaVuSans-Bold.ttf", "arial.ttf"):
+        try:
+            return ImageFont.truetype(f, px)
+        except Exception:
+            continue
+    return ImageFont.load_default(size=px)
+
+
+def sign(text, bg, fg, w=1024, h=320, border=None, neon=False):
+    """Biển hiệu chữ chung chung (CAFE, MART, 24H...). Không tên riêng, không logo."""
+    img = Image.new("RGBA", (w, h), hexc(bg))
+    d = ImageDraw.Draw(img)
+    if border:
+        d.rounded_rectangle([14, 14, w - 14, h - 14], 28, outline=hexc(border), width=18)
+    f = _font(int(h * 0.56))
+    bb = d.textbbox((0, 0), text, font=f)
+    x, y = (w - (bb[2] - bb[0])) / 2 - bb[0], (h - (bb[3] - bb[1])) / 2 - bb[1]
+    if neon:  # quầng sáng mờ quanh chữ (lớp riêng, làm nhoè rồi chồng lên nền)
+        from PIL import ImageFilter
+        glow = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        ImageDraw.Draw(glow).text((x, y), text, font=f, fill=hexc(fg, 200), stroke_width=10, stroke_fill=hexc(fg, 160))
+        img = Image.alpha_composite(img, glow.filter(ImageFilter.GaussianBlur(18)))
+        d = ImageDraw.Draw(img)
+        d.text((x, y), text, font=f, fill=(255, 255, 255, 255), stroke_width=4, stroke_fill=hexc(fg))
+    else:
+        d.text((x, y), text, font=f, fill=hexc(fg))
+    return img
+
+
+def whiteboard(w=1024, h=640):
+    """Bảng trắng: biểu đồ cột vẽ tay + mũi tên, không chữ."""
+    img = Image.new("RGBA", (w, h), (246, 246, 242, 255))
+    d = ImageDraw.Draw(img)
+    d.line([(90, 540), (940, 540)], fill=INK, width=8)
+    d.line([(90, 540), (90, 90)], fill=INK, width=8)
+    for k, (hh, c) in enumerate(((160, "blue"), (250, "orange"), (330, "green_bright"), (420, "red"))):
+        x = 170 + k * 190
+        d.rectangle([x, 540 - hh, x + 110, 536], fill=hexc(c), outline=INK, width=6)
+    d.line([(160, 420), (380, 330), (600, 250), (830, 110)], fill=hexc("red"), width=10)
+    d.polygon([(830, 110), (790, 120), (815, 150)], fill=hexc("red"))
+    return img
+
+
+def tv_screen(w=1024, h=576):
+    """Màn hình TV: cảnh hoạt hình trừu tượng (núi + mặt trời), không chữ."""
+    img = Image.new("RGBA", (w, h), hexc("sand_blue"))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, w, h * 0.6], fill=(120, 190, 240, 255))
+    d.ellipse([w * 0.68, h * 0.12, w * 0.84, h * 0.4], fill=hexc("yellow"))
+    d.polygon([(0, h * 0.75), (w * 0.3, h * 0.3), (w * 0.55, h * 0.7), (w * 0.75, h * 0.42), (w, h * 0.75), (w, h), (0, h)], fill=hexc("green"))
+    return img
+
+
+def product_shelf(w=1024, h=512, seed=5):
+    """Mặt trước kệ hàng: hộp màu xếp hàng, nhãn là sọc màu (không chữ, không logo)."""
+    rnd = random.Random(seed)
+    img = Image.new("RGBA", (w, h), hexc("light_gray"))
+    d = ImageDraw.Draw(img)
+    cols = ["red", "blue", "yellow", "green_bright", "orange", "lavender", "coral", "teal_dark", "white", "mustard"]
+    for row in range(3):
+        y0 = 12 + row * (h // 3)
+        x = 10
+        while x < w - 40:
+            bw = rnd.randint(46, 92)
+            bh = rnd.randint(int(h / 3 * 0.55), int(h / 3 * 0.85))
+            c = rnd.choice(cols)
+            d.rectangle([x, y0 + (h // 3 - 16 - bh), x + bw, y0 + h // 3 - 16], fill=hexc(c), outline=INK, width=3)
+            d.rectangle([x + 6, y0 + (h // 3 - 16 - bh) + bh * 0.35, x + bw - 6, y0 + (h // 3 - 16 - bh) + bh * 0.5], fill=hexc("white"))
+            x += bw + rnd.randint(4, 10)
+        d.rectangle([0, y0 + h // 3 - 16, w, y0 + h // 3 - 4], fill=hexc("dark_gray"))
+    return img
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     for fn in sorted(PATHS.cast_recipe_files().values()):
@@ -173,6 +248,23 @@ def main():
     screen_chart().save(os.path.join(OUT, "screen_chart.png"))
     poster_brick().save(os.path.join(OUT, "poster_brick.png"))
     menu_board().save(os.path.join(OUT, "menu_board.png"))
+    # Gđ 6: biển hiệu chung chung + màn hình của các set mới (không thương hiệu, không tên riêng)
+    for fn, args in {
+        "sign_cafe.png": ("CAFE", "brown_dark", "cream", "cream"),
+        "sign_books.png": ("BOOKS", "teal_dark", "cream", None),
+        "sign_bakery.png": ("BAKERY", "cream", "reddish_brown", "reddish_brown"),
+        "sign_mart.png": ("MART", "#161A2A", "#7CF0FF", None),
+        "sign_24h.png": ("24H", "#161A2A", "#FF6FB5", None),
+        "sign_open.png": ("OPEN", "#101010", "#FF5A4E", None),
+        "sign_bus7.png": ("7", "blue_dark", "white", "white"),
+        "sign_park.png": ("PARK", "green", "cream", "cream"),
+    }.items():
+        neon = args[1].startswith("#1")
+        sign(args[0], args[1], args[2], border=args[3], neon=neon).save(os.path.join(OUT, fn))
+    sign("7", "blue_dark", "white", w=320, h=320, border="white").save(os.path.join(OUT, "sign_route7_sq.png"))
+    whiteboard().save(os.path.join(OUT, "whiteboard.png"))
+    tv_screen().save(os.path.join(OUT, "tv_screen.png"))
+    product_shelf().save(os.path.join(OUT, "product_shelf.png"))
     print("textures ->", OUT)
 
 

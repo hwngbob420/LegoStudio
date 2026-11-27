@@ -1,0 +1,144 @@
+{
+ "set": "Set_BrickCreatorDesk",
+ "beats": [
+  {
+   "line": "L1",
+   "shot": "ws",
+   "angle": "birds_eye",
+   "move": "none",
+   "location": "Set_ApartmentCutaway",
+   "visual": "overhead_chaos",
+   "speaker_expr": "deadpan_tired",
+   "summary": "Seven alarms. Zero socks. Monday."
+  },
+  {
+   "line": "L2",
+   "shot": "ots",
+   "location": "Set_ApartmentCutaway",
+   "visual": "conversation",
+   "speaker_expr": "smug_smirk",
+   "summary": "You live four minutes from the office, Max."
+  },
+  {
+   "line": "L3",
+   "shot": "cu",
+   "move": "push_in",
+   "location": "Set_ApartmentCutaway",
+   "visual": "intimate_deadpan",
+   "speaker_expr": "deadpan_tired",
+   "summary": "Exactly. So I can leave at nine."
+  },
+  {
+   "line": "L4",
+   "shot": "mls",
+   "angle": "low_angle",
+   "move": "dolly_in",
+   "location": "Set_BusStop",
+   "visual": "satirical_low_angle",
+   "speaker_expr": "smug_smirk",
+   "summary": "I live one hour away, and I am always early."
+  },
+  {
+   "line": "L5",
+   "shot": "ots",
+   "location": "Set_BusStop",
+   "visual": "conversation",
+   "speaker_expr": "deadpan_tired",
+   "summary": "That is not fair. You have a bus."
+  },
+  {
+   "line": "L6",
+   "shot": "cu",
+   "move": "push_in",
+   "location": "Set_BusStop",
+   "visual": "intimate_deadpan",
+   "speaker_expr": "smug_smirk",
+   "summary": "You have legs."
+  },
+  {
+   "line": "L7",
+   "shot": "ms",
+   "move": "dolly_in",
+   "location": "Set_InstructionVoid",
+   "visual": "cutaway_gag",
+   "speaker_expr": "deadpan_tired",
+   "summary": "Fine. Show me the math, then."
+  },
+  {
+   "line": "L8",
+   "shot": "ws",
+   "move": "dolly_out",
+   "location": "Set_InstructionVoid",
+   "visual": "reveal",
+   "speaker_expr": "smug_smirk",
+   "summary": "Short trip, nine snoozes. Long trip, one snooze.",
+   "ui": {
+    "type": "brick_chart",
+    "title": "Snoozes",
+    "bars": [
+     {
+      "label": "Near",
+      "value": 9
+     },
+     {
+      "label": "Far",
+      "value": 1
+     }
+    ]
+   }
+  },
+  {
+   "line": "L9",
+   "shot": "ews",
+   "angle": "high_angle",
+   "move": "crane_reveal",
+   "location": "Set_CityStreetCorner",
+   "visual": "establishing_scale",
+   "speaker_expr": "side_glance",
+   "listener_expr": "deadpan_tired",
+   "action": "shrug_confused",
+   "fx": {
+    "kind": "question",
+    "word": 1
+   },
+   "summary": "So the city is not the problem at all?"
+  },
+  {
+   "line": "L10",
+   "shot": "ots",
+   "location": "Set_CityStreetCorner",
+   "visual": "conversation",
+   "speaker_expr": "smug_smirk",
+   "summary": "The problem has nine buttons. You press all of them."
+  },
+  {
+   "line": "L11",
+   "shot": "mls",
+   "angle": "low_angle",
+   "move": "dolly_in",
+   "location": "Set_OfficeFloor",
+   "visual": "satirical_low_angle",
+   "speaker_expr": "shocked_wide",
+   "listener_expr": "sweating_nervous",
+   "action": "shock_jump",
+   "fx": {
+    "kind": "exclaim",
+    "word": 1
+   },
+   "summary": "Nine minutes late. New personal best!"
+  },
+  {
+   "line": "L12",
+   "shot": "cu",
+   "move": "push_in",
+   "location": "Set_OfficeFloor",
+   "visual": "intimate_deadpan",
+   "speaker_expr": "smug_smirk",
+   "summary": "Step two. Set one alarm. Not nine."
+  }
+ ],
+ "ending": {
+  "step": "02",
+  "title": "One alarm"
+ }
+}

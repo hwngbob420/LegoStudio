@@ -1,0 +1,21 @@
+{
+  "title": "The Snooze Commute",
+  "logline": "Max lives four minutes from work and is always late. Priya lives an hour away and is always early. The math is brutal.",
+  "fps_world": 12,
+  "start_offset": 2.2,
+  "tail": 0.7,
+  "lines": [
+    {"id": "L1", "speaker": "max_dev", "text": "Seven alarms. Zero socks. Monday.", "gap_before": 0, "block": "b01", "beat": "B1", "location": "Set_ApartmentCutaway", "visual": "overhead_chaos"},
+    {"id": "L2", "speaker": "priya_lead", "text": "You live four minutes from the office, Max.", "gap_before": 0.35, "block": "b01", "beat": "B1", "location": "Set_ApartmentCutaway", "visual": "conversation"},
+    {"id": "L3", "speaker": "max_dev", "text": "Exactly. So I can leave at nine.", "gap_before": 0.3, "block": "b01", "beat": "B2", "location": "Set_ApartmentCutaway", "visual": "intimate_deadpan"},
+    {"id": "L4", "speaker": "priya_lead", "text": "I live one hour away, and I am always early.", "gap_before": 0.35, "block": "b01", "beat": "B2", "location": "Set_BusStop", "visual": "satirical_low_angle"},
+    {"id": "L5", "speaker": "max_dev", "text": "That is not fair. You have a bus.", "gap_before": 0.3, "block": "b01", "beat": "B2", "location": "Set_BusStop", "visual": "conversation"},
+    {"id": "L6", "speaker": "priya_lead", "text": "You have legs.", "gap_before": 0.3, "block": "b01", "beat": "B3", "location": "Set_BusStop", "visual": "intimate_deadpan"},
+    {"id": "L7", "speaker": "max_dev", "text": "Fine. Show me the math, then.", "gap_before": 0.35, "block": "b01", "beat": "B3", "location": "Set_InstructionVoid", "visual": "cutaway_gag", "prop_cue": "brick bar chart of snoozes"},
+    {"id": "L8", "speaker": "priya_lead", "text": "Short trip, nine snoozes. Long trip, one snooze.", "gap_before": 0.3, "block": "b01", "beat": "B4", "location": "Set_InstructionVoid", "visual": "reveal"},
+    {"id": "L9", "speaker": "max_dev", "text": "So the city is not the problem at all?", "gap_before": 0.35, "block": "b01", "beat": "B4", "location": "Set_CityStreetCorner", "visual": "establishing_scale"},
+    {"id": "L10", "speaker": "priya_lead", "text": "The problem has nine buttons. You press all of them.", "gap_before": 0.3, "block": "b01", "beat": "B5", "location": "Set_CityStreetCorner", "visual": "conversation"},
+    {"id": "L11", "speaker": "max_dev", "text": "Nine minutes late. New personal best!", "gap_before": 0.35, "block": "b01", "beat": "B5", "location": "Set_OfficeFloor", "visual": "satirical_low_angle"},
+    {"id": "L12", "speaker": "priya_lead", "text": "Step two. Set one alarm. Not nine.", "gap_before": 0.3, "block": "b01", "beat": "B6", "location": "Set_OfficeFloor", "visual": "intimate_deadpan"}
+  ]
+}

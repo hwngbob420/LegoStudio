@@ -1,0 +1,24 @@
+{
+  "id": "showcase_v2_world",
+  "title": "Showcase v2: The Snooze Commute",
+  "created": "2026-11-27T00:00:00Z",
+  "language": "vi",
+  "settings": {
+    "quality": "final",
+    "chunk_sec": 120
+  },
+  "stages": {},
+  "chunks": [
+    {
+      "index": 0,
+      "id": "b01",
+      "f0": 1,
+      "f1": 540,
+      "key": "d7686d0e07148173",
+      "file": "chunks/blk_d7686d0e07148173.mp4",
+      "status": "done"
+    }
+  ],
+  "timeline_hash": "78be56b224ba4b76",
+  "chunk_mode": "blocks"
+}

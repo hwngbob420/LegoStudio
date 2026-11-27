@@ -23,6 +23,7 @@ import minifig_builder as MB
 import acting_library as AL
 import fx_library as FX
 import sets_library as SL
+import paths as P
 
 UI_ZONES = {  # normalised [x0, y0, x1, y1], origin top-left
     "left_third": [0.035, 0.10, 0.365, 0.76], "right_third": [0.635, 0.10, 0.965, 0.76],
@@ -111,23 +112,116 @@ def apply_camera(cam, S, rigs):
     AL.set_constant(cam)
 
 
-def apply_assembly(objs_by_name, entry):
+def apply_assembly(objs_by_name, entry, skip_hide=()):
+    """skip_hide: vật đã có lịch hiện/ẩn hợp nhất (Gđ 6, stage.visibility) — chỉ khoá vị trí nảy, không khoá hide_render."""
     lift = entry["lift"]
     for name, fs in entry["show"].items():
         o = objs_by_name.get(name)
         if o is None:
             continue
         home = o.location.copy()
-        o.hide_render = True
-        o.keyframe_insert("hide_render", frame=1)
-        o.hide_render = False
-        o.keyframe_insert("hide_render", frame=fs)
+        if name not in skip_hide:
+            o.hide_render = True
+            o.keyframe_insert("hide_render", frame=1)
+            o.hide_render = False
+            o.keyframe_insert("hide_render", frame=fs)
         o.location = home + Vector((0, 0, lift))
         _key(o, "location", fs)
         o.location = home + Vector((0, 0, -0.004))
         _key(o, "location", fs + 1)
         o.location = home
         _key(o, "location", fs + 2)
+        AL.set_constant(o)
+
+
+# ------------------------------------------------------------------ Gđ 6: dàn cảnh nhiều set
+def _key_hide(o, frame, hidden):
+    o.hide_render = hidden
+    o.keyframe_insert("hide_render", frame=frame)
+    try:
+        o.hide_viewport = hidden
+        o.keyframe_insert("hide_viewport", frame=frame)
+    except Exception:
+        pass
+
+
+def apply_stage_lights(T, set_lights):
+    """Mỗi cảnh chỉ bật đèn của set đang quay (đèn SUN vô hạn nên phải tắt hẳn ở set khác)."""
+    shot_set = T["stage"]["shot_set"]
+    for sid, obs in set_lights.items():
+        for ob in obs:
+            prev = None
+            for S, ss in zip(T["shots"], shot_set):
+                on = ss == sid
+                f = 1 if prev is None else S["f0"]
+                if on != prev:
+                    _key_hide(ob, f, not on)
+                    prev = on
+            AL.set_constant(ob)
+
+
+def setup_world_stage(T, presets):
+    """Trời/ánh sáng môi trường theo set của từng cảnh: mỗi preset một nền, cộng lại, độ sáng khoá theo cảnh (CONSTANT)."""
+    sc = bpy.context.scene
+    w = sc.world or bpy.data.worlds.new("World")
+    sc.world = w
+    try:
+        w.use_nodes = True
+    except Exception:
+        pass
+    nt = w.node_tree
+    for n in list(nt.nodes):
+        nt.nodes.remove(n)
+    out = nt.nodes.new("ShaderNodeOutputWorld")
+    acc = None
+    bgs = {}
+    for sid, pr in presets.items():
+        bg = nt.nodes.new("ShaderNodeBackground")
+        hdri = os.path.join(P.HDRI, pr.get("hdri", "") or "_none_")
+        if pr.get("hdri") and os.path.exists(hdri):
+            tc = nt.nodes.new("ShaderNodeTexCoord")
+            mp = nt.nodes.new("ShaderNodeMapping")
+            mp.inputs["Rotation"].default_value = (0, 0, math.radians(pr.get("hdri_rotation_deg", 0)))
+            env = nt.nodes.new("ShaderNodeTexEnvironment")
+            env.image = bpy.data.images.load(hdri, check_existing=True)
+            mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"
+            mix.inputs["Factor"].default_value = 1.0
+            mix.inputs["B"].default_value = LD.color(pr.get("world_tint", "#FFFFFF"))
+            nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
+            nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
+            nt.links.new(env.outputs["Color"], mix.inputs["A"])
+            nt.links.new(mix.outputs["Result"], bg.inputs["Color"])
+        else:
+            bg.inputs["Color"].default_value = LD.color(pr.get("world_color", "#9FB8D0"))
+        bgs[sid] = (bg, pr.get("hdri_strength", 1.0))
+        if acc is None:
+            acc = bg.outputs[0]
+        else:
+            add = nt.nodes.new("ShaderNodeAddShader")
+            nt.links.new(acc, add.inputs[0])
+            nt.links.new(bg.outputs[0], add.inputs[1])
+            acc = add.outputs[0]
+    nt.links.new(acc, out.inputs["Surface"])
+    shot_set = T["stage"]["shot_set"]
+    for sid, (bg, strength) in bgs.items():
+        prev = None
+        for S, ss in zip(T["shots"], shot_set):
+            v = strength if ss == sid else 0.0
+            if v != prev:
+                bg.inputs["Strength"].default_value = v
+                bg.inputs["Strength"].keyframe_insert("default_value", frame=1 if prev is None else S["f0"])
+                prev = v
+    AL.set_constant(nt)
+
+
+def apply_visibility(T, objs_by_name):
+    """Lịch hiện/ẩn hợp nhất (lắp ráp + cutaway) do bộ đạo diễn nướng."""
+    for name, keys in T["stage"]["visibility"].items():
+        o = objs_by_name.get(name)
+        if o is None:
+            continue
+        for f, v in keys:
+            _key_hide(o, f, v == 0)
         AL.set_constant(o)
 
 
@@ -147,14 +241,25 @@ def compile_episode(prod_dir, fast=False):
     LD.setup_render(W, H, fps=fps, samples=T.get("samples") or 32, fast=fast)
     sc.frame_start, sc.frame_end = 1, frames
     sets = {}
+    stage = T.get("stage")
+    set_lights, presets = {}, {}
     for i, sdef in enumerate(T["sets"]):
         org = tuple(sdef["origin"])
         sb = SL.SETS[sdef["id"]](origin=org)
         sets[sdef["id"]] = sb
         preset = LD.load_lighting(sdef.get("lighting", "studio_bright"))
-        if i == 0:
-            LD.setup_world(preset)
-        LD.setup_lights(preset, org)
+        if stage is None:  # tập cũ: y như trước
+            if i == 0:
+                LD.setup_world(preset)
+            LD.setup_lights(preset, org)
+        else:
+            coll = bpy.data.collections.new(f"LIGHTS_{sdef['id']}")
+            sc.collection.children.link(coll)
+            set_lights[sdef["id"]] = LD.setup_lights(preset, org, coll)
+            presets[sdef["id"]] = preset
+    if stage is not None:
+        apply_stage_lights(T, set_lights)
+        setup_world_stage(T, presets)
     rigs = {}
     for aid, A in T["actors"].items():
         rig = MB.build_minifig(A["fig"])
@@ -170,8 +275,11 @@ def compile_episode(prod_dir, fast=False):
                 sc.collection.objects.link(mug)
                 MB.attach_prop(rig, mug, "hand.R", local=(-0.086, -0.070, 0.128))
         apply_actor(rig, A, frames)
+    vis = set((stage or {}).get("visibility", {}).keys())
     for entry in T["assembly"]:
-        apply_assembly({o.name: o for o in sets[entry["set"]].objects}, entry)
+        apply_assembly({o.name: o for o in sets[entry["set"]].objects}, entry, skip_hide=vis)
+    if stage is not None:
+        apply_visibility(T, {o.name: o for sb in sets.values() for o in sb.objects})
     cams = []
     for S in T["shots"]:
         cam = make_camera(f"CAM_{S['id']}", S, None)

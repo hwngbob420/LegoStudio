@@ -1,5 +1,6 @@
 // Phòng biên kịch: tư liệu người dùng gửi (sources/), dàn ý (beat sheet), phiếu phê bình đạt/không đạt, giới hạn số câu theo độ dài.
 import { z } from "zod";
+import { LIGHTING_MOODS, VISUAL_INTENTS } from "./constants";
 
 /** Đuôi file tư liệu được nhận. */
 export const SOURCE_EXTS = ["docx", "pdf", "md", "txt", "fountain"] as const;
@@ -99,6 +100,14 @@ export const Beat = z.object({
   on_screen: z.string().max(160).default(""),
   speakers: z.array(ID).min(1).max(4),
   est_lines: z.number().int().min(1).max(20),
+  /** Gđ 6: bối cảnh (id bộ set trong kho kênh) của nhịp */
+  location: ID.optional(),
+  /** Gđ 6: không khí ánh sáng của bối cảnh */
+  mood: z.enum(LIGHTING_MOODS).optional(),
+  /** Gđ 6: ý đồ hình ảnh của nhịp (cỡ cảnh / góc máy) */
+  visual: z.enum(VISUAL_INTENTS).optional(),
+  /** Gđ 6: vật minh hoạ được lắp bằng gạch (ngắn) */
+  prop_cue: z.string().max(80).optional(),
 });
 export type Beat = z.infer<typeof Beat>;
 
@@ -147,6 +156,7 @@ export const BEAT_CHECKS: Record<string, string> = {
   on_screen: "Mọi nhịp có ý tưởng thẻ chữ/biểu đồ phục vụ giải thích?",
   cast_fit: "Mỗi nhân vật có vai hài khác nhau rõ (ngây ngô / biết tuốt / mệt mỏi...), đúng tính cách trong series bible?",
   length_fit: "Tổng est_lines nằm trong khoảng số câu cho phép?",
+  location_arc: "Mỗi block ~2 phút có cung bối cảnh 2–4 nơi/cảnh cắt (mở cảnh rộng -> nơi hội thoại chính -> cảnh cắt gag ở set khác hoặc sân khấu hướng dẫn -> cận mặt chốt), mọi nhịp ghi location là id bộ set có trong kho?",
 };
 
 /** Danh mục kiểm kịch bản thoại. */
@@ -159,4 +169,19 @@ export const SCRIPT_CHECKS: Record<string, string> = {
   callback: "Có ít nhất một callback hoặc running gag quay lại ở cuối?",
   facts_from_source: "Số liệu/khẳng định lấy từ tư liệu người dùng hoặc là kiến thức phổ thông chắc chắn (không bịa)?",
   natural_english: "Tiếng Anh tự nhiên, không dịch máy, không tên thương hiệu thật?",
+  visual_story: "Thoại tận dụng hình ảnh của bối cảnh (nhắc vật/nơi thấy được, câu đổi bối cảnh có lý do), không phải kịch truyền thanh đứng yên một chỗ?",
 };
+
+/**
+ * Gđ 6: cung bối cảnh đo bằng code — mỗi block (phần thoại ~2 phút) phải có ít nhất 2 bối cảnh khác nhau.
+ * Tập rất ngắn (một block, dưới 60 giây) được phép một bối cảnh. Trả danh sách block không đạt.
+ */
+export function locationArcErrors(parts: { location?: string }[][], targetSec: number): string[] {
+  const errs: string[] = [];
+  parts.forEach((p, k) => {
+    const locs = new Set(p.map((b) => b.location).filter(Boolean));
+    if (locs.size < 2 && !(parts.length === 1 && targetSec < 60)) errs.push(`Block ${k + 1} chỉ có ${locs.size} bối cảnh (cần 2–4).`);
+    if (locs.size > 4) errs.push(`Block ${k + 1} có ${locs.size} bối cảnh (tối đa 4, người xem dễ rối).`);
+  });
+  return errs;
+}

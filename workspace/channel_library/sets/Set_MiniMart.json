@@ -1,0 +1,21 @@
+{
+ "id": "Set_MiniMart",
+ "name": "Cửa hàng tiện lợi",
+ "lighting": "night_neon",
+ "moods": {
+  "night": "night_neon",
+  "day": "office_daylight"
+ },
+ "anchors": [
+  "clerk",
+  "customer",
+  "aisle",
+  "fridge",
+  "entrance",
+  "center"
+ ],
+ "notes": "convenience store: 3 shelf aisles of colourful generic boxes, red checkout counter, glowing fridges, glass shopfront with generic MART / 24H / OPEN neon",
+ "best_for": "night-shift stories, quirky customers, suspense and satire",
+ "builder": "build_mini_mart",
+ "rings": 3
+}

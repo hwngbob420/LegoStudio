@@ -50,9 +50,12 @@ for fn in sorted(os.listdir(rdir)):
     cols = [r["skin"], r["hair"]["color"], r["torso"]["color"], r["arms"], r["hands"], r["hips"], r["legs"]]
     bad = [c for c in cols if c not in pal and not c.startswith("#")]
     check(f"recipe {r['id']} colours valid + in catalog", not bad and r["id"] in cat["cast"], f"bad={bad}")
-src = open(os.path.join(P.ENGINE, "sets_library.py"), encoding="utf-8").read()
+src = "".join(open(os.path.join(P.ENGINE, f), encoding="utf-8").read() for f in ("sets_library.py", "sets_world.py"))
+man_sets = json.load(open(P.MANIFEST, encoding="utf-8")).get("sets", {}) if os.path.exists(P.MANIFEST) else {}
 for sid in cat["sets"]:
-    check(f"set {sid} registered in SETS", f'"{sid}": build_' in src, "add builder to SETS")
+    check(f"set {sid} registered in SETS", f'"{sid}": build_' in src, "add builder to SETS (sets_library.SETS or sets_world.WORLD_SETS)")
+    if cat["sets"][sid].get("rings"):
+        check(f"set {sid} in manifest (3-ring)", sid in man_sets and "extent" in man_sets[sid], "re-run export_manifest.py")
 total, used, free = shutil.disk_usage(ROOT)
 check(f"disk free {free / 2**30:.0f} GB (>= 5 GB)", free > 5 * 2**30, "free disk space; renders need ~2 GB per minute temporarily")
 print("\nHEALTHY" if not fails else f"\n{fails} problem(s)")

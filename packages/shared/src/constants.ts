@@ -9,8 +9,24 @@ export const RESOLUTION = [1920, 1080] as const;
 export const STUD = 0.08;
 export const PLATE = 0.032;
 
-export const CAMERA_PRESETS = ["assembly_high", "wide_establish", "mcu", "ecu", "two_shot"] as const;
-export const CAMERA_MOVES = ["none", "push_in", "pull_out", "drift_right", "crane_down"] as const;
+/**
+ * Preset máy quay. 5 preset đầu là bản cũ (giữ nguyên toán để tập cũ nướng ra y hệt). Từ Gđ 6 thêm thang cỡ cảnh đầy đủ:
+ * ews (toàn cực rộng / mở cảnh), ws (toàn), mls (trung toàn, thấy dáng người), ms (trung), cu (cận mặt), ots (qua vai).
+ */
+export const CAMERA_PRESETS = ["assembly_high", "wide_establish", "mcu", "ecu", "two_shot", "ews", "ws", "mls", "ms", "cu", "ots"] as const;
+/** Góc máy (Gđ 6). Không ghi = eye_level. birds_eye bị chặn ở 82 độ để tránh điểm kỳ dị khi nhìn thẳng xuống. */
+export const CAMERA_ANGLES = ["eye_level", "low_angle", "high_angle", "birds_eye"] as const;
+export const CAMERA_MOVES = ["none", "push_in", "pull_out", "drift_right", "crane_down",
+  "dolly_in", "dolly_out", "truck_pan", "crane_reveal"] as const;
+/** Cỡ cảnh: thứ tự từ xa tới gần, dùng cho bộ lọc đơn điệu và gợi ý của biên kịch. */
+export const SHOT_SCALE: Record<(typeof CAMERA_PRESETS)[number], "EWS" | "WS" | "MLS" | "MS" | "MCU" | "CU" | "ECU"> = {
+  assembly_high: "EWS", ews: "EWS", wide_establish: "WS", ws: "WS", mls: "MLS", two_shot: "MS", ms: "MS", ots: "MS",
+  mcu: "MCU", cu: "CU", ecu: "ECU",
+};
+/** Ý đồ hình ảnh mà biên kịch được ghi cho từng nhịp/câu (Gđ 6); bộ dựng storyboard đổi thành preset + góc máy. */
+export const VISUAL_INTENTS = ["establishing_scale", "intimate_deadpan", "satirical_low_angle", "overhead_chaos",
+  "cutaway_gag", "conversation", "reveal", "isolation"] as const;
+export const LIGHTING_MOODS = ["day", "golden_hour", "night", "moody"] as const;
 export const SUBJECT_ZONES = ["left_third", "center", "right_third"] as const;
 export const UI_ZONE_NAMES = ["left_third", "right_third", "top_left", "top_right", "top_center", "upper", "none"] as const;
 

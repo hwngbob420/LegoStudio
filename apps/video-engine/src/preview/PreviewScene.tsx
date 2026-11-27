@@ -39,6 +39,8 @@ interface Loaded {
   decals: Record<string, HTMLImageElement | null>;
   atlas: { eyes: HTMLImageElement; mouths: HTMLImageElement; details: Record<string, HTMLImageElement | null>; torso: Record<string, HTMLImageElement | null> };
   env: THREE.DataTexture | null;
+  /** Gđ 6: HDRI theo từng preset ánh sáng (tập nhiều set) */
+  envs: Record<string, THREE.DataTexture | null>;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -59,6 +61,7 @@ function useAssets(p: PreviewProps): { data: Loaded | null; handle: number } {
     const glb = (name: string) => loader.loadAsync(url(p.assetBase, `glb/${name}.glb`)).then((g) => g.scene);
     const figs = [...new Set(Object.values(T.actors).map((a) => a.fig))];
     const preset = p.library.lighting[T.sets[0].lighting];
+    const hdris = [...new Set(T.sets.map((s) => p.library.lighting[s.lighting]?.hdri).filter((h): h is string => !!h))];
     Promise.all([
       Promise.all(T.sets.map((s) => glb(`set_${s.id}`))),
       Promise.all(figs.map((f) => glb(`cast_${f}`))),
@@ -69,7 +72,8 @@ function useAssets(p: PreviewProps): { data: Loaded | null; handle: number } {
       Promise.all(figs.map((f) => loadImage(url(p.assetBase, `textures/torso_${f}.png`)))),
       Promise.all(Object.values(DECALS).map((d) => loadImage(url(p.assetBase, `textures/${d.file}`)))),
       preset?.hdri ? new HDRLoader().loadAsync(url(p.assetBase, `hdri/${preset.hdri}`)).catch(() => null) : Promise.resolve(null),
-    ]).then(([sets, casts, mug, eyes, mouths, details, torsos, decals, env]) => {
+      Promise.all(hdris.map((h) => (h === preset?.hdri ? Promise.resolve(null) : new HDRLoader().loadAsync(url(p.assetBase, `hdri/${h}`)).catch(() => null)))),
+    ]).then(([sets, casts, mug, eyes, mouths, details, torsos, decals, env, extraEnvs]) => {
       setData({
         sets: Object.fromEntries(T.sets.map((s, i) => [s.id, sets[i]])),
         cast: Object.fromEntries(figs.map((f, i) => [f, casts[i]])),
@@ -78,6 +82,7 @@ function useAssets(p: PreviewProps): { data: Loaded | null; handle: number } {
         atlas: { eyes: eyes!, mouths: mouths!, details: Object.fromEntries(figs.map((f, i) => [f, details[i]])),
           torso: Object.fromEntries(figs.map((f, i) => [f, torsos[i]])) },
         env: env as THREE.DataTexture | null,
+        envs: Object.fromEntries(hdris.map((h, i) => [h, (h === preset?.hdri ? env : extraEnvs[i]) as THREE.DataTexture | null])),
       });
       // continueRender happens in <Stage> once Three.js has actually drawn the first frame with the assets
     }).catch((e) => { console.error(e); continueRender(handle); });
@@ -89,6 +94,17 @@ function useAssets(p: PreviewProps): { data: Loaded | null; handle: number } {
 function absMaterial(color: THREE.Color, extra: Partial<THREE.MeshPhysicalMaterialParameters> = {}) {
   return new THREE.MeshPhysicalMaterial({ color, roughness: 0.22, clearcoat: 0.35, clearcoatRoughness: 0.06, ...extra });
 }
+/** Gđ 6: dùng chung vật liệu theo màu (set 3 vòng có hàng trăm viên cùng màu -> ít shader, Player mượt). */
+const MAT_CACHE = new Map<string, THREE.Material>();
+function absShared(color: THREE.Color, opacity = 1) {
+  const k = `${color.getHexString()}|${opacity}`;
+  let m = MAT_CACHE.get(k);
+  if (!m) {
+    m = absMaterial(color, opacity < 1 ? { transparent: true, opacity, depthWrite: false } : {});
+    MAT_CACHE.set(k, m);
+  }
+  return m;
+}
 
 /** Vật liệu in hình (Blender dùng toạ độ Generated, glTF không mang theo) -> ảnh + độ phát sáng. */
 const DECALS: Record<string, { file: string; emissive?: number }> = {
@@ -99,14 +115,15 @@ const DECALS: Record<string, { file: string; emissive?: number }> = {
 };
 
 /** UV phẳng theo hộp bao trên mặt phẳng XY cục bộ (giống toạ độ Generated của Blender). */
-function planarUv(geo: THREE.BufferGeometry) {
+function planarUv(geo: THREE.BufferGeometry, flipV = false) {
   geo.computeBoundingBox();
   const b = geo.boundingBox!;
   const pos = geo.getAttribute("position");
   const uv = new Float32Array(pos.count * 2);
   for (let i = 0; i < pos.count; i++) {
     uv[i * 2] = (pos.getX(i) - b.min.x) / Math.max(1e-6, b.max.x - b.min.x);
-    uv[i * 2 + 1] = (pos.getY(i) - b.min.y) / Math.max(1e-6, b.max.y - b.min.y);
+    const v = (pos.getY(i) - b.min.y) / Math.max(1e-6, b.max.y - b.min.y);
+    uv[i * 2 + 1] = flipV ? 1 - v : v;
   }
   geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
 }
@@ -124,8 +141,19 @@ function buildScene(p: PreviewProps, L: Loaded) {
     const g = L.sets[s.id].clone(true);
     g.position.set(s.origin[0], s.origin[1], s.origin[2]);
     g.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh && /_DOME$/.test(o.name.replace(/_\d+$/, ""))) {
+        // vòm trời: màu theo đỉnh (vertex color), không chịu đèn, không đổ bóng
+        (o as THREE.Mesh).material = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
+        o.castShadow = false; o.receiveShadow = false;
+        if (o.name) bricks[o.name] = o;
+        return;
+      }
       if ((o as THREE.Mesh).isMesh) {
-        const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial;
+        const mesh = o as THREE.Mesh;
+        const m = mesh.material as THREE.MeshStandardMaterial;
+        // biển hiệu / kệ hàng in hình (Blender dùng toạ độ Generated) -> UV phẳng theo hộp bao cục bộ
+        // ảnh do GLTFLoader nạp có flipY = false -> lật v để chữ không bị lộn ngược
+        if (m && (m.map || m.emissiveMap) && !mesh.geometry.getAttribute("uv")) planarUv(mesh.geometry, (m.map ?? m.emissiveMap)!.flipY === false);
         const decal = m ? DECALS[m.name] : undefined;
         if (decal && L.decals[m.name]) {
           planarUv((o as THREE.Mesh).geometry);
@@ -135,10 +163,10 @@ function buildScene(p: PreviewProps, L: Loaded) {
           (o as THREE.Mesh).material = decal.emissive
             ? new THREE.MeshPhysicalMaterial({ map: tex, emissiveMap: tex, emissive: new THREE.Color(1, 1, 1), emissiveIntensity: decal.emissive, roughness: 0.15, clearcoat: 0.4 })
             : absMaterial(new THREE.Color(1, 1, 1), { map: tex });
-        } else if (m && !m.emissiveMap && m.emissive?.getHex() === 0) {
-          (o as THREE.Mesh).material = absMaterial(m.color.clone(), { map: m.map ?? null });
+        } else if (m && !m.emissiveMap && m.emissive?.getHex() === 0 && !Array.isArray(mesh.material)) {
+          (o as THREE.Mesh).material = m.map ? absMaterial(m.color.clone(), { map: m.map }) : absShared(m.color.clone(), m.transparent ? m.opacity : 1);
         }
-        o.castShadow = true;
+        o.castShadow = !(m && m.transparent);
         o.receiveShadow = true;
       }
       if (o.name) bricks[o.name] = o;
@@ -214,7 +242,7 @@ function buildScene(p: PreviewProps, L: Loaded) {
     world.add(g);
     return { e, g };
   });
-  return { world, bricks, actors, fxNodes };
+  return { world, bricks, actors, fxNodes, lights: null as THREE.Group | null, activeSet: "" };
 }
 
 function drawFace(n: ActorNodes, L: Loaded, p: PreviewProps, fig: string, eye: number, mouth: number) {
@@ -268,7 +296,9 @@ const Stage: React.FC<PreviewProps & { L: Loaded; handle: number }> = (props) =>
     lights.matrixAutoUpdate = false;
     lights.matrix.copy(ZUP_TO_YUP);
     for (const s of T.sets) {
-      for (const Ld of preset?.lights ?? []) {
+      // tập cũ: mọi set dùng preset của set đầu (y như trước); Gđ 6: mỗi set đèn riêng, bật/tắt theo cảnh
+      const pr = T.stage ? library.lighting[s.lighting] : preset;
+      for (const Ld of pr?.lights ?? []) {
         const pos = new THREE.Vector3(s.origin[0] + Ld.offset[0], s.origin[1] + Ld.offset[1], s.origin[2] + Ld.offset[2]);
         const aim = new THREE.Vector3(s.origin[0] + (Ld.aim_offset?.[0] ?? 0), s.origin[1] + (Ld.aim_offset?.[1] ?? 0), s.origin[2] + (Ld.aim_offset?.[2] ?? 0.3));
         const c = new THREE.Color(Ld.color ?? "#ffffff");
@@ -277,6 +307,7 @@ const Stage: React.FC<PreviewProps & { L: Loaded; handle: number }> = (props) =>
         else if (Ld.type === "AREA") { const r = new THREE.RectAreaLight(c, Ld.energy / ((Ld.size ?? 1) ** 2 * 20), Ld.size ?? 1, Ld.size ?? 1); light = r; }
         else light = new THREE.PointLight(c, Ld.energy * 0.05);
         light.position.copy(pos);
+        light.userData.set = s.id;
         if ((light as THREE.RectAreaLight).isRectAreaLight) {
           // RectAreaLight emits along its local -Z; lookAt points +Z at the target in Three, so aim it in Y-up space later
           lights.add(light);
@@ -299,8 +330,34 @@ const Stage: React.FC<PreviewProps & { L: Loaded; handle: number }> = (props) =>
       }
     });
     scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x8a7a66, 0.35));
+    built.lights = lights;
   }
   const f = worldFrame(T, frame);
+  // Gđ 6: bật đèn + trời của set đang quay; lịch hiện/ẩn cutaway (đã hợp nhất với lắp ráp)
+  if (T.stage) {
+    const si = T.shots.findIndex((b) => b.f0 <= f && f <= b.f1);
+    const sid = T.stage.shot_set[si < 0 ? T.shots.length - 1 : si];
+    if (built.activeSet !== sid) {
+      built.activeSet = sid;
+      built.lights?.children.forEach((l) => { if (l.userData.set) l.visible = l.userData.set === sid; });
+      const pr = library.lighting[T.sets.find((s) => s.id === sid)?.lighting ?? ""];
+      scene.background = new THREE.Color(pr?.world_color ?? "#bcd0e2");
+      const env = pr?.hdri ? L.envs[pr.hdri] : null;
+      if (env) {
+        env.mapping = THREE.EquirectangularReflectionMapping;
+        scene.environment = env;
+        scene.environmentIntensity = (pr?.hdri_strength ?? 1) * 0.9;
+        scene.environmentRotation.set(0, THREE.MathUtils.degToRad(pr?.hdri_rotation_deg ?? 0), 0);
+      }
+    }
+    for (const [name, keys] of Object.entries(T.stage.visibility)) {
+      const o = built.bricks[name];
+      if (!o) continue;
+      let v = 1;
+      for (const [kf, kv] of keys) if (kf <= f) v = kv;
+      o.visible = v === 1;
+    }
+  }
   // diễn viên
   for (const [aid, n] of Object.entries(built.actors)) {
     const mats = actorBoneMatrices(T, rig, aid, f);
@@ -318,7 +375,7 @@ const Stage: React.FC<PreviewProps & { L: Loaded; handle: number }> = (props) =>
       const o = built.bricks[name];
       if (!o) continue;
       if (o.userData.home === undefined) o.userData.home = o.position.z;
-      o.visible = f >= showAt;
+      if (!T.stage?.visibility[name]) o.visible = f >= showAt;
       o.position.z = o.userData.home + (f === showAt ? a.lift : f === showAt + 1 ? -0.004 : 0);
     }
   }
