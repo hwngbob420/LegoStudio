@@ -13,14 +13,15 @@ Quy trình làm theo mô hình **pixel-story-engine**: dán truyện → AI vi�
    "chưa đăng nhập", mở Terminal và gõ `claude auth login`. Muốn trả lời thủ công trong phiên Claude Code thì đặt `AI_SESSION_QUEUE=1` trong `.env` (Hộp thư Claude).
    Gemini chỉ dùng khi đặt `AI_PROVIDER=gemini` trong `.env`.
 
-## Studio 5 tab
+## Studio 6 tab
 | Tab | Làm gì |
 |---|---|
-| **Kịch bản** | Gửi file outline (.docx, .pdf, .md, .txt, .fountain) hoặc dán truyện, chọn ngôi kể, giọng văn (16 kiểu), độ dài (20 giây – 30 phút), thông điệp → **Generate kịch bản**: Claude lập dàn ý, tự chấm, viết thoại theo từng phần; sửa dàn ý rồi viết lại thoại được |
+| **Kịch bản** | Gửi file outline (.docx, .pdf, .md, .txt, .fountain) hoặc dán truyện, chọn ngôi kể, giọng văn (16 kiểu), độ dài (20 giây – 30 phút), thông điệp → **Làm bản xem trước**: Claude lập dàn ý, viết thoại theo từng block ~2 phút, rồi tự tạo giọng và dựng hình (chạy nền), xong tự mở tab Duyệt block. "Chỉ viết kịch bản" nếu chỉ cần chữ |
+| **Duyệt block** | Tập chia block ~2 phút. Mỗi block: Player 3D xem riêng, lời thoại (bấm để nghe), nhận xét tự động (code + Claude tự chấm), ô góp ý gắn theo câu/cảnh, **Claude sửa block này** (chỉ block đó đổi, câu không đổi giữ giọng cũ), **Duyệt block**, xem bản render cuối của block |
 | **Xưởng** | Ráp minifig xoay 3D (da, tóc, áo in, phụ kiện, giọng), vai quần chúng ngẫu nhiên, Lưu sang kho kênh, sơ đồ tập dạng nút |
 | **Giọng đọc** | Tạo giọng trên máy, hoặc nạp giọng thật từng câu rồi **Tự khớp giờ** bằng Whisper; khẩu hình 2D tự sinh |
 | **Đạo diễn & Xem trước** | **AI tạo Storyboard**; Player 3D xem ngay (Three.js); sửa thẻ cảnh (góc máy, biểu cảm, động tác, hiệu ứng); lỗi "thẻ chữ che mặt" hiện tức thì; **Kiểm khung** bằng Blender |
-| **Xuất bản** | Render bản cuối bằng Blender EEVEE chia chặng (tắt máy vẫn làm tiếp được), **phụ đề đa ngôn ngữ**, **Shorts dọc 1080x1920**, sổ chi phí AI |
+| **Xuất bản** | Render bản cuối bằng Blender EEVEE theo từng block (block không đổi được dùng lại, tắt máy vẫn làm tiếp được), mỗi block ra một video riêng rồi ghép thành bản cuối, **phụ đề đa ngôn ngữ**, **Shorts dọc 1080x1920**, sổ chi phí AI |
 
 ## Kiến trúc (phương án C)
 - **Một bộ đạo diễn duy nhất** (`packages/director`, TypeScript) tính trước mọi chuyển động thành `baked_timeline.json`.

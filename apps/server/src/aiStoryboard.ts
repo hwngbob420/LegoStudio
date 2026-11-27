@@ -45,12 +45,29 @@ function systemPrompt(paths: WorkspacePaths, ctx: Awaited<ReturnType<typeof load
     "Biểu cảm dựng cung cảm xúc (ví dụ deadpan_tired -> shocked_wide -> smug_smirk); punch.word là số thứ tự từ (bắt đầu từ 1) nơi biểu cảm đổi.",
     "listener_expr: biểu cảm phản ứng của người nghe. action chỉ chọn trong danh sách. fx tối đa 1 mỗi beat, dùng tiết kiệm.",
     "ui: tối đa một thẻ cho mỗi 2–3 câu: part_callout (đếm đồ vật, ví dụ 3 cốc cà phê) hoặc brick_chart (2–4 cột số liệu, collapse_last cho cú lật). Còn lại type none.",
+    "Câu thoại nhắc tới biểu đồ/số liệu (chart, graph, data, percent, so sánh con số) thì beat đó PHẢI có ui brick_chart với cột lấy từ câu thoại; câu đếm đồ vật thì part_callout.",
+    "ending.step: số bước của câu chốt cuối tập, 2 chữ số (ví dụ câu cuối nói \"Step five\" thì step là \"05\").",
     "Code sẽ tự đặt thẻ chữ ở 1/3 đối diện người nói và tự lo mốc giờ; bạn KHÔNG viết toạ độ hay thời gian.",
     "Không dùng tên thương hiệu thật trong chữ hiển thị.",
     `Bộ set: ${Object.entries(ctx.cat.sets).map(([k, v]) => `${k} (${(v as { notes?: string }).notes ?? ""})`).join("; ")}`,
     `Động tác: ${ACTIONS.join(", ")}. Biểu cảm: ${EXPRESSIONS.join(", ")}. Hiệu ứng: ${FX_KINDS.join(", ")}.`,
     "\n# Series bible\n" + bibleText(paths),
   ].join("\n");
+}
+
+const NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+
+/** Số bước của thẻ STEP kết: câu "Step N" cuối cùng trong 3 câu cuối kịch bản; không có thì dùng số AI chọn. Luôn 2 chữ số. */
+export function endingStep(script: Script, fallback: string): string {
+  let n: number | null = null;
+  for (const l of script.lines.slice(-3)) {
+    for (const m of l.text.matchAll(/\bstep\s+(\d{1,2}|[a-z]+)\b/gi)) {
+      const v = /^\d+$/.test(m[1]) ? Number(m[1]) : NUM_WORDS.indexOf(m[1].toLowerCase());
+      if (v > 0) n = v;
+    }
+  }
+  if (n === null) { const f = Number(String(fallback).replace(/\D/g, "")); n = Number.isFinite(f) && f > 0 ? f : 2; }
+  return String(Math.min(n, 99)).padStart(2, "0");
 }
 
 const BatchOut = z.object({ set: z.string(), beats: z.array(z.object({ line: z.string() }).passthrough()), ending: z.object({ step: z.string(), title: z.string() }) });
@@ -136,6 +153,8 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
       note = `Không gọi được AI (${e.message.slice(0, 160)}). Đã dùng đạo diễn tự động theo luật.`;
     }
   } else if (!ai) note = "Chưa cấu hình AI: đã dùng đạo diễn tự động theo luật (xem trước được ngay; thêm khóa AI trong .env để đạo diễn sáng tạo hơn).";
+  // thẻ STEP kết: số bước lấy từ chính câu thoại cuối ("Step five" -> 05), không tin số AI đoán; luôn 2 chữ số
+  plan = { ...plan, ending: { ...plan.ending, step: endingStep(ctx.script, plan.ending.step) } };
   // tự sửa bố cục: lật bên chủ thể -> cận thành trung cận -> bỏ thẻ chữ ở cảnh còn che mặt
   const fixed = autoFix(plan, composeCtx, ctx.lib);
   plan = fixed.plan;

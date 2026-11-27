@@ -98,7 +98,10 @@ describe("blocks API", () => {
     expect(r.json.steps.map((s: Step) => s.label)).toEqual(["fix", "tts", "direct"]);
     expect(r.json.steps[0].args).toContain("b02");
     expect(r.json.steps[2].args).toEqual(expect.arrayContaining(["--block", "b02", "--fix"]));
-    expect((await api("GET", `/api/projects/${ep}/blocks`)).json.blocks[1].review.status).toBe("fixing");
+    // lúc xếp việc: block ghi "fixing"; việc (giả) chạy xong ngay mà chưa ghi kết quả -> danh sách trả "needs_fix" để bấm lại được
+    await new Promise((r) => setTimeout(r, 50));
+    expect(JSON.parse(readFileSync(path.join(ws, "projects", ep, "review.json"), "utf8")).blocks.b02.status).toBe("fixing");
+    expect((await api("GET", `/api/projects/${ep}/blocks`)).json.blocks[1].review.status).toBe("needs_fix");
   });
 
   it("'Làm bản xem trước' saves the input and queues write -> voice -> direct", async () => {
@@ -151,5 +154,16 @@ describe("fixing one block", () => {
     const list = (await api("GET", `/api/projects/${ep}/blocks`)).json;
     expect(list.ready).toBe(true);
     expect(list.blocks[1].lines.map((l: any) => l.id)).toContain("L15");
+  });
+});
+
+describe("ending step badge", () => {
+  it("takes the step number from the last lines ('Step five' -> 05), always 2 digits", async () => {
+    const { endingStep } = await import("./aiStoryboard");
+    const sc = (texts: string[]) => parseOrThrow(Script, { title: "t", lines: texts.map((text, i) => ({ id: `L${i + 1}`, speaker: "max_dev", text })) }, "s");
+    expect(endingStep(sc(["Deal. Step four. Bribe Grandma Lin.", "Step five. Tomorrow, repeat."]), "6")).toBe("05");
+    expect(endingStep(sc(["Step 3: sleep.", "Okay."]), "9")).toBe("03");
+    expect(endingStep(sc(["No steps here."]), "6")).toBe("06");
+    expect(endingStep(sc(["No steps here."]), "x")).toBe("02");
   });
 });

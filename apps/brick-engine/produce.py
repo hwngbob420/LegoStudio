@@ -18,6 +18,23 @@ def py(script, *args):
     subprocess.run([sys.executable, os.path.join(ENGINE, script), *args], check=True)
 
 
+def timeline(prod):
+    return json.load(open(os.path.join(prod, "build", "baked_timeline.json"), encoding="utf-8"))
+
+
+def block_mode(prod):
+    """Danh sách block nếu tập render theo block (5D), None nếu theo chặng cũ."""
+    import block_render as BR
+    pj = os.path.join(prod, "project.json")
+    chunk_sec = float(json.load(open(pj, encoding="utf-8")).get("settings", {}).get("chunk_sec", 120)) if os.path.exists(pj) else 120.0
+    return BR.blocks_of(timeline(prod), chunk_sec)
+
+
+def continue_log(log, st, t, lp):
+    log["stages"][st] = round(time.time() - t, 1)
+    json.dump(log, open(lp, "w"), indent=1)
+
+
 def main():
     a = sys.argv[1:]
     prod = os.path.abspath(a[0])
@@ -56,6 +73,13 @@ def main():
         elif st == "overlay":
             # luôn dựng lại props lớp chữ đúng ngôn ngữ (không để sót bản dịch của lần xuất trước)
             py("remotion_props.py", prod, *(["--lang", a[a.index("--lang") + 1]] if "--lang" in a else []))
+            blocks = block_mode(prod)
+            if blocks:
+                # 5D: lớp chữ từng block, block không đổi thì dùng lại
+                import block_render as BR
+                BR.render_overlays(prod, blocks, timeline(prod)["fps"])
+                continue_log(log, st, t, lp)
+                continue
             rs = P.VIDEO_ENGINE
             npx = "npx.cmd" if os.name == "nt" else "npx"
             props = os.path.join(prod, "build", "overlay_props.json")
@@ -66,7 +90,17 @@ def main():
             import master_compositor as MC
             ep = json.load(open(os.path.join(prod, "storyboard.json"), encoding="utf-8"))
             lang = a[a.index("--lang") + 1] if "--lang" in a else None
-            out = MC.composite(prod, ep.get("fps_world", 12), ep.get("fps_out", 60), out_name=f"output_final_{lang}.mp4" if lang else "output_final.mp4")
+            out_name = f"output_final_{lang}.mp4" if lang else "output_final.mp4"
+            blocks = block_mode(prod)
+            if blocks:
+                import block_render as BR
+                proj = json.load(open(os.path.join(prod, "project.json"), encoding="utf-8"))
+                plates = {c["id"]: os.path.join(prod, c["file"]) for c in proj["chunks"]}
+                fps_w = timeline(prod)["fps"]
+                overlays = BR.render_overlays(prod, blocks, fps_w, log=lambda *_: None)   # chỉ lấy đường dẫn (đã render ở bước overlay)
+                out = BR.composite_blocks(prod, blocks, plates, overlays, fps_w, ep.get("fps_out", 60), out_name=out_name)
+            else:
+                out = MC.composite(prod, ep.get("fps_world", 12), ep.get("fps_out", 60), out_name=out_name)
             log["output"] = out
             log["probe"] = MC.probe(out)
         elif st == "qa":
@@ -74,6 +108,7 @@ def main():
         elif st == "clean":
             if not keep:
                 shutil.rmtree(os.path.join(prod, "frames"), ignore_errors=True)
+                # build/overlay/ov_*.webm của chế độ block là bộ nhớ đệm: giữ lại để lần sau chỉ làm block đã đổi
                 for f in ("overlay.webm",):
                     p = os.path.join(prod, "build", f)
                     if os.path.exists(p):

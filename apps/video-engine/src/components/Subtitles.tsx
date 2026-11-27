@@ -23,14 +23,14 @@ export const Subtitles: React.FC<{lines: Line[]; W: number; H: number}> = ({line
           border: `4px solid ${INK}`, whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: 1}}>
           {L.speaker}
         </div>
-        <div style={{fontSize: 52, fontWeight: 900, color: 'white', lineHeight: 1.15, display: 'flex', flexWrap: 'wrap', columnGap: 14}}>
+        <div style={{fontSize: 52, fontWeight: 900, color: 'white', lineHeight: 1.15, display: 'flex', flexWrap: 'wrap', columnGap: 22}}>
           {L.words.map((w, i) => {
             const next = L.words[i + 1]?.t ?? L.end;
             const active = t >= w.t && t < next;
             const said = t >= w.t;
             return (
               <span key={i} style={{color: active ? L.color : said ? 'white' : 'rgba(255,255,255,0.55)',
-                transform: active ? 'translateY(-3px) scale(1.06)' : 'none', display: 'inline-block'}}>
+                transform: active ? 'translateY(-3px) scale(1.03)' : 'none', transformOrigin: '50% 100%', display: 'inline-block'}}>
                 {w.text}
               </span>
             );
