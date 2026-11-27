@@ -12,31 +12,10 @@
     {
       "index": 0,
       "f0": 1,
-      "f1": 72,
-      "status": "done",
-      "file": "chunks/part_00.mp4"
-    },
-    {
-      "index": 1,
-      "f0": 73,
-      "f1": 144,
-      "status": "done",
-      "file": "chunks/part_01.mp4"
-    },
-    {
-      "index": 2,
-      "f0": 145,
-      "f1": 216,
-      "status": "done",
-      "file": "chunks/part_02.mp4"
-    },
-    {
-      "index": 3,
-      "f0": 217,
       "f1": 234,
       "status": "done",
-      "file": "chunks/part_03.mp4"
+      "file": "chunks/part_00.mp4"
     }
   ],
-  "timeline_hash": "c8b27e7d36791d18"
+  "timeline_hash": "b61d51c4c956af16"
 }

@@ -1,7 +1,11 @@
 // Ghép động tác theo thời gian (bản TS của pose_at / bake_actor trong acting_library.py).
 import type { V3 } from "@lse/shared";
 import { ACTION_DEFS, type ActionDef } from "./actions";
-import { Rng } from "./rng";
+import { Rng, smoothNoise } from "./rng";
+
+/** Boil khớp: khoảng cách nút (khung) và hệ số đổi biên độ boil (độ) ra độ lệch chuẩn. */
+export const BOIL_KNOT = 6;
+export const BOIL_SIGMA = 0.6;
 
 /** Các khớp được tạo dáng (root là gốc rig, đi theo vị trí riêng). */
 export const POSED_BONES = ["hips", "torso", "head", "arm.L", "arm.R", "hand.L", "hand.R", "leg.L", "leg.R"] as const;
@@ -62,7 +66,7 @@ function sampleRoot(rk: ActionDef["root"], u: number): V3 {
 }
 
 /** Tư thế (độ) + độ dời gốc tại thời điểm t: lớp nền idle_breathe + các clip đang chạy, có hoà trộn vào/ra. */
-export function poseAt(clips: Clip[], t: number, blendS = 0.17): { pose: Record<string, V3>; root: V3 } {
+export function poseAt(clips: Clip[], t: number, blendS = 0.17, idleT0 = 0): { pose: Record<string, V3>; root: V3 } {
   const pose: Record<string, V3> = Object.fromEntries(POSED_BONES.map((b) => [b, [0, 0, 0] as V3]));
   let root: V3 = [0, 0, 0];
   const add = (p: Record<string, V3>, w: number) => {
@@ -72,7 +76,8 @@ export function poseAt(clips: Clip[], t: number, blendS = 0.17): { pose: Record<
     }
   };
   const idle = ACTION_DEFS.idle_breathe;
-  add(sample(idle.keys, (t / (idle.loop as number)) % 1), 1);
+  // pha thở tính từ đầu block (idleT0) để block sau không phụ thuộc độ dài block trước
+  add(sample(idle.keys, (Math.max(0, t - idleT0) / (idle.loop as number)) % 1), 1);
   for (const c of clips) {
     if (!(c.t0 - 1e-6 <= t && t <= c.t1 + 1e-6)) continue;
     const a = ACTION_DEFS[c.action];
@@ -103,21 +108,42 @@ export interface ActorBakeInput {
   seed: number;
   appear?: number;
   boil?: number;
+  /**
+   * Block (5B): khung bắt đầu + hạt giống riêng. Nhiễu boil và pha thở (idle) tính lại từ đầu mỗi block, nên nội dung
+   * block không phụ thuộc độ dài các block trước. Mặc định một block từ khung 1.
+   */
+  segments?: { f0: number; seed: number }[];
 }
 
-/** Nướng từng khung: Euler (radian) mỗi khớp + gốc [x,y,z,rotZ]. Có "rung tay" boil ±0.35° kiểu múa rối. */
+/** Block chứa khung f (danh sách đã sắp theo f0, phần tử đầu có f0 = 1). */
+export function segmentAt<T extends { f0: number }>(segs: T[], f: number): { seg: T; index: number } {
+  let i = 0;
+  while (i + 1 < segs.length && segs[i + 1].f0 <= f) i++;
+  return { seg: segs[i], index: i };
+}
+
+/** Nướng từng khung: Euler (radian) mỗi khớp + gốc [x,y,z,rotZ]. Có "boil" kiểu múa rối (trôi chậm, độ lệch chuẩn ~0,2°). */
 export function bakeActor(inp: ActorBakeInput): { root: [number, number, number, number][]; joints: Record<string, V3[]> } {
-  const rng = new Rng(inp.seed);
   const boil = inp.boil ?? 0.35;
+  const segs = inp.segments?.length ? inp.segments : [{ f0: 1, seed: 0 }];
+  // boil trôi chậm (nút cách nửa giây) thay vì nhảy ngẫu nhiên từng khung: vẫn "sống" như múa rối, không rung giật.
+  // Mỗi block có dãy nhiễu riêng, đánh số khung từ đầu block.
+  const noise = segs.map((sg, i) => {
+    const rng = new Rng((inp.seed ^ sg.seed) >>> 0);
+    const n = (i + 1 < segs.length ? segs[i + 1].f0 : inp.frames + 1) - sg.f0;
+    return Object.fromEntries(POSED_BONES.map((b) => [b, [0, 1, 2].map(() => smoothNoise(rng, Math.max(0, n), BOIL_KNOT))]));
+  });
   const joints: Record<string, V3[]> = Object.fromEntries(POSED_BONES.map((b) => [b, [] as V3[]]));
   const rootOut: [number, number, number, number][] = [];
   const ang = inp.facingDeg * DEG;
   for (let f = 1; f <= inp.frames; f++) {
     const t = (f - 1) / inp.fps;
-    const { pose, root } = poseAt(inp.clips, t);
+    const { seg, index } = segmentAt(segs, f);
+    const { pose, root } = poseAt(inp.clips, t, undefined, (seg.f0 - 1) / inp.fps);
     for (const b of POSED_BONES) {
       const v = pose[b] ?? [0, 0, 0];
-      const j: V3 = boil ? [rng.uniform(-boil, boil), rng.uniform(-boil, boil), rng.uniform(-boil, boil)] : [0, 0, 0];
+      const nb = noise[index][b], k = f - seg.f0, s = boil * BOIL_SIGMA;
+      const j: V3 = boil ? [nb[0][k] * s, nb[1][k] * s, nb[2][k] * s] : [0, 0, 0];
       joints[b].push([(v[0] + j[0]) * DEG, (v[1] + j[1]) * DEG, (v[2] + j[2]) * DEG]);
     }
     const off: V3 = [root[0] * Math.cos(ang) - root[1] * Math.sin(ang), root[0] * Math.sin(ang) + root[1] * Math.cos(ang), root[2]];

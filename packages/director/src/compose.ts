@@ -65,6 +65,10 @@ export function compose(plan: BeatPlan, ctx: ComposeContext): Storyboard {
   const words = (lid: string) => timing.lines[lid]?.words.length ?? 1;
   const w = (lid: string, n: number) => `${lid}.w${Math.min(Math.max(1, n), words(lid))}`;
   const L1 = script.lines[0].id;
+  // block (5B) của từng câu: câu chưa ghi block theo câu trước
+  const blockOfLine = new Map<string, string>();
+  { let cur = script.lines.find((l) => l.block)?.block ?? "b01"; for (const l of script.lines) { if (l.block) cur = l.block; blockOfLine.set(l.id, cur); } }
+  const blockOf = (lid: string) => blockOfLine.get(lid) ?? "b01";
   const appearT = Math.max(0.6, script.start_offset - 0.6);
 
   const shots: Storyboard["shots"] = [];
@@ -84,9 +88,13 @@ export function compose(plan: BeatPlan, ctx: ComposeContext): Storyboard {
   for (const b of beats) {
     const prev = groups[groups.length - 1]?.[groups[groups.length - 1].length - 1];
     const sp = lineOf(b.line)!.speaker;
-    if (prev && lineOf(prev.line)!.speaker === sp && prev.shot === b.shot && (b.ui?.type ?? "none") === "none" && (prev.ui?.type ?? "none") === "none" && b.shot !== "two_shot") groups[groups.length - 1].push(b);
+    // không gộp qua ranh giới block: mỗi cảnh nằm gọn trong một block
+    if (prev && blockOf(prev.line) === blockOf(b.line) && lineOf(prev.line)!.speaker === sp && prev.shot === b.shot && (b.ui?.type ?? "none") === "none" && (prev.ui?.type ?? "none") === "none" && b.shot !== "two_shot") groups[groups.length - 1].push(b);
     else groups.push([b]);
   }
+  // thứ tự cảnh trong block (luân phiên chuyển động máy tính theo block, để block khác thêm/bớt cảnh không làm đổi block này)
+  const inBlock: number[] = [];
+  groups.forEach((g, gi) => { inBlock.push(gi > 0 && blockOf(groups[gi - 1][0].line) === blockOf(g[0].line) ? inBlock[gi - 1] + 1 : 0); });
   groups.forEach((g, gi) => {
     const first = g[0], last = g[g.length - 1];
     const id = `S${gi + 2}`;
@@ -123,7 +131,7 @@ export function compose(plan: BeatPlan, ctx: ComposeContext): Storyboard {
     }
     const fx = g.filter((b) => b.fx).map((b) => ({ kind: b.fx!.kind, actor: lineOf(b.line)!.speaker, t0: w(b.line, b.fx!.word), t1: `${b.line}.end+0.4`,
       size: b.fx!.kind === "shock_lines" ? 0.07 : 0.05 }));
-    shots.push({ id, t0, t1, set: setId, summary: first.summary, subjects, camera: { preset, move: isLast ? "pull_out" : preset === "ecu" ? "push_in" : gi % 2 ? "drift_right" : "push_in" },
+    shots.push({ id, t0, t1, set: setId, summary: first.summary, subjects, camera: { preset, move: isLast ? "pull_out" : preset === "ecu" ? "push_in" : inBlock[gi] % 2 ? "drift_right" : "push_in" },
       subject_zone: zone, ui_safe_zone: uiZone, key_t: w(first.line, Math.ceil(words(first.line) / 2)), whoosh: true, actors, fx } as Storyboard["shots"][number]);
     // thẻ chữ
     if (cue?.type === "part_callout") ui.push({ type: "part_callout", t0: `${first.line}.w1`, t1: `${id}.t1-0.15`, zone: uiZone as "left_third" | "right_third",
@@ -150,7 +158,10 @@ export function compose(plan: BeatPlan, ctx: ComposeContext): Storyboard {
 /** Đạo diễn tự động theo luật (không cần AI): xen kẽ cận người nói, thỉnh thoảng hai người, phản ứng người nghe. */
 export function autoPlan(script: Script, setId: string, defaultExpr: Record<string, string>): BeatPlan {
   const speakers = [...new Set(script.lines.map((l) => l.speaker))];
-  const beats: Beat[] = script.lines.map((l, i) => {
+  let k = 0;
+  const beats: Beat[] = script.lines.map((l, j) => {
+    // i = thứ tự câu trong block (5B), để nhịp luân phiên cỡ cảnh không phụ thuộc block trước
+    const i = j > 0 && l.block && l.block !== script.lines[j - 1].block ? (k = 0) : (j === 0 ? (k = 0) : ++k);
     const q = /\?\s*$/.test(l.text), ex = /!\s*$/.test(l.text);
     const shot = i > 0 && i % 4 === 3 && speakers.length > 1 ? "two_shot" : q && i > 1 ? "ecu" : "mcu";
     return {
@@ -196,4 +207,61 @@ export function autoFix(plan: BeatPlan, ctx: ComposeContext, lib: { manifest: Ma
     if (errs(r2) <= errs(res)) { cur = next; res = r2; }
   }
   return { plan: cur, storyboard: res.sb, issues: res.issues };
+}
+
+/**
+ * Ghép storyboard sau khi dựng lại vài block (5C): giữ nguyên cảnh/thẻ chữ/âm thanh của block khác (kể cả chỗ người dùng
+ * đã sửa tay ở tab Đạo diễn), lấy phần của block được dựng lại từ `fresh`. ID cảnh mới đổi thành `<block>_S<k>` để không
+ * trùng ID cũ. Câu đầu block đổi ID (viết lại thoại) -> cảnh cuối block trước được nối lại cho khớp.
+ */
+export function spliceBlocks(old: Storyboard, fresh: Storyboard, script: Script, targets: Set<string>): Storyboard {
+  const blocks: string[] = [];
+  const blockOfLine = new Map<string, string>();
+  { let cur = script.lines.find((l) => l.block)?.block ?? "b01"; for (const l of script.lines) { if (l.block) cur = l.block; blockOfLine.set(l.id, cur); if (blocks.at(-1) !== cur) blocks.push(cur); } }
+  const first = blocks[0], lastB = blocks[blocks.length - 1];
+  const anyTarget = [...targets][0];
+  const rank = (b: string) => { const i = blocks.indexOf(b); return i < 0 ? blocks.length : i; };
+  /** block của một mốc thời gian; câu không còn trong kịch bản = câu cũ của block đang dựng lại */
+  const ownerOf = (sb: Storyboard) => {
+    const shotOwner = new Map<string, string>();
+    const of = (ref: unknown): string => {
+      if (typeof ref === "number") return first;
+      const m = /^([A-Za-z0-9_]+)(?:\.([a-z0-9]+))?/.exec(String(ref));
+      if (!m) return first;
+      if (m[1] === "END") return lastB;
+      if (shotOwner.has(m[1])) return shotOwner.get(m[1])!;
+      return blockOfLine.get(m[1]) ?? anyTarget;
+    };
+    for (const s of sb.shots) shotOwner.set(s.id, of(s.t0));
+    return of;
+  };
+  const ownOld = ownerOf(old), ownFresh = ownerOf(fresh);
+  // đổi ID cảnh mới của block dựng lại + sửa các mốc "S7.t1" trỏ tới chúng
+  const rename = new Map<string, string>();
+  const perBlock: Record<string, number> = {};
+  for (const s of fresh.shots) { const b = ownFresh(s.t0); if (targets.has(b)) rename.set(s.id, `${b}_S${(perBlock[b] = (perBlock[b] ?? 0) + 1)}`); }
+  const fix = (v: unknown) => {
+    if (typeof v !== "string") return v;
+    const m = /^([A-Za-z0-9_]+)(\..*)$/.exec(v);
+    return m && rename.has(m[1]) ? `${rename.get(m[1])}${m[2]}` : v;
+  };
+  const deep = <T,>(o: T): T => JSON.parse(JSON.stringify(o), (_k, v) => fix(v));
+  type Item<T> = { item: T; b: string; src: number; i: number };
+  const pick = <T,>(oldList: T[], freshList: T[], refOf: (x: T) => unknown): T[] => {
+    const all: Item<T>[] = [
+      ...oldList.map((item, i) => ({ item, b: ownOld(refOf(item)), src: 0, i })).filter((x) => !targets.has(x.b)),
+      ...freshList.map((item, i) => ({ item, b: ownFresh(refOf(item)), src: 1, i })).filter((x) => targets.has(x.b)),
+    ];
+    return all.sort((a, b) => rank(a.b) - rank(b.b) || a.src - b.src || a.i - b.i).map((x) => x.item);
+  };
+  const shots = pick(old.shots, fresh.shots.map((s) => ({ ...deep(s), id: rename.get(s.id) ?? s.id })), (s) => s.t0);
+  // nối lại: cảnh giữ nguyên mà mốc kết thúc trỏ tới câu đã bị xoá -> kết thúc ở đầu cảnh kế tiếp
+  const live = (ref: unknown) => typeof ref !== "string" || /^(END|S\w*|b\d+_S\d+)/.test(ref) || blockOfLine.has(ref.split(".")[0]);
+  for (let i = 0; i + 1 < shots.length; i++) if (!live(shots[i].t1)) shots[i] = { ...shots[i], t1: shots[i + 1].t0 };
+  const ui = pick(old.ui, fresh.ui.map((c) => deep(c)), (c) => c.t0);
+  const sfx = pick(old.sfx, fresh.sfx, (e) => e.t);
+  // diễn viên: hợp hai danh sách (block mới có thể thêm người nói)
+  const cast = [...old.cast, ...fresh.cast.filter((c) => !old.cast.some((o) => o.id === c.id))];
+  const colors = { ...(fresh.subtitles?.speaker_colors ?? {}), ...(old.subtitles?.speaker_colors ?? {}) };
+  return { ...old, cast, shots, ui, sfx, subtitles: { speaker_colors: colors } };
 }

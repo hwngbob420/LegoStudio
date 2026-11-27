@@ -58,4 +58,6 @@ export interface BakedTimeline {
   sfx: { t: number; type: string; gain: number }[];
   /** Hộp đầu dự đoán (chiếu bằng toán, không cần Blender) để kiểm luật không che mặt. */
   qa: { shot: string; key_f: number; samples: { f: number; t: number; heads: Record<string, [number, number, number, number]> }[] }[];
+  /** Block ~2 phút (5B): dải khung + mã băm lát timeline (đổi = phải render lại block đó). */
+  blocks?: { id: string; f0: number; f1: number; hash: string }[];
 }

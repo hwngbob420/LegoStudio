@@ -21,6 +21,14 @@ import { costSummary } from "./ai";
 import { listPending } from "./ai/sessionQueue";
 import { LANGS, createShorts, readLocale, saveLocale, translate } from "./publish";
 import { aiStoryboard, rewriteShot } from "./aiStoryboard";
+import { addComment, blockPreview, listBlocks, readReview, setBlockStatus, splitBlocks, updateComment } from "./blocks";
+import { BLOCK_ID_RX } from "@lse/shared";
+
+const blockParam = (req: Request) => {
+  const b = String(req.params.bid);
+  if (!BLOCK_ID_RX.test(b)) throw new HttpError(400, `Mã block không hợp lệ: "${b}"`);
+  return b;
+};
 
 export interface AppOptions { workspaceRoot: string; repoRoot?: string; runner?: Runner; now?: () => string; ai?: TextAI; writerStatus?: () => Promise<{ ok: boolean; provider: string; message: string }> }
 
@@ -28,7 +36,7 @@ const PY = process.platform === "win32" ? "python" : "python3";
 const NPX = process.platform === "win32" ? "npx.cmd" : "npx";
 
 /** Các việc nền Studio bấm được -> chuỗi lệnh. */
-export function jobSteps(kind: string, prod: string, repo: string, opts: { lang?: string; from?: string } = {}): Step[] {
+export function jobSteps(kind: string, prod: string, repo: string, opts: { lang?: string; from?: string; block?: string } = {}): Step[] {
   const produce = (...a: string[]) => ({ cmd: PY, args: [path.join(repo, "apps/brick-engine/produce.py"), prod, ...a], label: kind });
   const blender = (script: string) => ({ cmd: PY, args: [path.join(repo, "apps/brick-engine/gpu_renderer.py"), "--script", script], label: script });
   switch (kind) {
@@ -43,6 +51,24 @@ export function jobSteps(kind: string, prod: string, repo: string, opts: { lang?
     }
     case "write_script": return [{ cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/generate.ts"), prod, ...(opts.from === "dialogue" ? ["--from", "dialogue"] : [])], label: "write" }];
     case "align": return [{ cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/align.ts"), prod], label: "align" }];
+    // 5C: một nút ra bản xem trước theo block: Claude viết -> giọng -> AI đạo diễn (from: write | voice | direct)
+    case "make_preview": {
+      const all: Step[] = [
+        { cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/generate.ts"), prod], label: "write" },
+        { cmd: PY, args: [path.join(repo, "apps/brick-engine/tts_sapi.py"), prod], label: "tts" },
+        { cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/direct.ts"), prod], label: "direct" },
+      ];
+      const from = ["write", "voice", "direct"].indexOf(opts.from ?? "write");
+      return all.slice(Math.max(0, from));
+    }
+    case "fix_block": {
+      if (!opts.block || !BLOCK_ID_RX.test(opts.block)) throw new HttpError(400, "Thiếu mã block (ví dụ b03).");
+      return [
+        { cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/fixblock.ts"), prod, opts.block], label: "fix" },
+        { cmd: PY, args: [path.join(repo, "apps/brick-engine/tts_sapi.py"), prod], label: "tts" },
+        { cmd: NPX, args: ["tsx", path.join(repo, "apps/server/src/scripts/direct.ts"), prod, "--block", opts.block, "--fix"], label: "direct" },
+      ];
+    }
     case "library": return [
       { cmd: PY, args: [path.join(repo, "apps/brick-engine/face_atlas_gen.py")], label: "faces" },
       { cmd: PY, args: [path.join(repo, "apps/brick-engine/texture_gen.py")], label: "textures" },
@@ -81,6 +107,11 @@ export function createApp(opts: AppOptions) {
     const r = await check(paths, String(req.params.id), st.storyboard, st.timing);
     if (!r.timeline) throw new HttpError(409, r.refErrors[0] ?? r.issues[0]?.message ?? "Chưa xem trước được.");
     const lib = libraryBundle(paths);
+    // ?block=b03: chỉ block đó (lát timeline + lớp chữ + giọng tính từ đầu block), Player nhẹ dù tập dài 30 phút
+    if (typeof req.query.block === "string" && st.timing && r.overlay) {
+      const bp = await blockPreview(paths, String(req.params.id), req.query.block, { timeline: r.timeline, overlay: r.overlay, timing: st.timing });
+      return { ...bp, issues: r.issues, library: { manifest: lib.manifest, faceSpec: lib.faceSpec, palette: lib.palette, cast: lib.cast, lighting: lib.lighting } };
+    }
     const voice = st.timing ? Object.fromEntries(Object.entries(st.timing.lines).map(([k, L]) => [k, { url: `/ws/projects/${req.params.id}/${L.wav}`, start: L.wav_start }])) : {};
     return { timeline: r.timeline, overlay: r.overlay, issues: r.issues, voice,
       library: { manifest: lib.manifest, faceSpec: lib.faceSpec, palette: lib.palette, cast: lib.cast, lighting: lib.lighting } };
@@ -90,7 +121,45 @@ export function createApp(opts: AppOptions) {
     assertValidId(id, "ID tập");
     const prod = paths.projectDir(id);
     if (!existsSync(prod)) throw new HttpError(404, `Không thấy tập "${id}".`);
-    return jobs.enqueue(id, String(req.body?.kind ?? ""), jobSteps(String(req.body?.kind ?? ""), prod, repo, { lang: req.body?.lang }));
+    return jobs.enqueue(id, String(req.body?.kind ?? ""), jobSteps(String(req.body?.kind ?? ""), prod, repo, { lang: req.body?.lang, from: req.body?.from, block: req.body?.block }));
+  }));
+
+  // ---- block ~2 phút + bảng duyệt (5C)
+  app.get("/api/projects/:id/blocks", h(async (req) => {
+    const r = await listBlocks(paths, String(req.params.id));
+    // việc sửa block đã dừng (lỗi, hoặc app bị tắt) mà block vẫn "Claude đang sửa" -> trả về "Cần sửa" để bấm lại được
+    const active = jobs.list(String(req.params.id)).some((j) => j.kind === "fix_block" && (j.status === "running" || j.status === "queued"));
+    if (!active) for (const b of r.blocks) if (b.review.status === "fixing") b.review = { ...b.review, status: "needs_fix" };
+    return r;
+  }));
+  app.post("/api/projects/:id/blocks/split", h(async (req) => {
+    const st = await readProject(paths, String(req.params.id));
+    return splitBlocks(paths, String(req.params.id), st.timing);
+  }));
+  app.post("/api/projects/:id/blocks/:bid/comments", h(async (req) => addComment(paths, String(req.params.id), blockParam(req), req.body, now())));
+  app.patch("/api/projects/:id/blocks/:bid/comments/:cid", h(async (req) => updateComment(paths, String(req.params.id), blockParam(req), String(req.params.cid), req.body)));
+  app.delete("/api/projects/:id/blocks/:bid/comments/:cid", h(async (req) => updateComment(paths, String(req.params.id), blockParam(req), String(req.params.cid), null, true)));
+  app.put("/api/projects/:id/blocks/:bid/status", h(async (req) => setBlockStatus(paths, String(req.params.id), blockParam(req), req.body?.status)));
+  /** "Claude sửa block này": góp ý -> Claude viết lại thoại block -> giọng (chỉ câu đổi) -> AI đạo diễn dựng lại riêng block. */
+  app.post("/api/projects/:id/blocks/:bid/fix", h(async (req) => {
+    const id = String(req.params.id), bid = blockParam(req);
+    const rv = await readReview(paths, id);
+    if (!(rv.blocks[bid]?.comments ?? []).some((c) => !c.resolved)) throw new HttpError(409, "Block này chưa có góp ý nào cần sửa. Viết góp ý trước.");
+    const st = await writerStatus();
+    if (!st.ok) throw new HttpError(503, st.message);
+    await setBlockStatus(paths, id, bid, "fixing");
+    return jobs.enqueue(id, "fix_block", jobSteps("fix_block", paths.projectDir(id), repo, { block: bid }));
+  }));
+  /** Nút "Làm bản xem trước": lưu thông tin người dùng điền rồi chạy trọn: Claude viết -> giọng -> AI đạo diễn. */
+  app.post("/api/projects/:id/make-preview", h(async (req) => {
+    const id = String(req.params.id);
+    const from = ["write", "voice", "direct"].includes(req.body?.from) ? String(req.body.from) : "write";
+    if (from === "write") {
+      await saveInput(paths, id, req.body?.input);
+      const st = await writerStatus();
+      if (!st.ok) throw new HttpError(503, st.message);
+    }
+    return jobs.enqueue(id, "make_preview", jobSteps("make_preview", paths.projectDir(id), repo, { from }));
   }));
   const ai = () => opts.ai ?? makeAI(repo, paths.root);
   /** Ai sẽ viết kịch bản: Claude Code trên máy (mặc định) hoặc Hộp thư Claude. */

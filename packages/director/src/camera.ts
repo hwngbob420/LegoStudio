@@ -2,7 +2,7 @@
 // và phép chiếu điểm thế giới lên khung hình (world_to_camera_view của Blender).
 import { SUBJECT_SHIFT, type V3 } from "@lse/shared";
 import { add, eulerXYZ, invRigid, len, lerp, mul, sub, trackEuler, translation, apply } from "./math3";
-import { Rng } from "./rng";
+import { Rng, smoothNoise } from "./rng";
 
 export interface CameraSpec {
   preset: string;
@@ -27,6 +27,10 @@ export interface CameraPlan {
 }
 
 const DEG = Math.PI / 180;
+/** Độ lệch chuẩn của rung tay, tính bằng điểm ảnh trên khung 1920 (shake = 1). */
+export const SHAKE_PX = 1.2;
+/** Khoảng cách giữa hai nút rung tay (khung thế giới). */
+export const SHAKE_KNOT = 18;
 
 export function planCamera(
   spec: CameraSpec,
@@ -89,6 +93,12 @@ export function planCamera(
   const shake = spec.shake ?? 1.0;
   const rng = new Rng(seed);
   const keys: CameraPlan["keys"] = [];
+  // Rung tay máy quay: trôi chậm theo nút cách 1,5 giây (18 khung), biên độ tính theo điểm ảnh để ống kính dài không
+  // bị rung mạnh hơn. Bản cũ cộng nhiễu trắng mỗi khung -> cả hình xô 4–12 px mỗi khung = "giật giật".
+  const n = f1 - f0 + 1;
+  const focalPx = (1920 * lens) / 36;
+  const amp = (SHAKE_PX / focalPx) * shake;
+  const pan = smoothNoise(rng, n, SHAKE_KNOT), tilt = smoothNoise(rng, n, SHAKE_KNOT);
   for (let f = f0; f <= f1; f++) {
     const u = (f - f0) / Math.max(1, f1 - f0);
     let p = pos;
@@ -96,12 +106,10 @@ export function planCamera(
     else if (move === "pull_out") p = lerp(pos, look, 0.1 * (1 - u));
     else if (move === "drift_right") p = add(pos, [0.08 * u, 0, 0]);
     else if (move === "crane_down") p = add(pos, [0, 0, 0.25 * (1 - u) ** 2]);
-    const jit: V3 = [rng.gauss(0, 0.0012) * shake, rng.gauss(0, 0.0012) * shake, rng.gauss(0, 0.0012) * shake];
-    const loc = add(p, jit);
     const r = trackEuler(sub(look, p));
-    r[0] += rng.gauss(0, 0.0009) * shake;
-    r[2] += rng.gauss(0, 0.0009) * shake;
-    keys.push([loc[0], loc[1], loc[2], r[0], r[1], r[2]]);
+    r[0] += tilt[f - f0] * amp;
+    r[2] += pan[f - f0] * amp;
+    keys.push([p[0], p[1], p[2], r[0], r[1], r[2]]);
   }
   return { lens, fstop, shift, focus, keys };
 }

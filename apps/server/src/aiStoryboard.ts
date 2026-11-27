@@ -3,8 +3,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { ACTIONS, BeatSheet, Catalog, EXPRESSIONS, FX_KINDS, Script, Storyboard, Timing, parseOrThrow, storyboardRefErrors } from "@lse/shared";
-import { BeatPlan, autoFix, autoPlan, bake, compose, overlayProps, validateLayout, type Beat } from "@lse/director";
+import { ACTIONS, BeatSheet, Catalog, blockList, EXPRESSIONS, FX_KINDS, Script, Storyboard, Timing, parseOrThrow, storyboardRefErrors } from "@lse/shared";
+import { BeatPlan, autoFix, autoPlan, bake, compose, overlayProps, spliceBlocks, validateLayout, type Beat } from "@lse/director";
 import { loadLibrary, timingPath } from "@lse/director/io";
 import { AiError, type TextAI } from "./ai/types";
 import { bibleText } from "./aiScript";
@@ -55,16 +55,39 @@ function systemPrompt(paths: WorkspacePaths, ctx: Awaited<ReturnType<typeof load
 
 const BatchOut = z.object({ set: z.string(), beats: z.array(z.object({ line: z.string() }).passthrough()), ending: z.object({ step: z.string(), title: z.string() }) });
 
-export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id: string, opts: { mode?: "ai" | "auto"; note?: string; set?: string } = {}) {
+export interface StoryboardOpts {
+  mode?: "ai" | "auto";
+  note?: string;
+  set?: string;
+  /** chỉ dựng lại các block này (5C), giữ nguyên cảnh của block khác (kể cả chỗ đã sửa tay) */
+  blocks?: string[];
+  /** dòng tiến độ cho việc nền: "[progress] direct k/N" */
+  log?: (line: string) => void;
+}
+
+export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id: string, opts: StoryboardOpts = {}) {
   const ctx = await load(paths, id);
+  const log = opts.log ?? (() => {});
   const episodeCast = existsSync(paths.episodeCast(id)) ? (await import("node:fs")).readdirSync(paths.episodeCast(id)).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5)) : [];
   const composeCtx = { episode: id, script: ctx.script, timing: ctx.timing, sets: ctx.sets, defaultExpr: { ...ctx.lib.defaultExpr } };
+  // dựng lại riêng vài block: cần kế hoạch nhịp cũ (beats.json) + storyboard cũ để ghép
+  const bp = path.join(ctx.dir, "beats.json");
+  const scoped = opts.blocks?.length && existsSync(bp) ? new Set(opts.blocks) : null;
+  const oldPlan = scoped ? parseOrThrow(BeatPlan, JSON.parse(readFileSync(bp, "utf8")), "beats.json") : null;
+  const blockOf = new Map(blockList(ctx.script.lines).flatMap((b) => b.lineIds.map((l) => [l, b.id] as const)));
+  const target = (lid: string) => !scoped || scoped.has(blockOf.get(lid) ?? "");
+  const order = new Map(ctx.script.lines.map((l, i) => [l.id, i]));
+  /** nhịp của các câu ngoài phạm vi (giữ nguyên) + nhịp mới, xếp theo thứ tự câu */
+  const merged = (fresh: Beat[]) => [...(oldPlan?.beats ?? []).filter((b) => order.has(b.line) && !target(b.line)), ...fresh]
+    .sort((a, b) => order.get(a.line)! - order.get(b.line)!);
   let source: "ai" | "auto" = "auto";
   let note = "";
-  let plan: BeatPlan = autoPlan(ctx.script, opts.set && ctx.sets[opts.set] ? opts.set : "Set_BrickCreatorDesk", ctx.lib.defaultExpr);
+  const auto0 = autoPlan(ctx.script, oldPlan?.set ?? (opts.set && ctx.sets[opts.set] ? opts.set : "Set_BrickCreatorDesk"), ctx.lib.defaultExpr);
+  let plan: BeatPlan = scoped ? { ...oldPlan!, beats: merged(auto0.beats.filter((b) => target(b.line))) } : auto0;
+  const lines = ctx.script.lines.filter((l) => target(l.id));
+  const nBatch = Math.ceil(lines.length / BATCH);
   if (opts.mode !== "auto" && ai) {
     try {
-      const lines = ctx.script.lines;
       const beats: Beat[] = [];
       // dàn ý đã duyệt ở phòng biên kịch: gợi ý thẻ chữ/biểu đồ theo nhịp
       const bsFile = path.join(paths.projectDir(id), "writing", "beat_sheet.json");
@@ -72,13 +95,14 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
       const beatHints = bs?.success && bs.data.approved
         ? `Dàn ý đã duyệt (ý tưởng thẻ chữ theo nhịp, dùng làm gợi ý cho ui): ${bs.data.beats.map((b) => `${b.id} ${b.kind}: ${b.on_screen || b.summary}`).join(" | ")}`
         : "";
-      let set = "", ending = { step: "02", title: "Your turn" }, prevSummary = "";
+      let set = oldPlan?.set ?? "", ending = oldPlan?.ending ?? { step: "02", title: "Your turn" }, prevSummary = "";
       for (let i = 0; i < lines.length; i += BATCH) {
+        log(`[progress] direct ${i / BATCH}/${nBatch}`);
         const chunk = lines.slice(i, i + BATCH);
         let feedback = "";
         for (let attempt = 0; attempt < 3; attempt++) {
           const prompt = [
-            `Tập: ${ctx.script.title}. Lô ${i / BATCH + 1}/${Math.ceil(lines.length / BATCH)}.`,
+            `Tập: ${ctx.script.title}. Lô ${i / BATCH + 1}/${nBatch}${scoped ? ` (chỉ dựng lại block ${[...scoped].join(", ")}; các block khác giữ nguyên)` : ""}.`,
             prevSummary ? `Tóm tắt các cảnh trước: ${prevSummary}` : "",
             beatHints,
             set ? `Bộ set đã chọn: ${set} (giữ nguyên).` : "Chọn MỘT bộ set hợp truyện.",
@@ -95,17 +119,18 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
           const auto = autoPlan(ctx.script, data.set, ctx.lib.defaultExpr).beats;
           beats.push(...chunk.map((l) => got.find((b) => b.line === l.id) ?? auto.find((b) => b.line === l.id)!));
           set ||= data.set;
-          ending = data.ending;
+          if (!scoped || lines.some((l) => l.id === ctx.script.lines.at(-1)!.id)) ending = data.ending;
           prevSummary = (prevSummary + " " + got.map((b) => b.summary ?? "").join(" ")).slice(-400);
           // kiểm thử lô này bằng compose tạm
-          const trial = compose({ set, beats: [...beats], ending }, composeCtx);
+          const trial = compose({ set, beats: merged([...beats]), ending }, composeCtx);
           const ev = evaluate(trial, ctx, episodeCast);
           if (ev.errors.length && attempt < 2) { beats.splice(beats.length - chunk.length, chunk.length); feedback = ev.errors.slice(0, 5).join(" "); continue; }
           break;
         }
       }
-      plan = { set, beats, ending };
+      plan = { set, beats: merged(beats), ending };
       source = "ai";
+      log(`[progress] direct ${nBatch}/${nBatch}`);
     } catch (e) {
       if (!(e instanceof AiError)) throw e;
       note = `Không gọi được AI (${e.message.slice(0, 160)}). Đã dùng đạo diễn tự động theo luật.`;
@@ -114,7 +139,13 @@ export async function aiStoryboard(ai: TextAI | null, paths: WorkspacePaths, id:
   // tự sửa bố cục: lật bên chủ thể -> cận thành trung cận -> bỏ thẻ chữ ở cảnh còn che mặt
   const fixed = autoFix(plan, composeCtx, ctx.lib);
   plan = fixed.plan;
-  const sb = parseOrThrow(Storyboard, fixed.storyboard, "Storyboard");
+  let sb = parseOrThrow(Storyboard, fixed.storyboard, "Storyboard");
+  if (scoped) {
+    // ghép: chỉ thay cảnh/thẻ/âm của block được dựng lại, giữ nguyên phần còn lại của storyboard đang có
+    const old = await readJson(path.join(ctx.dir, "storyboard.json"), Storyboard);
+    sb = parseOrThrow(Storyboard, spliceBlocks(old, sb, ctx.script, scoped), "Storyboard");
+    plan = { ...plan, beats: merged(plan.beats.filter((b) => target(b.line))) };
+  }
   const ev = evaluate(sb, ctx, episodeCast);
   if (JSON.stringify(fixed.plan) !== JSON.stringify(plan)) note += " Đã tự sửa bố cục.";
   await writeJsonAtomic(path.join(ctx.dir, "storyboard.json"), Storyboard, sb);

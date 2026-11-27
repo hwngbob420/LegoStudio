@@ -24,6 +24,10 @@ export const ScriptLine = z.object({
   text: z.string().min(1),
   gap_before: z.number().min(0).max(5).optional(),
   rate: z.number().int().min(-10).max(10).optional(),
+  /** block ~2 phút chứa câu này (b01, b02...); xem blocks.ts */
+  block: z.string().regex(/^b\d{2,3}$/).optional(),
+  /** nhịp trong dàn ý (B1, B2...) mà câu này phục vụ */
+  beat: z.string().regex(/^B\d{1,3}$/).optional(),
 });
 export const Script = z.object({
   title: z.string(),
@@ -45,6 +49,7 @@ export const TimingLine = z.object({
   end: z.number(),
   visemes: z.array(z.tuple([z.number(), z.number().int(), z.number()])),
   words: z.array(z.tuple([z.number(), z.string()])),
+  block: z.string().optional(),
 });
 export const Timing = z.object({
   fps_world: z.number().int().positive(),

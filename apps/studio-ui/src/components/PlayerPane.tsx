@@ -7,8 +7,8 @@ import { api } from "../api";
 
 export interface PlayerPaneHandle { seekSec: (t: number) => void }
 
-export const PlayerPane = forwardRef<PlayerPaneHandle, { pid: string; rev: number; onShot?: (id: string) => void; onPreview?: (p: any) => void }>(
-  ({ pid, rev, onShot, onPreview }, ref) => {
+export const PlayerPane = forwardRef<PlayerPaneHandle, { pid: string; rev: number; block?: string; onShot?: (id: string) => void; onPreview?: (p: any) => void }>(
+  ({ pid, rev, block, onShot, onPreview }, ref) => {
     const [data, setData] = useState<any>(null);
     const [err, setErr] = useState<string | null>(null);
     const [overlay, setOverlay] = useState(true);
@@ -16,9 +16,11 @@ export const PlayerPane = forwardRef<PlayerPaneHandle, { pid: string; rev: numbe
     const player = useRef<PlayerRef>(null);
     useEffect(() => {
       let live = true;
-      api.preview(pid).then((d) => { if (live) { setData(d); setErr(null); onPreview?.(d); } }).catch((e) => live && setErr(e.message));
+      setData(null);
+      // block: chỉ tải lát timeline của block đó (tập dài vẫn nhẹ)
+      api.preview(pid, block).then((d) => { if (live) { setData(d); setErr(null); onPreview?.(d); } }).catch((e) => live && setErr(e.message));
       return () => { live = false; };
-    }, [pid, rev]);
+    }, [pid, rev, block]);
     useEffect(() => {
       const p = player.current;
       if (!p) return;

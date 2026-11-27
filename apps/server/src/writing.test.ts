@@ -5,11 +5,11 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { BEAT_CHECKS, SCRIPT_CHECKS, linesForDuration } from "@lse/shared";
+import { BEAT_CHECKS, SCRIPT_CHECKS, blockErrors, blockId, blockList, linesForDuration } from "@lse/shared";
 import { createApp } from "./app";
 import { ClaudeSession, extractJson, type ClaudeRunner } from "./ai/claudeCode";
 import type { AiRequest, AiResult, TextAI } from "./ai/types";
-import { buildContext, chunkBeats, generateScript, statelessWriter, type WriterSession } from "./aiWriting";
+import { blockLines, buildContext, chunkBeats, generateScript, statelessWriter, type WriterSession } from "./aiWriting";
 import { extractText, zipBombCheck } from "./sources";
 import { REPO, workspacePaths } from "./workspace";
 
@@ -155,8 +155,14 @@ describe("Generate kịch bản (Claude + skill screenwriter)", () => {
     const logs: string[] = [];
     const r = await generateScript(paths, ep, fake, {}, (l) => logs.push(l));
     expect(fake.calls.filter((c) => c.label === "lap_dan_y")).toHaveLength(2);
-    const parts = chunkBeats(r.beats.beats).length;
-    expect(parts).toBeGreaterThan(3);
+    const parts = chunkBeats(r.beats.beats, blockLines(1200)).length;
+    expect(parts).toBeGreaterThan(6); // 20 phút ~ 10 block 2 phút
+    // mỗi câu mang block + beat; block là dải liền nhau b01..bN, mỗi block một phần thoại
+    const blocks = blockList(r.script.lines);
+    expect(blocks.map((b) => b.id)).toEqual(Array.from({ length: parts }, (_, i) => blockId(i)));
+    expect(blockErrors(r.script.lines)).toEqual([]);
+    expect(r.script.lines.every((l) => /^B\d+$/.test(l.beat ?? ""))).toBe(true);
+    for (const b of blocks.slice(0, -1)) expect(b.lineIds.length).toBeLessThanOrEqual(blockLines(1200) + est);
     expect(r.script.lines.length).toBe(n * est);
     expect(r.script.lines.map((l) => l.text).join(" ")).not.toMatch(/lego/i);
     expect(fake.calls.filter((c) => c.label === "viet_thoai_1")).toHaveLength(2); // lần đầu có chữ thương hiệu -> phải sửa

@@ -9,7 +9,7 @@ SAPI raises VisemeReached / SpeakProgress with audio positions, so lip-sync and 
 come for free, frame-accurate, with no network and no extra model downloads.
 """
 from __future__ import annotations
-import json, os, subprocess, sys, tempfile, wave
+import hashlib, json, math, os, subprocess, sys, tempfile, wave
 
 import paths as P
 
@@ -117,37 +117,63 @@ def trim_info(d, total):
     return start, end
 
 
+BLOCK_GRID, BLOCK_LEAD = 0.25, 0.5   # phải khớp packages/shared/src/blocks.ts
+
+
+def snap_block_start(t):
+    g = math.ceil((t - BLOCK_LEAD) / BLOCK_GRID - 1e-9) * BLOCK_GRID
+    return round(g + BLOCK_LEAD, 3)
+
+
 def main(prod):
     script = json.load(open(os.path.join(prod, "script.json"), encoding="utf-8"))
     adir = os.path.join(prod, "build", "audio")
     os.makedirs(adir, exist_ok=True)
     t = float(script.get("start_offset", 0.0))
     timing = {"lines": {}, "fps_world": script.get("fps_world", 12)}
+    recipes = P.cast_recipe_files()
+    prev_block, reused = None, 0
     for L in script["lines"]:
-        r = json.load(open(P.cast_recipe_files()[L["speaker"]], encoding="utf-8"))
+        r = json.load(open(recipes[L["speaker"]], encoding="utf-8"))
         v = r["voice"]
         raw = os.path.join(adir, f"{L['id']}_raw.wav")
         js = os.path.join(adir, f"{L['id']}.json")
-        d = synth(L["text"], v["sapi"], int(L.get("rate", v.get("rate", 0))), raw, js)
         wav = os.path.join(adir, f"{L['id']}.wav")
-        pitch_shift(raw, wav, float(v.get("pitch_semitones", 0)), float(v.get("gain_db", 0)))
-        total = wav_seconds(wav)
-        d = calibrate(d, wav)
-        json.dump(d, open(js, "w"), indent=0)
+        rate = int(L.get("rate", v.get("rate", 0)))
+        # câu không đổi (cùng chữ + cùng giọng) thì dùng lại file cũ: sửa một block không phải đọc lại cả tập
+        key = hashlib.sha256(json.dumps([L["text"], v, rate], sort_keys=True).encode("utf-8")).hexdigest()[:16]
+        kf = os.path.join(adir, f"{L['id']}.key")
+        if os.path.exists(kf) and open(kf).read().strip() == key and os.path.exists(wav) and os.path.exists(js):
+            d = json.load(open(js))
+            total = wav_seconds(wav)
+            reused += 1
+        else:
+            d = synth(L["text"], v["sapi"], rate, raw, js)
+            pitch_shift(raw, wav, float(v.get("pitch_semitones", 0)), float(v.get("gain_db", 0)))
+            total = wav_seconds(wav)
+            d = calibrate(d, wav)
+            json.dump(d, open(js, "w"), indent=0)
+            open(kf, "w").write(key)
         s0, s1 = trim_info(d, total)
         t += float(L.get("gap_before", 0.3))
+        blk = L.get("block")
+        if blk and prev_block is not None and blk != prev_block:
+            t = snap_block_start(t)         # đầu block mới khớp lưới 0,25 s (xem packages/shared/src/blocks.ts)
+        prev_block = blk if blk else prev_block
         start = t - s0                      # place the wav so speech begins at t
         timing["lines"][L["id"]] = {
             "speaker": L["speaker"], "text": L["text"], "wav": os.path.relpath(wav, prod).replace(os.sep, "/"), "wav_start": round(start, 3),
             "start": round(t, 3), "end": round(start + s1, 3),
             "visemes": [[round(start + a / 1000, 3), int(vv), round(dd / 1000, 3)] for a, vv, dd in d["visemes"]],
             "words": [[round(start + a / 1000, 3), w] for a, cp, cc, w in d["words"]],
+            **({"block": blk} if blk else {}),
         }
         t = start + s1
         print(f"  {L['id']} {L['speaker']:<12} {timing['lines'][L['id']]['start']:6.2f}-{timing['lines'][L['id']]['end']:6.2f}  {L['text']}")
+        print(f"[progress] tts {len(timing['lines'])}/{len(script['lines'])}", flush=True)
     timing["duration"] = round(t + float(script.get("tail", 1.0)), 3)
     json.dump(timing, open(os.path.join(prod, "build", "timing.json"), "w"), indent=1)
-    print("timing ->", os.path.join(prod, "build", "timing.json"), "duration", timing["duration"])
+    print("timing ->", os.path.join(prod, "build", "timing.json"), "duration", timing["duration"], f"(reused {reused} voice file(s))")
 
 
 if __name__ == "__main__":

@@ -92,10 +92,11 @@ export function lineErrors(lines: { speaker: string; text: string }[], known: Se
   return errs;
 }
 
-export async function writeScriptFile(paths: WorkspacePaths, episode: string, data: { title: string; logline: string; lines: { speaker: string; text: string }[] }) {
+export async function writeScriptFile(paths: WorkspacePaths, episode: string, data: { title: string; logline: string; lines: { speaker: string; text: string; beat?: string; block?: string }[] }) {
   const script = parseOrThrow(Script, {
     title: data.title, logline: data.logline, fps_world: 12, start_offset: 2.5, tail: 1.2,
-    lines: data.lines.map((l, i) => ({ id: `L${i + 1}`, speaker: l.speaker, text: l.text.trim(), gap_before: i === 0 ? 0 : 0.35 })),
+    lines: data.lines.map((l, i) => ({ id: `L${i + 1}`, speaker: l.speaker, text: l.text.trim(), gap_before: i === 0 ? 0 : 0.35,
+      ...(l.beat ? { beat: l.beat } : {}), ...(l.block ? { block: l.block } : {}) })),
   }, "Kịch bản");
   await writeJsonAtomic(path.join(paths.projectDir(episode), "script.json"), Script, script);
   return script;

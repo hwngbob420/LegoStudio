@@ -7,6 +7,7 @@ import { bakeFace, mouthTrack, type FaceSpec } from "./faces";
 import { add, scale } from "./math3";
 import { crc32 } from "./rng";
 import { RigModel } from "./rig";
+import { sliceHash } from "./slice";
 
 export interface BakeInput {
   storyboard: Storyboard;
@@ -31,6 +32,18 @@ export function bake(inp: BakeInput): BakedTimeline {
   const duration = shots[shots.length - 1]._t1;
   const frames = frameOf(duration, fps) - 1;
   const rig = new RigModel(manifest);
+
+  // ---- block (5B): cảnh thuộc block của câu ở mốc t0; block bắt đầu ở khung đầu cảnh đầu tiên của nó
+  const shotBlock: string[] = [];
+  const firstBlock = Object.values(timing.lines).find((L) => L.block)?.block ?? "b01";
+  for (const s of shots) {
+    const m = typeof s.t0 === "string" ? /^([A-Za-z0-9_]+)\.(?:start|end|w\d+)/.exec(s.t0) : null;
+    shotBlock.push((m && timing.lines[m[1]]?.block) || shotBlock[shotBlock.length - 1] || firstBlock);
+  }
+  const segments: { id: string; f0: number; seed: number }[] = [];
+  shots.forEach((s, i) => {
+    if (i === 0 || shotBlock[i] !== shotBlock[i - 1]) segments.push({ id: shotBlock[i], f0: i === 0 ? 1 : frameOf(s._t0, fps), seed: crc32(`block:${shotBlock[i]}`) });
+  });
 
   const sets = sb.sets.map((s, i) => ({ id: s.id, origin: [i * SET_SPACING, 0, 0] as V3, lighting: s.lighting }));
   const setOrigin = (id: string) => sets.find((s) => s.id === id)?.origin ?? ([0, 0, 0] as V3);
@@ -63,13 +76,13 @@ export function bake(inp: BakeInput): BakedTimeline {
     const home = add(setOrigin(c.set), anchor.location);
     facing[c.id] = anchor.facing_deg;
     const body = bakeActor({ clips: clips[c.id], fps, frames, home, facingDeg: anchor.facing_deg,
-      seed: crc32(c.id) % 1000, appear: appear[c.id] });
+      seed: crc32(c.id) % 1000, appear: appear[c.id], segments });
     if (appear[c.id] !== undefined) sfx.push({ t: appear[c.id], type: "clack", gain: 1.1 });
     let ex = exprs[c.id].slice().sort((a, b) => a[0] - b[0]);
     if (!ex.length) ex = [[0, inp.defaultExpr[c.id] ?? "innocent_dot"]];
     if (ex[0][0] > 0) ex.unshift([0, ex[0][1]]);
     const lines = Object.values(timing.lines).filter((L) => L.speaker === c.id);
-    const face = bakeFace(ex, mouthTrack(lines, fps, faceSpec), fps, frames, crc32(c.id) % 997, faceSpec, noBlink);
+    const face = bakeFace(ex, mouthTrack(lines, fps, faceSpec), fps, frames, crc32(c.id) % 997, faceSpec, noBlink, segments);
     actors[c.id] = { fig: c.id, set: c.set, mark: c.mark, props: c.props ?? [], prop_color: c.prop_color, root: body.root, joints: body.joints, face };
   }
   const jointsAt = (aid: string, f: number) =>
@@ -105,7 +118,8 @@ export function bake(inp: BakeInput): BakedTimeline {
     const mid = f0 + Math.floor((f1 - f0) / 2);
     const subj = s.subjects ?? [];
     const plan = planCamera({ ...s.camera, subject_zone: s.subject_zone }, f0, f1, subj.map((a) => headAt(a, mid)), subj,
-      subj.length ? facing[subj[0]] : 0, setOrigin(s.set), i * 31 + 7, W / H);
+      // hạt giống theo mốc t0 (neo theo câu), không theo số thứ tự cảnh: thêm/bớt cảnh ở block khác không đổi rung tay
+      subj.length ? facing[subj[0]] : 0, setOrigin(s.set), crc32(`shot:${String(s.t0)}`), W / H);
     bshots.push({ id: s.id, f0, f1, lens: plan.lens, fstop: plan.fstop, shift: plan.shift, focus: plan.focus,
       keys: plan.keys.map((k) => r5v(k)) });
     if (i > 0 && s.whoosh) sfx.push({ t: s._t0 - 0.08, type: "whoosh", gain: 0.7 });
@@ -156,8 +170,13 @@ export function bake(inp: BakeInput): BakedTimeline {
     for (const b of Object.keys(a.joints)) a.joints[b] = a.joints[b].map((v) => r5v(v));
   }
   sfx.sort((a, b) => a.t - b.t);
-  return {
+  const T: BakedTimeline = {
     version: 1, episode: sb.episode, fps, fps_out: sb.fps_out, frames, duration: r5(duration), resolution: [W, H],
     samples: sb.samples, sets, actors, shots: bshots, assembly, fx, sfx: sfx.map((e) => ({ ...e, t: r5(e.t) })), qa,
   };
+  T.blocks = segments.map((sg, i) => {
+    const f1 = i + 1 < segments.length ? segments[i + 1].f0 - 1 : frames;
+    return { id: sg.id, f0: sg.f0, f1, hash: sliceHash(T, sg.f0, f1) };
+  });
+  return T;
 }

@@ -23,12 +23,17 @@ và `workspace/projects/*/assets/cast/*.json`).
 Studio chạy `claude -p` ở thư mục gốc dự án, chỉ cho phép Read/Glob/Grep/Skill. Lượt đầu gửi đủ ngữ cảnh (thông số người dùng chọn,
 guide, bible, diễn viên, tư liệu bọc `<outline_document>`); các lượt sau cùng phiên:
 1. **Việc 1 — dàn ý:** lập beat sheet (tập dài chia chương ở field `chapter`), tự chấm `BEAT_CHECKS`, tự sửa tối đa 2 vòng, trả bản cuối kèm `checks` và `revisions`.
-2. **Việc 2 — thoại, từng phần ~40 câu:** viết đúng các nhịp được giao, mỗi câu gắn `beat`, tự chấm `SCRIPT_CHECKS` và sửa trước khi trả.
+2. **Việc 2 — thoại theo block ~2 phút:** mỗi lượt là một block (khoảng 25–35 câu, không cắt giữa nhịp). Viết đúng các nhịp
+   được giao, mỗi câu gắn `beat`, tự chấm `SCRIPT_CHECKS` và sửa trước khi trả. Block là đơn vị người dùng duyệt, góp ý và
+   render, nên mỗi block nên có một "móc" riêng ở đầu và kết bằng một câu kéo sang block sau.
+3. **Sửa một block theo góp ý (`sua_block_bXX`):** người dùng xem bản xem trước ở tab "Duyệt block" và góp ý. Trả TOÀN BỘ thoại
+   mới của block đó. Câu không bị góp ý thì chép y nguyên chữ (giọng cũ được dùng lại). Góp ý chỉ về hình (góc máy, biểu cảm,
+   thẻ chữ) thì giữ nguyên thoại, ghi yêu cầu vào `director_note`. `summary` tiếng Việt đơn giản, `handled` là id góp ý đã xử lý.
 Mỗi lượt trả đúng MỘT khối ```json theo khuôn trong lời nhắc. Server kiểm bằng code (người nói có thật, đủ nhịp, đúng thứ tự, tổng số câu,
 không thương hiệu) và gửi lại lỗi nếu có.
 
 ### 2. Trả lời Hộp thư Claude (`.env` có `AI_SESSION_QUEUE=1`)
-Cùng hai việc trên, nhưng mỗi việc là một file `workspace/claude_queue/<id>.request.json` (label `lap_dan_y`, `viet_thoai_1`, `viet_thoai_2`...).
+Cùng các việc trên, nhưng mỗi việc là một file `workspace/claude_queue/<id>.request.json` (label `lap_dan_y`, `viet_thoai_1`, `viet_thoai_2`..., `sua_block_b03`).
 Viết JSON khớp `schema` vào `<id>.response.json`; quy trình chung xem skill `claude-mailbox`.
 
 ### 3. Làm trực tiếp trong phiên chat (người dùng gửi outline cho bạn)

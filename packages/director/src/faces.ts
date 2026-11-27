@@ -65,16 +65,21 @@ export function bakeFace(
   spec: FaceSpec,
   /** khung không được chớp mắt (khung QA, khung chính của cảnh) */
   noBlink: Set<number> = new Set(),
+  /** block (5B): lịch chớp mắt bắt đầu lại ở đầu mỗi block, hạt giống riêng từng block */
+  segments: { f0: number; seed: number }[] = [{ f0: 1, seed: 0 }],
 ): [number, number][] {
-  const rng = new Rng(seed);
   const track = [...exprTrack].sort((a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0));
   const blinks = new Set<number>();
-  let t = rng.uniform(0.8, 2.0);
-  while (t * fps < frames) {
-    const bf = Math.round(t * fps) + 1;
-    if (!noBlink.has(bf)) blinks.add(bf);
-    t += rng.uniform(2.2, 4.2);
-  }
+  segments.forEach((sg, i) => {
+    const rng = new Rng((seed ^ sg.seed) >>> 0);
+    const end = i + 1 < segments.length ? segments[i + 1].f0 : frames + 1;
+    let t = rng.uniform(0.8, 2.0);
+    while (sg.f0 + Math.round(t * fps) < end) {
+      const bf = sg.f0 + Math.round(t * fps);
+      if (!noBlink.has(bf)) blinks.add(bf);
+      t += rng.uniform(2.2, 4.2);
+    }
+  });
   const out: [number, number][] = [];
   for (let f = 1; f <= frames; f++) {
     const tt = (f - 1) / fps;

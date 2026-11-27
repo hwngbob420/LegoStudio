@@ -1,6 +1,6 @@
 // Gọi server (vite proxy /api -> 127.0.0.1:8788).
 import type { Issue } from "@lse/director";
-import type { BeatSheet, CritiqueLog, Script, SourceEntry, Storyboard, Timing, WritingInput } from "@lse/shared";
+import type { BeatSheet, BlockReview, CritiqueLog, ReviewComment, ReviewNote, Script, SourceEntry, Storyboard, Timing, WritingInput } from "@lse/shared";
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
   const r = await fetch(url, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -40,7 +40,7 @@ export const api = {
   project: (id: string) => req<ProjectState>("GET", `/api/projects/${id}`),
   saveScript: (id: string, s: Script) => req<Script>("PUT", `/api/projects/${id}/script`, s),
   saveStoryboard: (id: string, sb: Storyboard) => req<{ storyboard: Storyboard; issues: Issue[] }>("PUT", `/api/projects/${id}/storyboard`, sb),
-  preview: (id: string) => req<any>("GET", `/api/projects/${id}/preview`),
+  preview: (id: string, block?: string) => req<any>("GET", `/api/projects/${id}/preview${block ? `?block=${block}` : ""}`),
   runJob: (id: string, kind: string) => req<Job>("POST", `/api/projects/${id}/jobs`, { kind }),
   jobs: (project?: string) => req<Job[]>("GET", `/api/jobs${project ? `?project=${project}` : ""}`),
   qa: (id: string) => req<any>("GET", `/api/projects/${id}/qa`),
@@ -61,7 +61,26 @@ export const api = {
   saveBeats: (id: string, b: BeatSheet) => req<BeatSheet>("PUT", `/api/projects/${id}/writing/beats`, b),
   generate: (id: string, body: { input?: WritingInput; from?: "dialogue" }) => req<Job>("POST", `/api/projects/${id}/writing/generate`, body),
   aiStatus: () => req<{ ok: boolean; provider: string; message: string }>("GET", "/api/ai/status"),
+  // block ~2 phút + bảng duyệt
+  blocks: (id: string) => req<BlockList>("GET", `/api/projects/${id}/blocks`),
+  splitBlocks: (id: string) => req<{ blocks: { id: string; lines: number }[] }>("POST", `/api/projects/${id}/blocks/split`),
+  addComment: (id: string, bid: string, c: { text: string; kind: ReviewComment["kind"]; line?: string; shot?: string }) => req<ReviewComment>("POST", `/api/projects/${id}/blocks/${bid}/comments`, c),
+  updateComment: (id: string, bid: string, cid: string, patch: { resolved?: boolean; text?: string }) => req<BlockReview>("PATCH", `/api/projects/${id}/blocks/${bid}/comments/${cid}`, patch),
+  deleteComment: (id: string, bid: string, cid: string) => req<BlockReview>("DELETE", `/api/projects/${id}/blocks/${bid}/comments/${cid}`),
+  setBlockStatus: (id: string, bid: string, status: BlockReview["status"]) => req<BlockReview>("PUT", `/api/projects/${id}/blocks/${bid}/status`, { status }),
+  fixBlock: (id: string, bid: string) => req<Job>("POST", `/api/projects/${id}/blocks/${bid}/fix`),
+  makePreview: (id: string, body: { input?: WritingInput; from?: "write" | "voice" | "direct" }) => req<Job>("POST", `/api/projects/${id}/make-preview`, body),
 };
+
+export interface BlockView {
+  id: string; index: number; f0: number; f1: number; t0: number; t1: number; hash: string;
+  lines: { id: string; speaker: string; text: string; beat?: string }[];
+  shots: string[];
+  notes: ReviewNote[];
+  review: BlockReview;
+  output?: { file: string; fresh: boolean };
+}
+export interface BlockList { ready: boolean; reason: string; duration?: number; blocks: BlockView[] }
 
 export interface Writing { input: WritingInput | null; beats: BeatSheet | null; beatCritique: CritiqueLog | null; scriptCritique: CritiqueLog | null }
 

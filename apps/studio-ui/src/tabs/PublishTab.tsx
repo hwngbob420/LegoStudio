@@ -31,7 +31,7 @@ export const PublishTab: React.FC<{ pid: string; state: ProjectState; rev: numbe
           <JobButton kind="publish" primary label="Xuất trọn tập (giọng → 3D → chữ → ghép)" icon={<Film className="h-4 w-4" />} />
           <JobButton kind="render" label="Render lại 3D (giữ giọng)" icon={<Clapperboard className="h-4 w-4" />} />
           <JobButton kind="recut" label="Chỉ cắt lại chữ + tiếng (nhanh)" icon={<Scissors className="h-4 w-4" />} />
-          <p className="text-xs text-ink-500">3D render bằng Blender EEVEE theo chặng 120 giây; tắt app giữa chừng thì lần sau làm tiếp từ chỗ dừng. Khoảng 1,2–1,6 giây mỗi hình (12 hình/giây thế giới).</p>
+          <p className="text-xs text-ink-500">3D render bằng Blender EEVEE theo từng block ~2 phút: block không đổi từ lần trước được dùng lại, chỉ block vừa sửa phải render. Tắt app giữa chừng thì lần sau làm tiếp. Khoảng 1,2–1,7 giây mỗi hình (12 hình/giây thế giới). Mỗi block ra một video riêng, xem ở tab Duyệt block.</p>
           <button className="btn" onClick={shorts}><Smartphone className="h-4 w-4" /> Tạo Shorts dọc 1080x1920</button>
         </div>
         <div className="card space-y-2 p-4">

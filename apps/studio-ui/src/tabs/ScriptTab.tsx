@@ -1,6 +1,7 @@
-// Tab 1 — Kịch bản: gửi tư liệu, chọn ngôi kể / giọng văn / độ dài, bấm "Generate kịch bản" để Claude (skill screenwriter) viết.
-import React, { useEffect, useState } from "react";
-import { Plus, Trash2, Save, LoaderCircle, Wand2, PenLine, CircleAlert, CircleCheck } from "lucide-react";
+// Tab 1 — Kịch bản: gửi tư liệu, chọn ngôi kể / giọng văn / độ dài, bấm "Làm bản xem trước": Claude (skill screenwriter) viết
+// kịch bản theo block ~2 phút -> tạo giọng -> AI đạo diễn dựng hình -> sang tab Duyệt block. "Chỉ viết kịch bản" dừng sau bước viết.
+import React, { useEffect, useRef, useState } from "react";
+import { Plus, Trash2, Save, LoaderCircle, Wand2, PenLine, CircleAlert, CircleCheck, FileText } from "lucide-react";
 import { POVS, TARGET_SECONDS, TONES, linesForDuration, type BeatSheet, type Pov, type Script, type SourceEntry, type Tone } from "@lse/shared";
 import { api, type Library, type ProjectState, type Writing } from "../api";
 import { Field } from "../components/Fields";
@@ -10,7 +11,7 @@ import { BeatEditor, CritiquePanel, SourcesPanel } from "../components/WritingRo
 const fmtSec = (s: number) => (s < 60 ? `${s} giây` : `${s / 60} phút`);
 const chip = (on: boolean) => `rounded-md border px-2 py-0.5 text-sm ${on ? "border-stud bg-stud/15" : "border-ink-700 hover:border-ink-500"}`;
 
-export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Library; onScript: (s: Script) => void; onReload: () => void }> = ({ pid, state, lib, onScript, onReload }) => {
+export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Library; onScript: (s: Script) => void; onReload: () => void; onPreviewReady?: () => void }> = ({ pid, state, lib, onScript, onReload, onPreviewReady }) => {
   const { busy, jobs, refresh } = useJobs();
   const [sc, setSc] = useState<Script | null>(state.script);
   const [story, setStory] = useState("");
@@ -25,8 +26,14 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
   const [beats, setBeats] = useState<BeatSheet | null>(null);
   const [ai, setAi] = useState<{ ok: boolean; provider: string; message: string } | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const job = busy("write_script");
-  const lastJob = jobs.find((j) => j.kind === "write_script");
+  const job = busy("make_preview") ?? busy("write_script");
+  const lastJob = jobs.find((j) => j.kind === "write_script" || j.kind === "make_preview");
+  // bản xem trước vừa xong -> tự sang tab Duyệt block
+  const seen = useRef<Record<string, string>>({});
+  useEffect(() => {
+    for (const j of jobs) if (j.kind === "make_preview" && seen.current[j.id] && seen.current[j.id] !== "done" && j.status === "done") onPreviewReady?.();
+    seen.current = Object.fromEntries(jobs.map((j) => [j.id, j.status]));
+  }, [jobs]);
 
   const loadWriting = async (fillForm = false) => {
     const [src, w] = await Promise.all([api.sources(pid), api.writing(pid)]);
@@ -46,13 +53,22 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
   const budget = linesForDuration(target);
   const ready = !!(story.trim() || picked.length);
 
+  const input = () => ({ story, sourceIds: picked, pov, tones, message, notes, targetSec: target });
   const generate = async (from?: "dialogue") => {
     setMsg(null);
     try {
       if (from === "dialogue" && beats) await api.saveBeats(pid, beats);
-      await api.generate(pid, from ? { from } : { input: { story, sourceIds: picked, pov, tones, message, notes, targetSec: target } });
+      await api.generate(pid, from ? { from } : { input: input() });
       await refresh();
       setMsg(from ? "Claude đang viết lại thoại theo dàn ý bạn sửa..." : "Claude đang viết kịch bản. Tập dài có thể mất 10–30 phút; bạn cứ làm việc khác, xong sẽ tự hiện.");
+    } catch (e) { setMsg((e as Error).message); api.aiStatus().then(setAi).catch(() => undefined); }
+  };
+  const makePreview = async () => {
+    setMsg(null);
+    try {
+      await api.makePreview(pid, { input: input() });
+      await refresh();
+      setMsg("Đang làm bản xem trước: Claude viết kịch bản theo block 2 phút, rồi tạo giọng và dựng hình. Tập 20 phút có thể mất 30–60 phút; xong sẽ tự mở tab Duyệt block.");
     } catch (e) { setMsg((e as Error).message); api.aiStatus().then(setAi).catch(() => undefined); }
   };
 
@@ -84,7 +100,7 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
           <span className="label">Độ dài mục tiêu</span>
           <div className="flex flex-wrap gap-1.5">{TARGET_SECONDS.map((t) => (
             <button key={t} className={chip(target === t)} onClick={() => setTarget(t)}>{fmtSec(t)}</button>))}</div>
-          <p className="mt-1 text-xs text-ink-300">Khoảng {budget.min}–{budget.max} câu thoại{target > 300 ? "; tập dài được chia chương, Claude viết từng phần" : ""}.</p>
+          <p className="mt-1 text-xs text-ink-300">Khoảng {budget.min}–{budget.max} câu thoại{target > 150 ? `; chia khoảng ${Math.round(target / 120)} block 2 phút để duyệt và sửa từng đoạn` : ""}.</p>
         </div>
 
         <Field label="Thông điệp người xem mang về (tuỳ chọn)">
@@ -102,8 +118,12 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
             <span>{ai.message}</span>
           </div>
         ) : null}
-        <button className="btn-primary w-full justify-center py-2 text-base" disabled={!!busy() || !ready} onClick={() => generate()}>
-          {job ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Wand2 className="h-5 w-5" />} Generate kịch bản
+        <button className="btn-primary w-full justify-center py-2 text-base" disabled={!!busy() || !ready} onClick={makePreview}
+          title="Claude viết kịch bản (chia block ~2 phút) -> tạo giọng -> AI đạo diễn dựng hình -> mở tab Duyệt block">
+          {job ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Wand2 className="h-5 w-5" />} Làm bản xem trước
+        </button>
+        <button className="btn w-full justify-center" disabled={!!busy() || !ready} onClick={() => generate()} title="Chỉ viết kịch bản, chưa tạo giọng và dựng hình">
+          <FileText className="h-4 w-4" /> Chỉ viết kịch bản
         </button>
         {job ? (
           <div className="space-y-1">
@@ -113,7 +133,7 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
         ) : null}
         {!job && lastJob?.status === "error" ? <div className="text-sm text-red-300">Lỗi: {lastJob.log.filter((l) => l.startsWith("LỖI")).at(-1) ?? lastJob.error}</div> : null}
         {msg ? <div className="text-sm text-ink-300">{msg}</div> : null}
-        {!ready ? <p className="text-xs text-ink-500">Gửi ít nhất một file tư liệu (hoặc dán truyện) để bật nút Generate.</p> : null}
+        {!ready ? <p className="text-xs text-ink-500">Gửi ít nhất một file tư liệu (hoặc dán truyện) để bật nút.</p> : null}
       </section>
 
       <div className="space-y-4">
@@ -145,10 +165,11 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
             <Field label="Đuôi cuối (giây)"><input className="field" type="number" step={0.1} value={sc.tail} onChange={(e) => setSc({ ...sc, tail: Number(e.target.value) })} /></Field>
           </div>
           <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-ink-300"><tr><th className="w-14">ID</th><th className="w-44">Người nói</th><th>Lời thoại</th><th className="w-20">Nghỉ trước</th><th className="w-10" /></tr></thead>
+            <thead className="text-left text-xs uppercase text-ink-300"><tr><th className="w-12">Block</th><th className="w-14">ID</th><th className="w-44">Người nói</th><th>Lời thoại</th><th className="w-20">Nghỉ trước</th><th className="w-10" /></tr></thead>
             <tbody>
               {sc.lines.map((L, i) => (
-                <tr key={i} className="align-top">
+                <tr key={i} className={`align-top ${i > 0 && L.block && L.block !== sc.lines[i - 1].block ? "border-t-2 border-stud/40" : ""}`}>
+                  <td className="py-1 font-mono text-xs text-ink-500">{L.block && (i === 0 || L.block !== sc.lines[i - 1].block) ? L.block : ""}</td>
                   <td className="py-1 font-mono text-ink-300">{L.id}</td>
                   <td className="py-1 pr-2"><select className="field" value={L.speaker} onChange={(e) => setLine(i, { speaker: e.target.value })}>{speakers.map((s) => <option key={s} value={s}>{lib.cast[s]?.name ?? s}</option>)}</select></td>
                   <td className="py-1 pr-2"><input className="field" value={L.text} onChange={(e) => setLine(i, { text: e.target.value })} /></td>
@@ -158,7 +179,7 @@ export const ScriptTab: React.FC<{ pid: string; state: ProjectState; lib: Librar
               ))}
             </tbody>
           </table>
-          <button className="btn" onClick={() => setSc({ ...sc, lines: [...sc.lines, { id: `L${sc.lines.length + 1}`, speaker: speakers[0], text: "...", gap_before: 0.3 }] })}><Plus className="h-4 w-4" /> Thêm câu</button>
+          <button className="btn" onClick={() => setSc({ ...sc, lines: [...sc.lines, { id: `L${1 + Math.max(0, ...sc.lines.map((l) => Number(/^L(\d+)$/.exec(l.id)?.[1] ?? 0)))}`, speaker: speakers[0], text: "...", gap_before: 0.3, ...(sc.lines.at(-1)?.block ? { block: sc.lines.at(-1)!.block } : {}) }] })}><Plus className="h-4 w-4" /> Thêm câu</button>
           <p className="text-xs text-ink-500">Câu ngắn, có dấu chấm câu để giọng đọc ngắt nghỉ. Xong thì sang tab Giọng đọc, bấm "Tạo giọng".</p>
         </section>
       </div>

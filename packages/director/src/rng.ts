@@ -10,6 +10,23 @@ const CRC_TABLE = (() => {
   return t;
 })();
 
+/**
+ * Nhiễu chậm tất định (value noise): nút ngẫu nhiên chuẩn N(0,1) cách nhau `every` khung, nội suy cosin giữa các nút.
+ * Dùng cho rung tay máy quay và "boil" khớp: lệch từ khung này sang khung kế rất nhỏ (không giật), vẫn ghi thành
+ * khoá CONSTANT 12 hình/giây như stop-motion. Trả `n` giá trị, phần tử i là khung i (tính từ 0).
+ */
+export function smoothNoise(rng: Rng, n: number, every: number): number[] {
+  const step = Math.max(1, every);
+  const knots = Array.from({ length: Math.ceil(n / step) + 2 }, () => rng.gauss(0, 1));
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const k = Math.floor(i / step), u = (i % step) / step;
+    const w = (1 - Math.cos(Math.PI * u)) / 2;
+    out.push(knots[k] * (1 - w) + knots[k + 1] * w);
+  }
+  return out;
+}
+
 /** CRC32 giống zlib.crc32 của Python (dùng làm hạt giống theo ID). */
 export function crc32(s: string): number {
   const bytes = new TextEncoder().encode(s);

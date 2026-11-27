@@ -34,6 +34,23 @@ export function overlayProps(sb: Storyboard, timing: Timing, castNames: Record<s
   };
 }
 
+/**
+ * Lát lớp chữ theo block: giữ thẻ/phụ đề/cảnh giao với [t0, t1), dời mốc về 0 (block xem riêng trong Player,
+ * render lớp chữ riêng từng block ở 5D). Thẻ bắt đầu trước block bị kẹp về 0.
+ */
+export function sliceOverlay(ov: OverlayProps, t0: number, t1: number): OverlayProps {
+  const r = (x: number) => Math.round((x - t0) * 1e5) / 1e5;
+  const hit = (a: number, b: number) => b > t0 + 1e-9 && a < t1 - 1e-9;
+  const cues = ov.cues.filter((c) => hit(c.t0 as number, c.t1 as number)).map((c) => {
+    const o: Record<string, unknown> = { ...c, t0: Math.max(0, r(c.t0 as number)), t1: Math.min(t1 - t0, r(c.t1 as number)) };
+    if (Array.isArray(c.bars)) o.bars = (c.bars as Record<string, number>[]).map((b) => ({ ...b, t: r(b.t), ...(b.collapse_t !== undefined ? { collapse_t: r(b.collapse_t) } : {}) }));
+    return o;
+  });
+  const subtitles = ov.subtitles.filter((s) => hit(s.start, s.end)).map((s) => ({ ...s, start: r(s.start), end: r(s.end), words: s.words.map((w) => ({ ...w, t: r(w.t) })) }));
+  const shots = ov.shots.filter((s) => hit(s.t0, s.t1)).map((s) => ({ ...s, t0: Math.max(0, r(s.t0)), t1: Math.min(t1 - t0, r(s.t1)) }));
+  return { ...ov, duration: Math.round((t1 - t0) * 1e5) / 1e5, cues, subtitles, shots };
+}
+
 export interface Issue {
   level: "error" | "warn";
   shot: string;

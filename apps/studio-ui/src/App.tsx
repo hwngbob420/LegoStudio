@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Boxes, Clapperboard, FileText, Mic, Plus, Send, Blocks, CircleCheck, LoaderCircle } from "lucide-react";
+import { Boxes, Clapperboard, FileText, Mic, Plus, Send, Blocks, CircleCheck, LoaderCircle, ListChecks } from "lucide-react";
 import type { Script, Storyboard } from "@lse/shared";
 import { api, type Library, type ProjectState, type ProjectSummary } from "./api";
 import { ScriptTab } from "./tabs/ScriptTab";
+import { ReviewTab } from "./tabs/ReviewTab";
 import { WorkshopTab } from "./tabs/WorkshopTab";
 import { VoiceTab } from "./tabs/VoiceTab";
 import { DirectorTab } from "./tabs/DirectorTab";
@@ -11,6 +12,7 @@ import { JobsProvider } from "./components/jobs";
 
 const TABS = [
   { id: "script", label: "Kịch bản", icon: FileText },
+  { id: "review", label: "Duyệt block", icon: ListChecks },
   { id: "workshop", label: "Xưởng", icon: Boxes },
   { id: "voice", label: "Giọng đọc", icon: Mic },
   { id: "director", label: "Đạo diễn & Xem trước", icon: Clapperboard },
@@ -95,7 +97,8 @@ export const App: React.FC = () => {
         <main className="min-h-0 flex-1 overflow-auto p-4">
           {!state || !lib ? <div className="text-ink-300">Đang tải...</div> : (
             <>
-              {tab === "script" && <ScriptTab pid={pid} state={state} lib={lib} onScript={editScript} onReload={reload} />}
+              {tab === "script" && <ScriptTab pid={pid} state={state} lib={lib} onScript={editScript} onReload={reload} onPreviewReady={() => setTab("review")} />}
+              {tab === "review" && <ReviewTab pid={pid} state={state} lib={lib} rev={rev} onReload={reload} />}
               {tab === "workshop" && <WorkshopTab pid={pid} state={state} lib={lib} onStoryboard={editStoryboard} onReload={reload} />}
               {tab === "voice" && <VoiceTab pid={pid} state={state} lib={lib} />}
               {tab === "director" && <DirectorTab pid={pid} state={state} lib={lib} rev={rev} onStoryboard={editStoryboard} onReload={reload} />}

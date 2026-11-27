@@ -26,7 +26,8 @@ export type Runner = (step: Step, cwd: string, onLine: (line: string) => void) =
 
 export const spawnRunner: Runner = (step, cwd, onLine) =>
   new Promise((resolve) => {
-    const p = spawn(step.cmd, step.args, { cwd, shell: process.platform === "win32", windowsHide: true });
+    // PYTHONUNBUFFERED: Python in từng dòng ngay (không gom bộ đệm), thanh tiến độ và nhật ký cập nhật kịp thời
+    const p = spawn(step.cmd, step.args, { cwd, shell: process.platform === "win32", windowsHide: true, env: { ...process.env, PYTHONUNBUFFERED: "1" } });
     let buf = "";
     const feed = (d: Buffer) => {
       buf += d.toString("utf8");

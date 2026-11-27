@@ -9,7 +9,7 @@ import { planCamera, project } from "./camera";
 import { bakeFace, quantise, type FaceSpec } from "./faces";
 import { loadLibrary } from "./io";
 import { RigModel } from "./rig";
-import { Rng, crc32 } from "./rng";
+import { Rng, crc32, smoothNoise } from "./rng";
 
 const ROOT = path.resolve(__dirname, "../../..");
 const read = (p: string) => JSON.parse(readFileSync(path.join(ROOT, p), "utf8"));
@@ -83,6 +83,26 @@ describe("camera", () => {
     expect(p[0]).toBeCloseTo(1 / 3, 1);
     expect(p[1]).toBeGreaterThan(0.25);
     expect(p[1]).toBeLessThan(0.6);
+  });
+
+  it("handheld shake drifts slowly: static shots move < 0.6 px per world frame (was 4-12 px white noise)", () => {
+    const head: V3 = [0, 0, 0.4];
+    for (const preset of ["mcu", "ecu", "wide_establish"]) {
+      const plan = planCamera({ preset }, 1, 240, [head], ["a"], 0, [0, 0, 0], 12345);
+      const pts = plan.keys.map((k) => project(head, k, plan.lens, plan.shift, 1920, 1080)!);
+      let maxStep = 0, maxOff = 0;
+      for (let i = 1; i < pts.length; i++) maxStep = Math.max(maxStep, Math.hypot((pts[i][0] - pts[i - 1][0]) * 1920, (pts[i][1] - pts[i - 1][1]) * 1080));
+      for (const p of pts) maxOff = Math.max(maxOff, Math.hypot((p[0] - pts[0][0]) * 1920, (p[1] - pts[0][1]) * 1080));
+      expect(maxStep, preset).toBeLessThan(0.6);
+      expect(maxOff, preset).toBeGreaterThan(0.5); // vẫn còn cảm giác cầm tay, không đứng chết
+      expect(maxOff, preset).toBeLessThan(12);
+    }
+  });
+
+  it("smoothNoise is deterministic and continuous", () => {
+    const a = smoothNoise(new Rng(7), 100, 6), b = smoothNoise(new Rng(7), 100, 6);
+    expect(a).toEqual(b);
+    for (let i = 1; i < a.length; i++) expect(Math.abs(a[i] - a[i - 1])).toBeLessThan(2.5);
   });
 });
 

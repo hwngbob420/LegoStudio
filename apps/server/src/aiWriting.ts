@@ -7,7 +7,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { z, type ZodType } from "zod";
 import {
-  BEAT_CHECKS, BeatSheet, CheckResult, CritiqueLog, POVS, SCRIPT_CHECKS, TONES, WritingInput, linesForDuration, passRate,
+  BEAT_CHECKS, BLOCK_TARGET_SEC, BeatSheet, blockId, CheckResult, CritiqueLog, POVS, SCRIPT_CHECKS, TONES, WritingInput, linesForDuration, passRate,
   type Beat,
 } from "@lse/shared";
 import type { TextAI } from "./ai/types";
@@ -140,7 +140,7 @@ export function chunkErrors(d: ChunkOut, beats: Beat[], known: Set<string>): str
   return errs;
 }
 
-/** Gom nhịp thành từng phần ~CHUNK_LINES câu (không cắt giữa nhịp). */
+/** Gom nhịp thành từng phần ~size câu (không cắt giữa nhịp). Phần cuối quá ngắn (< 35%) thì gộp vào phần trước. */
 export function chunkBeats(beats: Beat[], size = CHUNK_LINES): Beat[][] {
   const out: Beat[][] = [];
   let cur: Beat[] = [], n = 0;
@@ -149,7 +149,19 @@ export function chunkBeats(beats: Beat[], size = CHUNK_LINES): Beat[][] {
     cur.push(b); n += b.est_lines;
   }
   if (cur.length) out.push(cur);
+  const est = (p: Beat[]) => p.reduce((a, b) => a + b.est_lines, 0);
+  if (out.length > 1 && est(out[out.length - 1]) < size * 0.35 && est(out[out.length - 2]) + est(out[out.length - 1]) <= size * 1.35) {
+    const last = out.pop()!;
+    out[out.length - 1].push(...last);
+  }
   return out;
+}
+
+/** Số câu của một block ~2 phút cho độ dài mục tiêu (số giây mỗi câu suy từ khoảng số câu cho phép). */
+export function blockLines(targetSec: number): number {
+  const b = linesForDuration(targetSec);
+  const secPerLine = targetSec / ((b.min + b.max) / 2);
+  return Math.max(10, Math.min(CHUNK_LINES, Math.round(BLOCK_TARGET_SEC / secPerLine)));
 }
 
 // ---------------------------------------------------------------- pipeline
@@ -202,7 +214,7 @@ export function beatTask(input: WritingInput) {
 
 export function chunkTask(part: Beat[], k: number, n: number, prev: { speaker: string; text: string }[], sheet: BeatSheet) {
   return [
-    `## Việc 2 (phần ${k}/${n}): viết THOẠI cho các nhịp ${part[0].id}–${part.at(-1)!.id}`,
+    `## Việc 2 (block ${k}/${n}, khoảng 2 phút): viết THOẠI cho các nhịp ${part[0].id}–${part.at(-1)!.id}`,
     k === 1 ? `Dàn ý đầy đủ để nắm mạch (đã chốt):\n${JSON.stringify({ title: sheet.title, idea: sheet.idea, runner: sheet.runner, beats: sheet.beats.map((b) => ({ id: b.id, chapter: b.chapter, kind: b.kind, summary: b.summary })) })}` : "",
     `Các nhịp của phần này (viết đúng thứ tự, mỗi câu gắn beat, số câu mỗi nhịp xấp xỉ est_lines):\n${JSON.stringify(part)}`,
     prev.length ? `Các câu ngay trước phần này (nối mạch, không lặp lại):\n${prev.map((l) => `${l.speaker}: ${l.text}`).join("\n")}` : "",
@@ -241,15 +253,16 @@ export async function generateScript(paths: WorkspacePaths, ep: string, session:
     log(`dàn ý: ${sheet.beats.length} nhịp, Claude tự sửa ${revisions} vòng`);
   }
   log("== dialogue ==");
-  const parts = chunkBeats(sheet.beats);
+  // mỗi phần thoại = một block ~2 phút (đơn vị duyệt, sửa, render ở bước sau)
+  const parts = chunkBeats(sheet.beats, blockLines(input.targetSec));
   const known = new Set(knownCast(paths));
-  const lines: { speaker: string; text: string }[] = [];
+  const lines: { speaker: string; text: string; beat?: string; block?: string }[] = [];
   const rounds: CritiqueLog["rounds"] = [];
   for (let k = 0; k < parts.length; k++) {
     log(`[progress] write ${k + 1}/${steps(parts.length)}`);
     const out = await session.ask(`viet_thoai_${k + 1}`, chunkTask(parts[k], k + 1, parts.length, lines.slice(-4), sheet), ChunkOut, (d) => chunkErrors(d, parts[k], known));
-    lines.push(...out.lines.map((l) => ({ speaker: l.speaker, text: l.text })));
-    rounds.push({ round: k + 1, label: parts.length > 1 ? `Phần ${k + 1} (${parts[k][0].id}–${parts[k].at(-1)!.id})` : undefined, pass_rate: passRate({ checks: out.checks, fixes: [] }), checks: out.checks, fixes: [], applied: out.revisions > 0 });
+    lines.push(...out.lines.map((l) => ({ speaker: l.speaker, text: l.text, beat: l.beat, block: blockId(k) })));
+    rounds.push({ round: k + 1, label: parts.length > 1 ? `Block ${blockId(k)} (${parts[k][0].id}–${parts[k].at(-1)!.id})` : `Block ${blockId(k)}`, pass_rate: passRate({ checks: out.checks, fixes: [] }), checks: out.checks, fixes: [], applied: out.revisions > 0 });
     log(`thoại phần ${k + 1}/${parts.length}: ${out.lines.length} câu`);
   }
   const script = await writeScriptFile(paths, ep, { title: sheet.title, logline: sheet.logline, lines });
@@ -261,7 +274,8 @@ export async function generateScript(paths: WorkspacePaths, ep: string, session:
 
 /** Đọc thông tin + dựng ngữ cảnh (cho script chạy nền). */
 export async function contextFor(paths: WorkspacePaths, ep: string) {
-  const input = await readJson(WF.input(paths, ep), WritingInput);
+  // tập làm trước khi có phòng biên kịch (không có writing/input.json): ngữ cảnh mặc định, tư liệu là chính kịch bản
+  const input = existsSync(WF.input(paths, ep)) ? await readJson(WF.input(paths, ep), WritingInput) : WritingInput.parse({ story: "", targetSec: 300 });
   return buildContext(paths, ep, input);
 }
 

@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { alignWords, Script, Timing, parseOrThrow, wordsFromTokens, wordsOf } from "@lse/shared";
+import { alignWords, Script, snapBlockStart, Timing, parseOrThrow, wordsFromTokens, wordsOf } from "@lse/shared";
 import { lineVisemes } from "@lse/director";
 import { loadEnv } from "../ai/env";
 import { REPO } from "../workspace";
@@ -64,6 +64,8 @@ async function main(prod: string) {
   const uploaded = existsSync(voiceDir) ? readdirSync(voiceDir) : [];
   let t = script.start_offset;
   const lines: Timing["lines"] = {};
+  // block của câu i (câu chưa ghi block theo câu trước)
+  const blockAt = (i: number) => { for (let k = i; k >= 0; k--) if (script.lines[k].block) return script.lines[k].block; return undefined; };
   for (const [i, L] of script.lines.entries()) {
     const up = uploaded.find((f) => f.startsWith(`${L.id}.`));
     const src = up ? path.join(voiceDir, up) : path.join(audioDir, `${L.id}.wav`);
@@ -94,11 +96,15 @@ async function main(prod: string) {
     const S = (spans as { text: string; start: number; end: number }[]).map((x) => ({ ...x, start: Math.min(Math.max(x.start, onset), offset), end: Math.min(Math.max(x.end, onset), offset) }));
     if (S.length) { S[0].start = onset; S[S.length - 1].end = Math.max(S[S.length - 1].start + 0.05, offset); }
     t += i === 0 ? 0 : (L.gap_before ?? 0.3);
+    // đầu block mới khớp lưới 0,25 s, giống tts_sapi.py (block sau không phụ thuộc độ dài block trước)
+    const pb = i > 0 ? blockAt(i - 1) : undefined;
+    if (L.block && pb && L.block !== pb) t = snapBlockStart(t);
     const wavStart = t - onset;
     const abs = S.map((s) => ({ ...s, start: wavStart + s.start, end: wavStart + s.end }));
     lines[L.id] = {
       speaker: L.speaker, text: L.text, wav: `build/audio/${L.id}.wav`, wav_start: r3(wavStart), start: r3(t), end: r3(wavStart + offset),
       visemes: lineVisemes(abs).map(([a, v, d]) => [r3(a), v, r3(d)]), words: abs.map((s) => [r3(s.start), s.text]),
+      ...(L.block ? { block: L.block } : {}),
     };
     t = wavStart + offset;
     const conf = map.filter((x) => x >= 0).length / Math.max(1, sw.length);

@@ -28,7 +28,7 @@ export const JobsProvider: React.FC<{ project: string; onJobDone: () => void; ch
   return <JobsCtx.Provider value={{ jobs, run, busy, refresh }}>{children}</JobsCtx.Provider>;
 };
 
-const LABEL: Record<string, string> = { write_script: "Viết kịch bản", tts: "Tạo giọng", contact: "Kiểm khung", render: "Render 3D", publish: "Xuất bản trọn tập", recut: "Cắt lại chữ + tiếng", library: "Nướng kho" };
+export const LABEL: Record<string, string> = { make_preview: "Làm bản xem trước", fix_block: "Claude sửa block", write_script: "Viết kịch bản", tts: "Tạo giọng", contact: "Kiểm khung", render: "Render 3D", publish: "Xuất bản trọn tập", recut: "Cắt lại chữ + tiếng", library: "Nướng kho" };
 
 /** Nút chạy một việc nền, kèm trạng thái và thanh tiến độ. */
 export const JobButton: React.FC<{ kind: string; label?: string; primary?: boolean; icon?: React.ReactNode }> = ({ kind, label, primary, icon }) => {

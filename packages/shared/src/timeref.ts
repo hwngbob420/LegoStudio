@@ -47,5 +47,6 @@ export class Timeline {
 
 /** Giây -> số khung (khung đầu = 1), giống frame_of() trong Python. */
 export function frameOf(t: number, fps: number): number {
-  return Math.round(t * fps) + 1;
+  // làm tròn 1e-6 trước: cùng một mốc dời đi số nguyên khung (đầu block khớp lưới) luôn ra cùng số khung tương đối
+  return Math.round(Math.round(t * fps * 1e6) / 1e6) + 1;
 }
