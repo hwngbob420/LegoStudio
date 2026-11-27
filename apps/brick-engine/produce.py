@@ -77,7 +77,7 @@ def main():
             if blocks:
                 # 5D: lớp chữ từng block, block không đổi thì dùng lại
                 import block_render as BR
-                BR.render_overlays(prod, blocks, timeline(prod)["fps"])
+                BR.render_overlays(prod, blocks, timeline(prod)["fps"], lang=a[a.index("--lang") + 1] if "--lang" in a else None)
                 continue_log(log, st, t, lp)
                 continue
             rs = P.VIDEO_ENGINE
@@ -97,8 +97,8 @@ def main():
                 proj = json.load(open(os.path.join(prod, "project.json"), encoding="utf-8"))
                 plates = {c["id"]: os.path.join(prod, c["file"]) for c in proj["chunks"]}
                 fps_w = timeline(prod)["fps"]
-                overlays = BR.render_overlays(prod, blocks, fps_w, log=lambda *_: None)   # chỉ lấy đường dẫn (đã render ở bước overlay)
-                out = BR.composite_blocks(prod, blocks, plates, overlays, fps_w, ep.get("fps_out", 60), out_name=out_name)
+                overlays = BR.render_overlays(prod, blocks, fps_w, log=lambda *_: None, lang=lang)   # chỉ lấy đường dẫn (đã render ở bước overlay)
+                out = BR.composite_blocks(prod, blocks, plates, overlays, fps_w, ep.get("fps_out", 60), out_name=out_name, lang=lang)
             else:
                 out = MC.composite(prod, ep.get("fps_world", 12), ep.get("fps_out", 60), out_name=out_name)
             log["output"] = out

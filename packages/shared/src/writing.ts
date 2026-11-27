@@ -77,7 +77,8 @@ export type WritingInput = z.infer<typeof WritingInput>;
  */
 export function linesForDuration(targetSec: number): { min: number; max: number } {
   const t = Math.max(10, Math.min(1800, targetSec));
-  return { min: Math.max(2, Math.round(t / 5.5)), max: Math.max(6, Math.min(600, Math.round(t / 3.2))) };
+  // giọng máy đọc trung bình ~3,3–3,6 s mỗi câu kể cả nghỉ (ep02: 3,65 s; ep06: 3,26 s) -> khoảng 3,0–3,9 s/câu
+  return { min: Math.max(2, Math.round(t / 3.9)), max: Math.max(6, Math.min(600, Math.round(t / 3.0))) };
 }
 
 const ID = z.string().regex(/^[a-z][a-z0-9_]{2,30}$/);

@@ -91,10 +91,11 @@ def overlay_key(sliced):
     return _sha([json.dumps(norm, sort_keys=True, ensure_ascii=False), overlay_salt()])
 
 
-def render_overlays(prod, blocks, fps_world, log=print):
-    """Render lớp chữ từng block (bỏ qua block đã có cùng khoá). Trả {block_id: đường dẫn webm}."""
+def render_overlays(prod, blocks, fps_world, log=print, lang=None):
+    """Render lớp chữ từng block (bỏ qua block đã có cùng khoá). Trả {block_id: đường dẫn webm}.
+    Bản phụ đề ngôn ngữ khác (lang) dùng thư mục riêng, không xoá bộ đệm của bản chính."""
     props = json.load(open(os.path.join(prod, "build", "overlay_props.json"), encoding="utf-8"))
-    odir = os.path.join(prod, "build", "overlay")
+    odir = os.path.join(prod, "build", f"overlay_{lang}" if lang else "overlay")
     os.makedirs(odir, exist_ok=True)
     npx = "npx.cmd" if os.name == "nt" else "npx"
     out, keep = {}, set()
@@ -124,12 +125,12 @@ def render_overlays(prod, blocks, fps_world, log=print):
 
 
 # ---------------------------------------------------------------- ghép theo block
-def composite_blocks(prod, blocks, plates, overlays, fps_world=12, fps_out=60, crf=17, out_name="output_final.mp4", log=print):
+def composite_blocks(prod, blocks, plates, overlays, fps_world=12, fps_out=60, crf=17, out_name="output_final.mp4", log=print, lang=None):
     """Mỗi block: nền + chữ -> build/blocks/v_<khoá>.mp4 (chỉ hình, lưu theo khoá, không phụ thuộc tiếng nên block khác
     đổi độ dài không làm block này phải ghép lại). Rồi gắn đoạn tiếng tương ứng -> build/blocks/<id>.mp4 để xem riêng (nhanh,
     chép hình). Bản cuối: nối hình các block (-c copy, cùng thông số mã hoá) + MỘT bản trộn tiếng cả tập (nhạc liền mạch)."""
     mix = os.path.join(prod, "build", "mix.wav")
-    bdir = os.path.join(prod, "build", "blocks")
+    bdir = os.path.join(prod, "build", f"blocks_{lang}" if lang else "blocks")
     os.makedirs(bdir, exist_ok=True)
     # tpad nhân bản hình cuối vài khung rồi -frames:v cắt đúng số hình: mỗi block đúng (khung thế giới x 5) hình, không hụt
     # một hình ở cuối (hụt sẽ cộng dồn thành lệch khẩu hình ở các block sau)
@@ -161,7 +162,7 @@ def composite_blocks(prod, blocks, plates, overlays, fps_world=12, fps_out=60, c
     for f in glob.glob(os.path.join(bdir, "*.mp4")):
         if f not in keep:
             os.remove(f)
-    json.dump(files, open(os.path.join(prod, "build", "block_outputs.json"), "w", encoding="utf-8"), indent=1)
+    json.dump(files, open(os.path.join(prod, "build", f"block_outputs_{lang}.json" if lang else "block_outputs.json"), "w", encoding="utf-8"), indent=1)
     lst = os.path.join(bdir, "concat.txt")
     open(lst, "w", encoding="utf-8").write("".join(f"file '{os.path.basename(f)}'" + chr(10) for f in listing))
     out = os.path.join(prod, out_name)

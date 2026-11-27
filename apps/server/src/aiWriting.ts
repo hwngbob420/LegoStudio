@@ -157,11 +157,12 @@ export function chunkBeats(beats: Beat[], size = CHUNK_LINES): Beat[][] {
   return out;
 }
 
-/** Số câu của một block ~2 phút cho độ dài mục tiêu (số giây mỗi câu suy từ khoảng số câu cho phép). */
-export function blockLines(targetSec: number): number {
-  const b = linesForDuration(targetSec);
-  const secPerLine = targetSec / ((b.min + b.max) / 2);
-  return Math.max(10, Math.min(CHUNK_LINES, Math.round(BLOCK_TARGET_SEC / secPerLine)));
+/** Giây trung bình mỗi câu khi đọc bằng giọng máy, kể cả khoảng nghỉ (đo thật ep06: 241 s / 74 câu = 3,26 s). */
+export const SPOKEN_SEC_PER_LINE = 3.4;
+
+/** Số câu của một block ~2 phút. `targetSec` giữ để sau này chỉnh theo độ dài tập. */
+export function blockLines(_targetSec?: number): number {
+  return Math.max(10, Math.min(CHUNK_LINES, Math.round(BLOCK_TARGET_SEC / SPOKEN_SEC_PER_LINE)));
 }
 
 // ---------------------------------------------------------------- pipeline

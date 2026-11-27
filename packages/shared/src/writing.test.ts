@@ -3,9 +3,12 @@ import { BEAT_CHECKS, BeatSheet, Critique, SourceIndex, linesForDuration, passRa
 
 describe("writing room schemas", () => {
   it("line budget grows with target length and stays sane", () => {
-    expect(linesForDuration(20)).toEqual({ min: 4, max: 6 });
+    expect(linesForDuration(20)).toEqual({ min: 5, max: 7 });
     expect(linesForDuration(180).max).toBeGreaterThanOrEqual(52); // ep02 thật: 52 câu / 190 s
-    expect(linesForDuration(300).max).toBeLessThanOrEqual(95);
+    expect(linesForDuration(300).max).toBeLessThanOrEqual(105);
+    // 5 phút đọc bằng giọng máy (~3,4 s/câu) phải nằm trong khoảng
+    expect(linesForDuration(300).min).toBeLessThanOrEqual(Math.round(300 / 3.4));
+    expect(linesForDuration(300).max).toBeGreaterThanOrEqual(Math.round(300 / 3.4));
     expect(linesForDuration(5).min).toBeGreaterThanOrEqual(2);
   });
   it("beat sheet rejects timings-free violations (bad ids, empty beats)", () => {
